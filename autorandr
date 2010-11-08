@@ -97,7 +97,7 @@ blocked() {
 
 load() {
 	local PROFILE="$1"
-	if [ "$CHANGE_PROFILE" -eq 1 ]; then
+	if [ "$CHANGE_PROFILE" -eq 1 ] && [ -e "$PROFILES/$PROFILE/config" ] ; then
 		echo " -> loading profile $PROFILE"
 		sed 's!^!--!' "$PROFILES/$PROFILE/config" | xargs xrandr
 
