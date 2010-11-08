@@ -108,8 +108,34 @@ load() {
 	fi
 }
 
+help() {
+	cat <<EOH
+Usage: autorandr action [profile-name]
+
+-h, --help 		get this small help
+-c, --change 		reload current setup
+-s, --save <profile>	save your current setup to profile <profile>
+-l, --load <profile> 	load profile <profile>
+--fingerprint		fingerprints your actual config 
+
+ To prevent a profile from being loaded, place a script call "block" in its
+ directory. The script is evaluated before the screen setup is inspected, and
+ in case of it returning a value of 0 the profile is skipped. This can be used
+ to query the status of a docking station you are about to leave.
+
+ If no suitable profile can be identified, the current configuration is kept.
+ To change this behaviour and switch to a fallback configuration, specify
+ --default <profile>
+
+ Another script called "postswitch "can be placed in the directory
+ ~/.auto-disper as well as in all profile directories: The scripts are
+ executed after a mode switch has taken place and can notify window managers
+
+EOH
+	exit
+}
 # process parameters
-OPTS=$(getopt -n autorandr -o s:l:d:cf --long change,default:,save:,load:,fingerprint -- "$@")
+OPTS=$(getopt -n autorandr -o s:l:d:cfh --long change,default:,save:,load:,fingerprint,help -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 eval set -- "$OPTS"
 
@@ -119,6 +145,7 @@ while true; do
 		-d|--default) DEFAULT_PROFILE="$2"; shift 2 ;;
 		-s|--save) SAVE_PROFILE="$2"; shift 2 ;;
 		-l|--load) LOAD_PROFILE="$2"; shift 2 ;;
+	 	-h|--help) help ;; 
 		--fingerprint) setup_fp; exit 0;;
 		--) shift; break ;;
 		*) echo "Error: $1"; exit 1;;
