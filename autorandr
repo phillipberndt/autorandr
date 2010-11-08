@@ -37,10 +37,13 @@
 
 XRANDR=/usr/bin/xrandr
 PROFILES=~/.autorandr/
+CONFIG=~/.autorandr.conf
 
 CHANGE_PROFILE=0
 DEFAULT_PROFILE=""
 SAVE_PROFILE=""
+
+test -f $CONFIG && . $CONFIG 
 
 setup_fp_xrandr_edid() {
 	$XRANDR -q --verbose | awk '
