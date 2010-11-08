@@ -137,6 +137,7 @@ Usage: autorandr action [profile-name]
 -s, --save <profile>	save your current setup to profile <profile>
 -l, --load <profile> 	load profile <profile>
 --force			force loading of a profile
+-d, --default <profile> make profile <profile> the default profile 
 --fingerprint		fingerprints your actual config 
 
  To prevent a profile from being loaded, place a script call "block" in its
