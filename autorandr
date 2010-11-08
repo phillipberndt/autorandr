@@ -42,21 +42,35 @@ CHANGE_PROFILE=0
 DEFAULT_PROFILE=""
 SAVE_PROFILE=""
 
-setup_fp_edid() {
+setup_fp_xrandr_edid() {
 	$XRANDR -q --verbose | awk '
-	/^[^ ]+ (dis)?connected / { DEV=$1; ID[DEV] = ""; }
+	/^[^ ]+ (dis)?connected / { DEV=$1; }
 	$1 ~ /^[a-f0-9]+$/ { ID[DEV] = ID[DEV] $1 }
 	END { for (X in ID) { print X " " ID[X]; } }'
 }
 
-setup_fp_dim() {
-	$XRANDR -q --verbose | awk '
-	/^[^ ]+ connected / { CONNECTED=1 }
-	/^[^ ]+ disconnected / { CONNECTED=0 }
-	/^[^ ]+ (dis)?connected / \
-	&& match($0, "([0-9]+mm) x ([0-9]+mm)", A) {
-		print $1, (CONNECTED==1 ? A[1]"x"A[2] : "" )
-	}'
+setup_fp_sysfs_edid() {
+	# hash the EDIDs of all _connected_ devices
+	for P in /sys/class/drm/card*-*/; do
+		if grep -q "^connected$" < "${P}status"; then
+			echo -n "$(basename "$P") "
+			md5sum ${P}edid | awk '{print $1}'
+		fi
+	done
+}
+
+setup_fp() {
+	local METHODS="setup_fp_xrandr_edid setup_fp_sysfs_edid"
+	local FP="";
+	for M in $METHODS; do
+		FP="$($M)"
+		[ -n "$FP" ] && break;
+	done
+	if [ -z "$FP" ]; then
+		echo "Unable to fingerprint display configuration" >&2
+		return
+	fi
+	echo "$FP"
 }
 
 
@@ -105,13 +119,13 @@ while true; do
         -d|--default) DEFAULT_PROFILE="$2"; shift 2 ;;
         -s|--save) SAVE_PROFILE="$2"; shift 2 ;;
         -l|--load) LOAD_PROFILE="$2"; shift 2 ;;
-	--fingerprint) setup_fp_edid; exit 0;;
+	--fingerprint) setup_fp; exit 0;;
         --) shift; break ;;
         *) echo "Error: $1"; exit 1;;
     esac
 done
 
-CURRENT_SETUP="$(setup_fp_edid)"
+CURRENT_SETUP="$(setup_fp)"
 
 if [ -n "$SAVE_PROFILE" ]; then
     echo "Saving current configuration as profile '${SAVE_PROFILE}'"
