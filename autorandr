@@ -89,23 +89,23 @@ current_cfg() {
 }
 
 blocked() {
-    local PROFILE="$1"
-    [ ! -x "$PROFILES/$PROFILE/block" ] && return 1
+	local PROFILE="$1"
+	[ ! -x "$PROFILES/$PROFILE/block" ] && return 1
 
-    "$PROFILES/$PROFILE/block" "$PROFILE"
+	"$PROFILES/$PROFILE/block" "$PROFILE"
 }
 
 load() {
-    local PROFILE="$1"
-    if [ "$CHANGE_PROFILE" -eq 1 ]; then
-        echo " -> loading profile $PROFILE"
-        sed 's!^!--!' "$PROFILES/$PROFILE/config" | xargs xrandr
+	local PROFILE="$1"
+	if [ "$CHANGE_PROFILE" -eq 1 ]; then
+		echo " -> loading profile $PROFILE"
+		sed 's!^!--!' "$PROFILES/$PROFILE/config" | xargs xrandr
 
-        [ -x "$PROFILES/$PROFILE/postswitch" ] && \
-            "$PROFILES/$PROFILE/postswitch" "$PROFILE"
-        [ -x "$PROFILES/postswitch" ] && \
-            "$PROFILES/postswitch" "$PROFILE"
-    fi
+		[ -x "$PROFILES/$PROFILE/postswitch" ] && \
+			"$PROFILES/$PROFILE/postswitch" "$PROFILE"
+		[ -x "$PROFILES/postswitch" ] && \
+			"$PROFILES/postswitch" "$PROFILE"
+	fi
 }
 
 # process parameters
@@ -114,58 +114,58 @@ if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 eval set -- "$OPTS"
 
 while true; do
-    case "$1" in
-        -c|--change) CHANGE_PROFILE=1; shift ;;
-        -d|--default) DEFAULT_PROFILE="$2"; shift 2 ;;
-        -s|--save) SAVE_PROFILE="$2"; shift 2 ;;
-        -l|--load) LOAD_PROFILE="$2"; shift 2 ;;
-	--fingerprint) setup_fp; exit 0;;
-        --) shift; break ;;
-        *) echo "Error: $1"; exit 1;;
-    esac
+	case "$1" in
+		-c|--change) CHANGE_PROFILE=1; shift ;;
+		-d|--default) DEFAULT_PROFILE="$2"; shift 2 ;;
+		-s|--save) SAVE_PROFILE="$2"; shift 2 ;;
+		-l|--load) LOAD_PROFILE="$2"; shift 2 ;;
+		--fingerprint) setup_fp; exit 0;;
+		--) shift; break ;;
+		*) echo "Error: $1"; exit 1;;
+	esac
 done
 
 CURRENT_SETUP="$(setup_fp)"
 
 if [ -n "$SAVE_PROFILE" ]; then
-    echo "Saving current configuration as profile '${SAVE_PROFILE}'"
-    mkdir -p "$PROFILES/$SAVE_PROFILE"
-    echo "$CURRENT_SETUP" > "$PROFILES/$SAVE_PROFILE/setup"
-    current_cfg > "$PROFILES/$SAVE_PROFILE/config"
-    exit 0
+	echo "Saving current configuration as profile '${SAVE_PROFILE}'"
+	mkdir -p "$PROFILES/$SAVE_PROFILE"
+	echo "$CURRENT_SETUP" > "$PROFILES/$SAVE_PROFILE/setup"
+	current_cfg > "$PROFILES/$SAVE_PROFILE/config"
+	exit 0
 fi
 
 if [ -n "$LOAD_PROFILE" ]; then
-    CHANGE_PROFILE=1 load "$LOAD_PROFILE"
-    exit $?
+	CHANGE_PROFILE=1 load "$LOAD_PROFILE"
+	exit $?
 fi
 
 for SETUP_FILE in $PROFILES/*/setup; do
-    if ! [ -e $SETUP_FILE ]; then
-        break
-    fi
-    PROFILE="$(basename $(dirname "$SETUP_FILE"))"
-    echo -n "$PROFILE"
+	if ! [ -e $SETUP_FILE ]; then
+		break
+	fi
+	PROFILE="$(basename $(dirname "$SETUP_FILE"))"
+	echo -n "$PROFILE"
 
-    if blocked "$PROFILE"; then
-        echo " (blocked)"
-        continue
-    fi
+	if blocked "$PROFILE"; then
+		echo " (blocked)"
+		continue
+	fi
 
-    FILE_SETUP="$(cat "$PROFILES/$PROFILE/setup")"
-    if [ "$CURRENT_SETUP" = "$FILE_SETUP" ]; then
-        echo " (detected)"
-        load "$PROFILE"
-        # found the profile, exit with success
-        exit 0
-    else
-        echo ""
-    fi
+	FILE_SETUP="$(cat "$PROFILES/$PROFILE/setup")"
+	if [ "$CURRENT_SETUP" = "$FILE_SETUP" ]; then
+		echo " (detected)"
+		load "$PROFILE"
+		# found the profile, exit with success
+		exit 0
+	else
+		echo ""
+	fi
 done
 
 # we did not find the profile, load default
 if [ -n "$DEFAULT_PROFILE" ]; then
-    echo "No suitable profile detected, falling back to $DEFAULT_PROFILE"
-    load "$DEFAULT_PROFILE"
+	echo "No suitable profile detected, falling back to $DEFAULT_PROFILE"
+	load "$DEFAULT_PROFILE"
 fi
 exit 1
