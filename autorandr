@@ -21,6 +21,9 @@
 #
 # To manually load a profile, you can use the --load <profile> option.
 #
+# autorandr tries to avoid reloading an identical configuration. To force the
+# configuration, apply --force.
+#
 # To prevent a profile from being loaded, place a script call "block" in its
 # directory. The script is evaluated before the screen setup is inspected, and
 # in case of it returning a value of 0 the profile is skipped. This can be used
@@ -40,6 +43,7 @@ PROFILES=~/.autorandr/
 CONFIG=~/.autorandr.conf
 
 CHANGE_PROFILE=0
+FORCE_LOAD=0
 DEFAULT_PROFILE=""
 SAVE_PROFILE=""
 
@@ -101,9 +105,19 @@ blocked() {
 	"$PROFILES/$PROFILE/block" "$PROFILE"
 }
 
+config_equal() {
+	local PROFILE="$1"
+	if [ "$(cat "$PROFILES/$PROFILE/config")" = "$(current_cfg)" ]; then
+		echo "Config already loaded"
+		return 0
+	else
+		return 1
+	fi
+}
+
 load() {
 	local PROFILE="$1"
-	if [ "$CHANGE_PROFILE" -eq 1 ] && [ -e "$PROFILES/$PROFILE/config" ] ; then
+	if [ -e "$PROFILES/$PROFILE/config" ] ; then
 		echo " -> loading profile $PROFILE"
 		sed 's!^!--!' "$PROFILES/$PROFILE/config" | xargs xrandr
 
@@ -122,6 +136,7 @@ Usage: autorandr action [profile-name]
 -c, --change 		reload current setup
 -s, --save <profile>	save your current setup to profile <profile>
 -l, --load <profile> 	load profile <profile>
+--force			force loading of a profile
 --fingerprint		fingerprints your actual config 
 
  To prevent a profile from being loaded, place a script call "block" in its
@@ -141,7 +156,7 @@ EOH
 	exit
 }
 # process parameters
-OPTS=$(getopt -n autorandr -o s:l:d:cfh --long change,default:,save:,load:,fingerprint,help -- "$@")
+OPTS=$(getopt -n autorandr -o s:l:d:cfh --long change,default:,save:,load:,force,fingerprint,help -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 eval set -- "$OPTS"
 
@@ -152,6 +167,7 @@ while true; do
 		-s|--save) SAVE_PROFILE="$2"; shift 2 ;;
 		-l|--load) LOAD_PROFILE="$2"; shift 2 ;;
 	 	-h|--help) help ;; 
+		--force) FORCE_LOAD=1; shift ;;
 		--fingerprint) setup_fp; exit 0;;
 		--) shift; break ;;
 		*) echo "Error: $1"; exit 1;;
@@ -169,7 +185,7 @@ if [ -n "$SAVE_PROFILE" ]; then
 fi
 
 if [ -n "$LOAD_PROFILE" ]; then
-	CHANGE_PROFILE=1 load "$LOAD_PROFILE"
+	CHANGE_PROFILE=1 FORCE_LOAD=1 load "$LOAD_PROFILE"
 	exit $?
 fi
 
@@ -188,7 +204,11 @@ for SETUP_FILE in $PROFILES/*/setup; do
 	FILE_SETUP="$(cat "$PROFILES/$PROFILE/setup")"
 	if [ "$CURRENT_SETUP" = "$FILE_SETUP" ]; then
 		echo " (detected)"
-		load "$PROFILE"
+		if [ "$CHANGE_PROFILE" -eq 1 ]; then
+			if [ "$FORCE_LOAD" -eq 1 ] || ! config_equal "$PROFILE"; then
+				load "$PROFILE"
+			fi
+		fi
 		# found the profile, exit with success
 		exit 0
 	else
