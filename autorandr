@@ -55,6 +55,8 @@ setup_fp_xrandr_edid() {
 }
 
 setup_fp_sysfs_edid() {
+	# xrandr triggers the reloading of EDID data
+	$XRANDR -q > /dev/null
 	# hash the EDIDs of all _connected_ devices
 	for P in /sys/class/drm/card*-*/; do
 		if grep -q "^connected$" < "${P}status"; then
