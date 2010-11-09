@@ -43,6 +43,8 @@ CHANGE_PROFILE=0
 DEFAULT_PROFILE=""
 SAVE_PROFILE=""
 
+FP_METHODS="setup_fp_xrandr_edid setup_fp_sysfs_edid"
+
 test -f $CONFIG && . $CONFIG 
 
 setup_fp_xrandr_edid() {
@@ -63,9 +65,8 @@ setup_fp_sysfs_edid() {
 }
 
 setup_fp() {
-	local METHODS="setup_fp_xrandr_edid setup_fp_sysfs_edid"
 	local FP="";
-	for M in $METHODS; do
+	for M in $FP_METHODS; do
 		FP="$($M)"
 		[ -n "$FP" ] && break;
 	done
