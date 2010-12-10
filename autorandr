@@ -6,23 +6,23 @@
 #
 # How to use:
 #
-# Save your current display configuration and setup with
-# autorandr --save mobile
+# Save your current display configuration and setup with:
+#  $ autorandr --save mobile
 #
-# Connect an additional display, configure your setup and save it
-# autorand --save docked
+# Connect an additional display, configure your setup and save it:
+#  $ autorandr --save docked
 #
 # Now autorandr can detect which hardware setup is active:
-# # autorandr
-# mobile
-# docked (detected)
+#  $ autorandr
+#    mobile
+#    docked (detected)
 #
 # To automatically reload your setup, just append --change to the command line
 #
 # To manually load a profile, you can use the --load <profile> option.
 #
 # autorandr tries to avoid reloading an identical configuration. To force the
-# configuration, apply --force.
+# (re)configuration, apply --force.
 #
 # To prevent a profile from being loaded, place a script call "block" in its
 # directory. The script is evaluated before the screen setup is inspected, and
@@ -34,11 +34,18 @@
 # --default <profile>
 #
 # Another script called "postswitch "can be placed in the directory
-# ~/.auto-disper as well as in all profile directories: The scripts are
-# executed after a mode switch has taken place and can notify window managers
-# or other applications about it.
+# ~/.autorandr as well as in all profile directories: The scripts are executed
+# after a mode switch has taken place and can notify window managers or other
+# applications about it.
+#
+#
+# While the script uses xrandr by defult, calling it by the name "autodisper"
+# or "auto-disper" forces it to use the "disper" utility, which is useful for
+# controlling nvidia chipsets. The formats for fingerprinting the current setup
+# and saving/loading the current configuration are adjusted accordingly.
 
 XRANDR=/usr/bin/xrandr
+DISPER=/usr/bin/disper
 PROFILES=~/.autorandr/
 CONFIG=~/.autorandr.conf
 
@@ -48,6 +55,16 @@ DEFAULT_PROFILE=""
 SAVE_PROFILE=""
 
 FP_METHODS="setup_fp_xrandr_edid setup_fp_sysfs_edid"
+CURRENT_CFG_METHOD="current_cfg_xrandr"
+LOAD_METHOD="load_cfg_xrandr"
+
+SCRIPTNAME="$(basename $0)"
+# when called as autodisper/auto-disper, we assume different defaults
+if [ "$SCRIPTNAME" = "auto-disper" ] || [ "$SCRIPTNAME" = "autodisper" ]; then
+	FP_METHODS="setup_fp_disper"
+	CURRENT_CFG_METHOD="current_cfg_disper"
+	LOAD_METHOD="load_cfg_disper"
+fi
 
 test -f $CONFIG && . $CONFIG 
 
@@ -70,6 +87,10 @@ setup_fp_sysfs_edid() {
 	done
 }
 
+setup_fp_disper() {
+	$DISPER -l | grep '^display '
+}
+
 setup_fp() {
 	local FP="";
 	for M in $FP_METHODS; do
@@ -83,8 +104,7 @@ setup_fp() {
 	echo "$FP"
 }
 
-
-current_cfg() {
+current_cfg_xrandr() {
 	$XRANDR -q | awk '
 	/^[^ ]+ disconnected / {
         print "output "$1;
@@ -96,6 +116,14 @@ current_cfg() {
 		print "mode "A[1];
 		print "pos "A[2]"x"A[3];
 	}'
+}
+
+current_cfg_disper() {
+	$DISPER -p
+}
+
+current_cfg() {
+	$CURRENT_METHOD;
 }
 
 blocked() {
@@ -115,11 +143,20 @@ config_equal() {
 	fi
 }
 
+load_cfg_xrandr() {
+	sed 's!^!--!' "$1" | xargs $XRANDR
+}
+
+load_cfg_disper() {
+	$DISPER < -i < "$1"
+}
+
 load() {
 	local PROFILE="$1"
-	if [ -e "$PROFILES/$PROFILE/config" ] ; then
+	local CONF="$PROFILES/$PROFILE/config"
+	if [ -e "$CONF" ] ; then
 		echo " -> loading profile $PROFILE"
-		sed 's!^!--!' "$PROFILES/$PROFILE/config" | xargs xrandr
+		$LOAD_METHOD "$CONF"
 
 		[ -x "$PROFILES/$PROFILE/postswitch" ] && \
 			"$PROFILES/$PROFILE/postswitch" "$PROFILE"
@@ -130,7 +167,7 @@ load() {
 
 help() {
 	cat <<EOH
-Usage: autorandr [options]
+Usage: $SCRIPTNAME [options]
 
 -h, --help 		get this small help
 -c, --change 		reload current setup
@@ -150,8 +187,11 @@ Usage: autorandr [options]
  --default <profile>.
 
  Another script called "postswitch "can be placed in the directory
- ~/.auto-disper as well as in any profile directories: The scripts are executed
+ ~/.autorandr as well as in any profile directories: The scripts are executed
  after a mode switch has taken place and can notify window managers.
+
+ When called by the name "autodisper" or "auto-disper", the script uses "disper"
+ instead of "xrandr" to detect, configure and save the display configuration.
 
 EOH
 	exit
