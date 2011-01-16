@@ -80,6 +80,8 @@ setup_fp_sysfs_edid() {
 	$XRANDR -q > /dev/null
 	# hash the EDIDs of all _connected_ devices
 	for P in /sys/class/drm/card*-*/; do
+		# nothing found
+		[ ! -d "$P" ] && continue
 		if grep -q "^connected$" < "${P}status"; then
 			echo -n "$(basename "$P") "
 			md5sum ${P}edid | awk '{print $1}'
