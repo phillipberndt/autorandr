@@ -61,12 +61,16 @@ LOAD_METHOD="load_cfg_xrandr"
 SCRIPTNAME="$(basename $0)"
 # when called as autodisper/auto-disper, we assume different defaults
 if [ "$SCRIPTNAME" = "auto-disper" ] || [ "$SCRIPTNAME" = "autodisper" ]; then
+	echo "Assuming disper defaults..." >&2
 	FP_METHODS="setup_fp_disper"
 	CURRENT_CFG_METHOD="current_cfg_disper"
 	LOAD_METHOD="load_cfg_disper"
 fi
 
-test -f $CONFIG && . $CONFIG 
+if [ -f $CONFIG ]; then
+	echo "Loading configuration from '$CONFIG'" >&2
+	. $CONFIG
+fi
 
 setup_fp_xrandr_edid() {
 	$XRANDR -q --verbose | awk '
@@ -97,7 +101,9 @@ setup_fp() {
 	local FP="";
 	for M in $FP_METHODS; do
 		FP="$($M)"
-		[ -n "$FP" ] && break;
+		if [ -n "$FP" ]; then
+			break
+		fi
 	done
 	if [ -z "$FP" ]; then
 		echo "Unable to fingerprint display configuration" >&2
