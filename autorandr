@@ -131,7 +131,7 @@ current_cfg_disper() {
 }
 
 current_cfg() {
-	$CURRENT_METHOD;
+	$CURRENT_CFG_METHOD;
 }
 
 blocked() {
@@ -156,7 +156,7 @@ load_cfg_xrandr() {
 }
 
 load_cfg_disper() {
-	$DISPER < -i < "$1"
+	$DISPER -i < "$1"
 }
 
 load() {
