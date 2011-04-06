@@ -118,7 +118,11 @@ current_cfg_xrandr() {
         print "output "$1;
 	        print "off";
 	}
-	/^[^ ]+ connected / {
+	/^[^ ]+ connected \(/ {
+		print "output "$1;
+		print "off";
+	}
+	/^[^ ]+ connected [^(]/ {
 		split($3, A, "+");
 		print "output "$1;
 		print "mode "A[1];
