@@ -1,0 +1,27 @@
+#!/bin/sh
+#
+# 90autorandr: Change autorand profile on thaw/resume
+
+AUTORANDR="autorandr -c"
+
+detect_display()
+{
+	for x in /tmp/.X11-unix/*; do
+		displaynum=`echo $x | sed s#/tmp/.X11-unix/X##`
+		user=$(who|awk '$5 ~ regexp {print $1}' regexp="\\\(:$displaynum\\\)")
+		if [ x"$user" = x"" ]; then
+			user=$(who|awk '$2 ~ regexp {print $1}' regexp=":$displaynum")
+		fi
+		if [ x"$user" != x"" ]; then
+			export DISPLAY=":$displaynum"
+			/bin/su -c "${AUTORANDR}" "$user"
+			return 0
+		fi
+	done
+}
+
+case "$1" in
+	thaw|resume)
+		detect_display
+		;;
+esac
