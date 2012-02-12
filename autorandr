@@ -126,7 +126,8 @@ current_cfg_xrandr() {
 		next;
 	}
 	# disconnected or disabled displays
-	/^[^ ]+ (dis)?connected / {
+	/^[^ ]+ (dis)?connected / ||
+	/^[^ ]+ unknown connection / {
 		print "output "$1;
 		print "off";
 		next;
