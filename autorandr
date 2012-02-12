@@ -46,6 +46,7 @@
 
 XRANDR=/usr/bin/xrandr
 DISPER=/usr/bin/disper
+XDPYINFO=/usr/bin/xdpyinfo
 PROFILES=~/.autorandr/
 CONFIG=~/.autorandr.conf
 
@@ -113,8 +114,11 @@ setup_fp() {
 }
 
 current_cfg_xrandr() {
-	local PRIMARY_SETUP=$(xdpyinfo -ext XINERAMA|awk '/^  head #0:/ {printf $3 $5}')
-	$XRANDR -q | awk -v primary_setup=${PRIMARY_SETUP} '
+	local PRIMARY_SETUP="";
+	if [ -x "$XDPYINFO" ]; then
+		PRIMARY_SETUP="$($XDPYINFO -ext XINERAMA | awk '/^  head #0:/ {printf $3 $5}')"
+	fi
+	$XRANDR -q | awk -v primary_setup="${PRIMARY_SETUP}" '
 	# display is connected and has a mode
 	/^[^ ]+ connected [^(]/ {
 		split($3, A, "+");
