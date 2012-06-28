@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Automatically select a display configuration based on connected devives
+# Automatically select a display configuration based on connected devices
 #
 # Stefan Tomanek <stefan.tomanek@wertarbyte.de>
 #
@@ -39,7 +39,7 @@
 # applications about it.
 #
 #
-# While the script uses xrandr by defult, calling it by the name "autodisper"
+# While the script uses xrandr by default, calling it by the name "autodisper"
 # or "auto-disper" forces it to use the "disper" utility, which is useful for
 # controlling nvidia chipsets. The formats for fingerprinting the current setup
 # and saving/loading the current configuration are adjusted accordingly.
