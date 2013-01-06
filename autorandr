@@ -125,6 +125,9 @@ current_cfg_xrandr() {
 		print "output "$1;
 		print "mode "A[1];
 		print "pos "A[2]"x"A[3];
+		if ($4 !~ /^\(/) {
+			print "rotate "$4;
+		}
 		if (A[1] A[2] "," A[3] == primary_setup)
 			print "primary";
 		next;
@@ -196,6 +199,7 @@ Usage: $SCRIPTNAME [options]
 -d, --default <profile> make profile <profile> the default profile 
 --force			force (re)loading of a profile
 --fingerprint		fingerprint your current hardware setup
+--config		dump your current xrandr setup
 
  To prevent a profile from being loaded, place a script call "block" in its
  directory. The script is evaluated before the screen setup is inspected, and
@@ -217,7 +221,7 @@ EOH
 	exit
 }
 # process parameters
-OPTS=$(getopt -n autorandr -o s:l:d:cfh --long change,default:,save:,load:,force,fingerprint,help -- "$@")
+OPTS=$(getopt -n autorandr -o s:l:d:cfh --long change,default:,save:,load:,force,fingerprint,config,help -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 eval set -- "$OPTS"
 
@@ -230,6 +234,7 @@ while true; do
 	 	-h|--help) help ;; 
 		--force) FORCE_LOAD=1; shift ;;
 		--fingerprint) setup_fp; exit 0;;
+		--config) current_cfg; exit 0;;
 		--) shift; break ;;
 		*) echo "Error: $1"; exit 1;;
 	esac
