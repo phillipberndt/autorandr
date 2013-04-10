@@ -1,0 +1,1 @@
+ACTION=="change", SUBSYSTEM=="drm", RUN+="/etc/pm/sleep.d/40autorandr thaw"
