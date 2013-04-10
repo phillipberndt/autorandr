@@ -1,6 +1,7 @@
 #!/bin/sh
 #
 # 40autorandr: Change autorandr profile on thaw/resume
+exec > /var/log/autorandr.log 2>&1
 
 AUTORANDR="autorandr -c"
 
@@ -8,7 +9,8 @@ detect_display()
 {
 	for X in /tmp/.X11-unix/X*; do
 		D="${X##/tmp/.X11-unix/X}"
-		user=$(who | awk -vD="$D" '$5 ~ "\\(:"D"\\)$" {print $1}')
+		user=`w -h | awk -vD="$D" '$3 ~ ":"D"(\\.[0-9])?$" {print $1}'`
+		logger "user $user"
 		if [ x"$user" != x"" ]; then
 			export DISPLAY=":$D"
 			/bin/su -c "${AUTORANDR}" "$user"
