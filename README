@@ -44,3 +44,15 @@ or "auto-disper" forces it to use the "disper" utility, which is useful for
 controlling nvidia chipsets. The formats for fingerprinting the current setup
 and saving/loading the current configuration are adjusted accordingly.
 
+
+For Debian using auto-disper:
+To make the screen auto-configure when your computer wakes up,
+* Copy auto-disper into /usr/local/bin/
+* Copy pm-utils/40auto-disper into /etc/pm/sleep.d/
+* (Assuming gnome) Run gnome-keybinding-properties and ADD a shortcut,
+  I called it "Run auto-disper", I set it to CTRL-F7, and the command is:
+  auto-disper -c --default default
+* Create a default disper setting... eg for laptop: unplug all monitors,
+  set up the screen nicely on the laptop display.
+  Then run auto-disper --save laptop
+
