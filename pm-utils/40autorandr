@@ -2,22 +2,35 @@
 #
 # 40autorandr: Change autorandr profile on thaw/resume
 
-AUTORANDR="autorandr -c"
+# detect if we are being called as 40auto-disper or 40autorandr
+FORM=${0##*40}
+case $FORM in
+	auto-disper)
+		AUTORANDR="auto-disper -c"
+		;;
+	*)
+		AUTORANDR="autorandr -c"
+		;;
+esac
+echo "$AUTORANDR"
 
 detect_display()
 {
 	for X in /tmp/.X11-unix/X*; do
 		D="${X##/tmp/.X11-unix/X}"
-		user=$(who | awk -vD="$D" '$5 ~ "\\(:"D"\\)$" {print $1}')
+		user=$( who | grep  \(:$D\) | cut -d ' ' -sf 1 | uniq )
+		echo "Checking $X -- $D - $user"
 		if [ x"$user" != x"" ]; then
+			echo "AUTORANDR $D - $user"
 			export DISPLAY=":$D"
 			/bin/su -c "${AUTORANDR}" "$user"
 		fi
 	done
+	echo "Done"
 }
 
 case "$1" in
 	thaw|resume)
-		detect_display
+		detect_display 
 		;;
 esac
