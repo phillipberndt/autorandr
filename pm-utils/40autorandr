@@ -6,7 +6,7 @@
 FORM=${0##*40}
 case $FORM in
 	auto-disper)
-		AUTORANDR="auto-disper -c"
+		AUTORANDR="auto-disper -c --default default"
 		;;
 	*)
 		AUTORANDR="autorandr -c"
