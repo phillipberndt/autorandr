@@ -1,16 +1,20 @@
-# Tool: autorandr
+# autorandr
 
 Automatically select a display configuration based on connected devices
 
-### Stefan Tomanek <[stefan.tomanek@wertarbyte.de](stefan.tomanek@wertarbyte.de)>
+Stefan Tomanek <[stefan.tomanek@wertarbyte.de](stefan.tomanek@wertarbyte.de)>
 
-# How to use:
+## How to use
 
 Save your current display configuration and setup with:
-```autorandr --save mobile```
+```
+autorandr --save mobile
+```
 
 Connect an additional display, configure your setup and save it:
-```autorandr --save docked```
+```
+autorandr --save docked
+```
 
 Now autorandr can detect which hardware setup is active:
 ```
@@ -41,7 +45,8 @@ after a mode switch has taken place and can notify window managers or other
 applications about it.
 
 
-While the script uses xrandr by default, calling it by the name __autodisper__
-or "auto-disper" forces it to use the "disper" utility, which is useful for
-controlling nvidia chipsets. The formats for fingerprinting the current setup
-and saving/loading the current configuration are adjusted accordingly.
+While the script uses xrandr by default, calling it by the name `autodisper`
+or `auto-disper` forces it to use the [disper](http://willem.engen.nl/projects/disper/)
+utility, which is useful for controlling nvidia chipsets. The formats for
+fingerprinting the current setup and saving/loading the current configuration
+are adjusted accordingly.
