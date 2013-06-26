@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+import os
+import pyinotify
+from pyinotify import ProcessEvent
+
+SYS_VIDEO_OUTPUTS='/sys/class/drm/card0/'
+
+DEFAULT_PROFILE='mobile'
+AUTORANDR_CMD='autorandr --change --default %s' % DEFAULT_PROFILE
+
+class VideoOutputMonitor(ProcessEvent):
+
+    def process_IN_ACCESS(self, event):
+        if event.name == 'status':
+            print 'Change status of %s' % os.path.basename(event.path)
+            os.system(AUTORANDR_CMD)
+
+
+def register_video_cards(manager):
+    if not os.path.exists(SYS_VIDEO_OUTPUTS):
+        return
+
+    for directory in os.listdir(SYS_VIDEO_OUTPUTS):
+        path = os.path.join(SYS_VIDEO_OUTPUTS, directory)
+        status = os.path.join(path, 'status')
+        if os.path.exists(status):
+            print 'Monitoring %s' % path
+            manager.add_watch(path, pyinotify.ALL_EVENTS)
+
+# pyinotify.log.setLevel(10)
+
+manager = pyinotify.WatchManager()
+handler = VideoOutputMonitor()
+notifier = pyinotify.Notifier(manager, default_proc_fun=handler)
+
+register_video_cards(manager)
+
+notifier.loop()
