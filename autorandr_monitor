@@ -1,23 +1,34 @@
 #!/usr/bin/env python
+""""
+Author:  Tomasz Bogdal (a.k.a. QueezyTheGreat)
+Home:    https://github.com/queezythegreat/autorandr
+License: This Source Code Form is subject to the terms of the
+         Mozilla Public License, v. 2.0
+"""
 import os
 import pyinotify
 from pyinotify import ProcessEvent
 
-SYS_VIDEO_OUTPUTS='/sys/class/drm/card0/'
-SYS_VIDEO_OUTPUTS='/sys/class/drm/'
+#TODO: Fork off when started
+#TODO: Add configuration file
+#TODO: Add command line options
 
+SYS_VIDEO_OUTPUTS='/sys/class/drm/'
 DEFAULT_PROFILE='default'
 AUTORANDR_CMD='autorandr --change --default %s' % DEFAULT_PROFILE
 
 class VideoOutputMonitor(ProcessEvent):
+    """ Launch autorandr when video card output status is changed. """
 
     def process_IN_ACCESS(self, event):
+        """ Handle IN_ACCESS events to `status` file. """
         if event.name == 'status':
             print 'Change status of %s' % os.path.basename(event.path)
             os.system(AUTORANDR_CMD)
 
 
 def register_video_cards(manager):
+    """ Register all video card ouptus for monitoring. """
     if not os.path.exists(SYS_VIDEO_OUTPUTS):
         return
 
@@ -28,12 +39,15 @@ def register_video_cards(manager):
             print 'Monitoring %s' % path
             manager.add_watch(path, pyinotify.ALL_EVENTS)
 
-# pyinotify.log.setLevel(10)
+def main():
+    # pyinotify.log.setLevel(10)
+    manager = pyinotify.WatchManager()
+    handler = VideoOutputMonitor()
+    notifier = pyinotify.Notifier(manager, default_proc_fun=handler)
 
-manager = pyinotify.WatchManager()
-handler = VideoOutputMonitor()
-notifier = pyinotify.Notifier(manager, default_proc_fun=handler)
+    register_video_cards(manager)
 
-register_video_cards(manager)
+    notifier.loop()
 
-notifier.loop()
+if __name__ == '__main__':
+    main()
