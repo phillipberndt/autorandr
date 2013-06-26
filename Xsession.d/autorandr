@@ -1,3 +1,4 @@
 # -*- sh -*-
 
-autorandr_mointor > /tmp/autorandr_monitor &
+/usr/bin/autorandr --change --default default
+/usr/bin/autorandr_monitor &> /tmp/autorandr_monitor &
