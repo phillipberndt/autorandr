@@ -4,8 +4,9 @@ import pyinotify
 from pyinotify import ProcessEvent
 
 SYS_VIDEO_OUTPUTS='/sys/class/drm/card0/'
+SYS_VIDEO_OUTPUTS='/sys/class/drm/'
 
-DEFAULT_PROFILE='mobile'
+DEFAULT_PROFILE='default'
 AUTORANDR_CMD='autorandr --change --default %s' % DEFAULT_PROFILE
 
 class VideoOutputMonitor(ProcessEvent):
