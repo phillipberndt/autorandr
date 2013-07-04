@@ -174,7 +174,28 @@ config_equal() {
 }
 
 load_cfg_xrandr() {
-	sed 's!^!--!' "$1" | xargs $XRANDR
+	# sed 1: Prefix arguments with "--"
+	# sed 2: Merge arguments into one line per output
+	# sed 3: Merge into two lines, all --off outputs in the first one
+	sed 's/^/--/' "$1" | sed -e '
+		:START
+		/\n--output/{P;D}
+		s/\n/ /
+		N;bSTART' | sed -e '
+			### First line
+			/ --off/{
+				G
+				# Merge if next line contains --off
+				s/\n\([^\n]* --off\)/ \1/
+				h
+				$!d;b
+			}
+			### Last line
+			H;x
+			# Merge if previous line contains --mode
+			s/\(--mode [^\n]*\)\n/\1 /
+			h
+			$!d' | xargs -L 1 $XRANDR
 }
 
 load_cfg_disper() {
