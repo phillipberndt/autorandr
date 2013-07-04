@@ -121,15 +121,22 @@ current_cfg_xrandr() {
 	$XRANDR -q | awk -v primary_setup="${PRIMARY_SETUP}" '
 	# display is connected and has a mode
 	/^[^ ]+ connected [^(]/ {
-		split($3, A, "+");
 		print "output "$1;
+		if ($3 == "primary") {
+			print $3
+			split($4, A, "+")
+			$4=$5
+		}
+		else {
+			split($3, A, "+");
+			if (A[1] A[2] "," A[3] == primary_setup)
+				print "primary";
+		}
 		print "mode "A[1];
 		print "pos "A[2]"x"A[3];
 		if ($4 !~ /^\(/) {
 			print "rotate "$4;
 		}
-		if (A[1] A[2] "," A[3] == primary_setup)
-			print "primary";
 		next;
 	}
 	# disconnected or disabled displays
