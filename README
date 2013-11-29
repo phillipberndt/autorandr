@@ -44,3 +44,6 @@ or "auto-disper" forces it to use the "disper" utility, which is useful for
 controlling nvidia chipsets. The formats for fingerprinting the current setup
 and saving/loading the current configuration are adjusted accordingly.
 
+To install autorandr call "make install", define your setup and then call 
+"make hotplug" to install hotplug scripts.
+
