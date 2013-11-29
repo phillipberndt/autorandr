@@ -1,3 +1,16 @@
+BRANCH INFORMATION
+------------------
+
+The original wertarbyte/autorandr tree seems unmaintained, with lots of open
+pull requests and issues. I forked it and merged what I thought were the most
+important changes. I will maintain this branch until wertarbyte finds the time
+to maintain his branch again.
+
+
+ORIGINAL README
+---------------
+
+
 Tool: "autorandr"
 
 Automatically select a display configuration based on connected devices
