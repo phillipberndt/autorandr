@@ -10,8 +10,8 @@ detect_display()
 	for X in /tmp/.X11-unix/X*; do
 		D="${X##/tmp/.X11-unix/X}"
 		user=$(w -h | awk -vD="$D" '$3 ~ ":"D"(\\.[0-9])?$" {print $1}' | head -1)
- 		logger "autorandr: Changing display configuration for user '$user'"
 		if [ x"$user" != x"" ]; then
+			logger "autorandr: Changing display configuration for user '$user'"
 			export DISPLAY=":$D"
 			/bin/su -c "${AUTORANDR}" "$user"
 		fi
