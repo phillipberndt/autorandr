@@ -1,0 +1,3 @@
+# -*- sh -*-
+
+/usr/bin/autorandr_monitor &> /tmp/autorandr_monitor &
