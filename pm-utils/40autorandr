@@ -3,7 +3,16 @@
 # 40autorandr: Change autorandr profile on thaw/resume
 exec > /var/log/autorandr.log 2>&1
 
-AUTORANDR="autorandr -c"
+# detect if we are being called as 40auto-disper or 40autorandr
+FORM=${0##*40}
+case $FORM in
+	auto-disper)
+		AUTORANDR="auto-disper -c"
+		;;
+	*)
+		AUTORANDR="autorandr -c"
+		;;
+esac
 
 detect_display()
 {
@@ -16,6 +25,7 @@ detect_display()
 			/bin/su -c "${AUTORANDR}" "$user"
 		fi
 	done
+	echo "Done"
 }
 
 case "$1" in
