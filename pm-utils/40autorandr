@@ -7,10 +7,10 @@ exec > /var/log/autorandr.log 2>&1
 FORM=${0##*40}
 case $FORM in
 	auto-disper)
-		AUTORANDR="auto-disper -c"
+		AUTORANDR="auto-disper -c --default default"
 		;;
 	*)
-		AUTORANDR="autorandr -c"
+		AUTORANDR="autorandr -c --default default"
 		;;
 esac
 
@@ -25,7 +25,6 @@ detect_display()
 			/bin/su -c "${AUTORANDR}" "$user"
 		fi
 	done
-	echo "Done"
 }
 
 case "$1" in

@@ -60,3 +60,14 @@ are adjusted accordingly.
 
 To install autorandr call `make install`, define your setup and then call
 `make hotplug` to install hotplug scripts.
+
+For Debian using auto-disper:
+To make the screen auto-configure when your computer wakes up,
+* Copy auto-disper into /usr/local/bin/
+* Copy pm-utils/40auto-disper into /etc/pm/sleep.d/
+* (Assuming gnome) Run gnome-keybinding-properties and ADD a shortcut,
+  I called it "Run auto-disper", I set it to CTRL-F7, and the command is:
+  `auto-disper -c --default default`
+* Create a default disper setting... eg for laptop: unplug all monitors,
+  set up the screen nicely on the laptop display.
+  Then run `auto-disper --save laptop`
