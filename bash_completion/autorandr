@@ -30,7 +30,7 @@ _autorandr ()
 
 	case "${prev}" in
 		-l|--load|-d|--default)
-			COMPREPLY=( $( compgen -W "${prfls}" ) )
+			COMPREPLY=( $( compgen -W "${prfls}" -- $cur ) )
 			return 0
 			;;
 		*)
