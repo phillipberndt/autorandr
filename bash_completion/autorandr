@@ -10,7 +10,10 @@ _autorandr ()
 
 	opts="-h -c -s -l -d"
 	lopts="--help --change --save --load --default --force --fingerprint --config"
-	prfls="`find ~/.autorandr/* -maxdepth 1 -type d -printf '%f\n'`"
+	prfls=""
+	if [ -d ~/.autorandr/ ]; then
+		prfls="`find ~/.autorandr/* -maxdepth 1 -type d -printf '%f\n'`"
+	fi
 
 	case "${cur}" in
 		--*)
