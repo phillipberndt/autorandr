@@ -9,7 +9,7 @@ _autorandr ()
 	prev="${COMP_WORDS[COMP_CWORD-1]}"
 
 	opts="-h -c -s -l -d"
-	lopts="--help --change --save --load --default --force --fingerprint"
+	lopts="--help --change --save --load --default --force --fingerprint --config"
 	prfls="`find ~/.autorandr/* -maxdepth 1 -type d -printf '%f\n'`"
 
 	case "${cur}" in
