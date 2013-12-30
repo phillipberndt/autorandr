@@ -178,6 +178,11 @@ load() {
 	local PROFILE="$1"
 	local CONF="$PROFILES/$PROFILE/config"
 	if [ -e "$CONF" ] ; then
+    [ -x "$PROFILES/preswitch" ] && \
+      "$PROFILES/preswitch" "$PROFILE"
+    [ -x "$PROFILES/$PROFILE/preswitch" ] && \
+      "$PROFILES/$PROFILE/preswitch" "$PROFILE"
+
 		echo " -> loading profile $PROFILE"
 		$LOAD_METHOD "$CONF"
 
