@@ -141,6 +141,9 @@ current_cfg_xrandr() {
 		if ($4 !~ /^\(/) {
 			print "rotate "$4;
 		}
+		else {
+			print "rotate normal";
+		}
 		next;
 	}
 	# disconnected or disabled displays
