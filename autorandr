@@ -135,12 +135,13 @@ current_cfg_xrandr() {
 		if (($4 == "left") || ($4 == "right")) {
 			split(A[1], B, "x");
 			A[1] = B[2]"x"B[1];
+			print "rotate "$4;
+		}
+		else {
+			print "rotate normal";
 		}
 		print "mode "A[1];
 		print "pos "A[2]"x"A[3];
-		if ($4 !~ /^\(/) {
-			print "rotate "$4;
-		}
 		next;
 	}
 	# disconnected or disabled displays
