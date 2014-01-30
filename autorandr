@@ -132,6 +132,11 @@ current_cfg_xrandr() {
 			if (A[1] A[2] "," A[3] == primary_setup)
 				print "primary";
 		}
+		if (($4 == "left") || ($4 == "right")) {
+			split(A[1], B, "x");
+			A[1] = B[2]"x"B[1];
+			print "rotate "$4;
+		}
 		print "mode "A[1];
 		print "pos "A[2]"x"A[3];
 		if ($4 !~ /^\(/) {
@@ -229,7 +234,7 @@ Usage: $SCRIPTNAME [options]
 -c, --change 		reload current setup
 -s, --save <profile>	save your current setup to profile <profile>
 -l, --load <profile> 	load profile <profile>
--d, --default <profile> make profile <profile> the default profile 
+-d, --default <profile> make profile <profile> the default profile
 --force			force (re)loading of a profile
 --fingerprint		fingerprint your current hardware setup
 --config		dump your current xrandr setup
@@ -264,7 +269,7 @@ while true; do
 		-d|--default) DEFAULT_PROFILE="$2"; shift 2 ;;
 		-s|--save) SAVE_PROFILE="$2"; shift 2 ;;
 		-l|--load) LOAD_PROFILE="$2"; shift 2 ;;
-	 	-h|--help) help ;; 
+	 	-h|--help) help ;;
 		--force) FORCE_LOAD=1; shift ;;
 		--fingerprint) setup_fp; exit 0;;
 		--config) current_cfg; exit 0;;
