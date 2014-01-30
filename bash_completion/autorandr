@@ -9,7 +9,7 @@ _autorandr ()
 	prev="${COMP_WORDS[COMP_CWORD-1]}"
 
 	opts="-h -c -s -l -d"
-	lopts="--help --change --save --load --default --force --fingerprint"
+	lopts="--help --change --save --load --default --force --fingerprint --config"
 	if [ -d ~/.autorandr ]; then
 		prfls="`find ~/.autorandr/* -maxdepth 1 -type d -printf '%f\n'`"
 	else
@@ -34,7 +34,7 @@ _autorandr ()
 
 	case "${prev}" in
 		-l|--load|-d|--default)
-			COMPREPLY=( $( compgen -W "${prfls}" ) )
+			COMPREPLY=( $( compgen -W "${prfls}" -- $cur ) )
 			return 0
 			;;
 		*)
