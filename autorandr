@@ -212,19 +212,22 @@ load_cfg_disper() {
 load() {
 	local PROFILE="$1"
 	local CONF="$PROFILES/$PROFILE/config"
-	if [ -e "$CONF" ] ; then
-		[ -x "$PROFILES/preswitch" ] && \
-			"$PROFILES/preswitch" "$PROFILE"
-		[ -x "$PROFILES/$PROFILE/preswitch" ] && \
-			"$PROFILES/$PROFILE/preswitch" "$PROFILE"
+	[ -f "$CONF" ] || return 1
+	if [ -x "$PROFILES/preswitch" ]; then
+		"$PROFILES/preswitch" "$PROFILE"
+	fi
+	if [ -x "$PROFILES/$PROFILE/preswitch" ]; then
+		"$PROFILES/$PROFILE/preswitch" "$PROFILE"
+	fi
 
-		echo " -> loading profile $PROFILE"
-		$LOAD_METHOD "$CONF"
+	echo " -> loading profile $PROFILE"
+	$LOAD_METHOD "$CONF"
 
-		[ -x "$PROFILES/$PROFILE/postswitch" ] && \
-			"$PROFILES/$PROFILE/postswitch" "$PROFILE"
-		[ -x "$PROFILES/postswitch" ] && \
-			"$PROFILES/postswitch" "$PROFILE"
+	if [ -x "$PROFILES/$PROFILE/postswitch" ]; then
+		"$PROFILES/$PROFILE/postswitch" "$PROFILE"
+	fi
+	if [ -x "$PROFILES/postswitch" ]; then
+		"$PROFILES/postswitch" "$PROFILE"
 	fi
 }
 
