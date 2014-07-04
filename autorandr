@@ -331,3 +331,10 @@ if [ -n "$DEFAULT_PROFILE" ]; then
 	load "$DEFAULT_PROFILE"
 fi
 exit 1
+
+# Local Variables:
+# tab-width: 8
+# sh-basic-offset: 8
+# sh-indentation: 8
+# indent-tabs-mode: t
+# End:
