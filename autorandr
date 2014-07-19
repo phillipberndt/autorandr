@@ -159,6 +159,53 @@ current_cfg_disper() {
 	$DISPER -p
 }
 
+common_cfg_xrandr() {
+	$XRANDR -q | awk '
+	# variables:
+	#   output: current output
+	#   outputlist: space sep list of all outputs
+	#   outputarr: array of all connected outputs
+	#   outputarrsize: number of connected outputs
+	#   modelist[800x600]: space sep list of outputs supporting mode
+	BEGIN {
+	    ORS = " " # output space sep argument list for xrandr
+	}
+	# display is connected
+	/^[^ ]+ connected / {
+	    output=$1;
+	    outputlist=outputlist " " output
+	    outputarr[outputarrsize++]=output
+	}
+	# disconnected or disabled displays
+	/^[^ ]+ disconnected / ||
+	/^[^ ]+ unknown connection / {
+	    print "--output",$1,"--off";
+	}
+	# modes available on a screen
+	/^   [0-9]+x[0-9]+/ {
+	    modelist[$1]=modelist[$1] " " output
+	}
+	END {
+	    # find common mode with largest screen area
+	    for (m in modelist) {
+		if (modelist[m] == outputlist) {
+		    # calculate area of resolution
+		    split(m, wh, "x");
+		    if (wh[1]*wh[2] >= maxdim) {
+			maxdim=wh[1]*wh[2]
+			maxmode=m
+		    }
+		}
+	    }
+	    if (maxmode) {
+		for (i in outputarr)
+		    print "--output",outputarr[i],"--mode",maxmode,"--pos","0x0"
+	    }
+	    print param
+	}' \
+		| xargs -L 1 $XRANDR
+}
+
 current_cfg() {
 	$CURRENT_CFG_METHOD;
 }
@@ -212,7 +259,7 @@ load_cfg_disper() {
 load() {
 	local PROFILE="$1"
 	local CONF="$PROFILES/$PROFILE/config"
-	[ -f "$CONF" ] || return 1
+	[ -f "$CONF" -o "$PROFILE" = "common" ] || return 1
 	if [ -x "$PROFILES/preswitch" ]; then
 		"$PROFILES/preswitch" "$PROFILE"
 	fi
@@ -220,8 +267,13 @@ load() {
 		"$PROFILES/$PROFILE/preswitch" "$PROFILE"
 	fi
 
-	echo " -> loading profile $PROFILE"
-	$LOAD_METHOD "$CONF"
+	if [ $PROFILE = "common" ]; then
+		echo " -> setting largest common mode"
+		common_cfg_xrandr
+        else
+		echo " -> loading profile $PROFILE"
+		$LOAD_METHOD "$CONF"
+	fi
 
 	if [ -x "$PROFILES/$PROFILE/postswitch" ]; then
 		"$PROFILES/$PROFILE/postswitch" "$PROFILE"
