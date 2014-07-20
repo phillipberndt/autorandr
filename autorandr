@@ -167,9 +167,6 @@ common_cfg_xrandr() {
 	#   outputarr: array of all connected outputs
 	#   outputarrsize: number of connected outputs
 	#   modelist[800x600]: space sep list of outputs supporting mode
-	BEGIN {
-	    ORS = " " # output space sep argument list for xrandr
-	}
 	# display is connected
 	/^[^ ]+ connected / {
 	    output=$1;
@@ -179,7 +176,8 @@ common_cfg_xrandr() {
 	# disconnected or disabled displays
 	/^[^ ]+ disconnected / ||
 	/^[^ ]+ unknown connection / {
-	    print "--output",$1,"--off";
+	    print "output " $1;
+	    print "off";
 	}
 	# modes available on a screen
 	/^   [0-9]+x[0-9]+/ {
@@ -198,12 +196,14 @@ common_cfg_xrandr() {
 		}
 	    }
 	    if (maxmode) {
-		for (i in outputarr)
-		    print "--output",outputarr[i],"--mode",maxmode,"--pos","0x0"
+		for (i in outputarr) {
+		    print "output " outputarr[i];
+		    print "mode " maxmode;
+		    print "pos 0x0";
+		}
 	    }
-	    print param
 	}' \
-		| xargs -L 1 $XRANDR
+		| load_cfg_xrandr -
 }
 
 current_cfg() {
