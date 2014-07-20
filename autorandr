@@ -50,7 +50,9 @@ XDPYINFO=/usr/bin/xdpyinfo
 PROFILES=~/.autorandr/
 CONFIG=~/.autorandr.conf
 RESERVED_PROFILE_NAMES=`cat <<EOF
- common	Set all connected outputs to the largest common resolution in cloned mode
+ common     Clone all connected outputs at the largest common resolution
+ horizontal Stack all connected outputs horizontally at their largest resolution
+ vertical   Stack all connected outputs vertically at their largest resolution
 EOF`
 
 CHANGE_PROFILE=0
@@ -212,6 +214,45 @@ common_cfg_xrandr() {
 		| load_cfg_xrandr -
 }
 
+stack_cfg_xrandr() {
+	$XRANDR -q | awk -v stack="${STACK}" '
+	# variables:
+	#   stack: "horizontal" (anything except vertical) or "vertical"
+	#   output: current output
+	#   firstmode: pick first mode after output
+	#   posX,posY: position of the next output
+	BEGIN {
+	    posX=posY=0
+	}
+	# display is connected
+	/^[^ ]+ connected / {
+	    output=$1;
+	    print "output " $1;
+	    firstmode=1
+	}
+	# disconnected or disabled displays
+	/^[^ ]+ disconnected / ||
+	/^[^ ]+ unknown connection / {
+	    print "output " $1;
+	    print "off";
+	}
+	# modes available on a screen, but pick only the first
+	/^   [0-9]+x[0-9]+/ {
+	    if (!firstmode) next;
+	    firstmode=0
+	    # output mode at current virtual desktop pos
+	    print "mode " $1;
+	    print "pos " posX "x" posY;
+	    # calculate position of next output
+	    split($1, wh, "x");
+	    if (stack == "vertical")
+		posY += wh[2];
+	    else
+		posX += wh[1];
+	}' \
+		| load_cfg_xrandr -
+}
+
 current_cfg() {
 	$CURRENT_CFG_METHOD;
 }
@@ -265,7 +306,7 @@ load_cfg_disper() {
 load() {
 	local PROFILE="$1"
 	local CONF="$PROFILES/$PROFILE/config"
-	local IS_VIRTUAL_PROFILE=`echo "$RESERVED_PROFILE_NAMES" | grep -q " $PROFILE	"`
+	local IS_VIRTUAL_PROFILE=`echo "$RESERVED_PROFILE_NAMES" | grep -c "^ $PROFILE "`
 	[ -f "$CONF" -o -n $IS_VIRTUAL_PROFILE ] || return 1
 	if [ -x "$PROFILES/preswitch" ]; then
 		"$PROFILES/preswitch" "$PROFILE"
@@ -283,8 +324,14 @@ load() {
 	else
 		# Virtual profiles
 		if [ $PROFILE = "common" ]; then
-			echo " -> setting largest common mode"
+			echo " -> setting largest common mode in cloned mode"
 			common_cfg_xrandr
+	        elif [ $PROFILE = "horizontal" ]; then
+			echo " -> stacking all outputs horizontally at their largest modes"
+			STACK="horizontal" stack_cfg_xrandr
+	        elif [ $PROFILE = "vertical" ]; then
+			echo " -> stacking all outputs vertically at their largest modes"
+			STACK="vertical" stack_cfg_xrandr
 		fi
 	fi
 
@@ -326,7 +373,7 @@ Usage: $SCRIPTNAME [options]
  instead of "xrandr" to detect, configure and save the display configuration.
 
  If xrandr is used, the following virtual configurations are available:
- ${RESERVED_PROFILE_NAMES}
+${RESERVED_PROFILE_NAMES}
 
 EOH
 	exit
