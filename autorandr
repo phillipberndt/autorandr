@@ -307,7 +307,12 @@ load() {
 	local PROFILE="$1"
 	local CONF="$PROFILES/$PROFILE/config"
 	local IS_VIRTUAL_PROFILE=`echo "$RESERVED_PROFILE_NAMES" | grep -c "^ $PROFILE "`
-	[ -f "$CONF" -o -n $IS_VIRTUAL_PROFILE ] || return 1
+
+	if [ ! -f "$CONF" -a $IS_VIRTUAL_PROFILE == 0 ]; then
+		echo " -> Error: Profile '$PROFILE' does not exist." >&2
+		return
+	fi
+
 	if [ -x "$PROFILES/preswitch" ]; then
 		"$PROFILES/preswitch" "$PROFILE"
 	fi
@@ -317,7 +322,7 @@ load() {
 
 	if [ -f "$CONF" ]; then
 		echo " -> loading profile $PROFILE"
-		if [ -n $IS_VIRTUAL_PROFILE ]; then
+		if [ $IS_VIRTUAL_PROFILE != 0 ]; then
 			echo " -> Warning: Existing profile overrides virtual profile with same name" >&2
 		fi
 		$LOAD_METHOD "$CONF"
