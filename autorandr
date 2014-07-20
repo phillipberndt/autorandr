@@ -49,6 +49,9 @@ DISPER=/usr/bin/disper
 XDPYINFO=/usr/bin/xdpyinfo
 PROFILES=~/.autorandr/
 CONFIG=~/.autorandr.conf
+RESERVED_PROFILE_NAMES=`cat <<EOF
+ common	Set all connected outputs to the largest common resolution in cloned mode
+EOF`
 
 CHANGE_PROFILE=0
 FORCE_LOAD=0
@@ -262,7 +265,8 @@ load_cfg_disper() {
 load() {
 	local PROFILE="$1"
 	local CONF="$PROFILES/$PROFILE/config"
-	[ -f "$CONF" -o "$PROFILE" = "common" ] || return 1
+	local IS_VIRTUAL_PROFILE=`echo "$RESERVED_PROFILE_NAMES" | grep -q " $PROFILE	"`
+	[ -f "$CONF" -o -n $IS_VIRTUAL_PROFILE ] || return 1
 	if [ -x "$PROFILES/preswitch" ]; then
 		"$PROFILES/preswitch" "$PROFILE"
 	fi
@@ -270,12 +274,18 @@ load() {
 		"$PROFILES/$PROFILE/preswitch" "$PROFILE"
 	fi
 
-	if [ $PROFILE = "common" ]; then
-		echo " -> setting largest common mode"
-		common_cfg_xrandr
-        else
+	if [ -f "$CONF" ]; then
 		echo " -> loading profile $PROFILE"
+		if [ -n $IS_VIRTUAL_PROFILE ]; then
+			echo " -> Warning: Existing profile overrides virtual profile with same name" >&2
+		fi
 		$LOAD_METHOD "$CONF"
+	else
+		# Virtual profiles
+		if [ $PROFILE = "common" ]; then
+			echo " -> setting largest common mode"
+			common_cfg_xrandr
+		fi
 	fi
 
 	if [ -x "$PROFILES/$PROFILE/postswitch" ]; then
@@ -315,6 +325,9 @@ Usage: $SCRIPTNAME [options]
  When called by the name "autodisper" or "auto-disper", the script uses "disper"
  instead of "xrandr" to detect, configure and save the display configuration.
 
+ If xrandr is used, the following virtual configurations are available:
+ ${RESERVED_PROFILE_NAMES}
+
 EOH
 	exit
 }
@@ -341,6 +354,10 @@ done
 CURRENT_SETUP="$(setup_fp)"
 
 if [ -n "$SAVE_PROFILE" ]; then
+	if echo "$RESERVED_PROFILE_NAMES" | grep -q " $SAVE_PROFILE	"; then
+		echo "Cannot save current configuration as profile '${SAVE_PROFILE}': This configuration name is a reserved virtual configuration."
+		exit 1
+	fi
 	echo "Saving current configuration as profile '${SAVE_PROFILE}'"
 	mkdir -p "$PROFILES/$SAVE_PROFILE"
 	echo "$CURRENT_SETUP" > "$PROFILES/$SAVE_PROFILE/setup"
