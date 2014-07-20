@@ -200,6 +200,9 @@ common_cfg_xrandr() {
 		    print "output " outputarr[i];
 		    print "mode " maxmode;
 		    print "pos 0x0";
+		    if (i > 0) {
+		        print "same-as " outputarr[0]
+		    }
 		}
 	    }
 	}' \
