@@ -401,7 +401,7 @@ done
 CURRENT_SETUP="$(setup_fp)"
 
 if [ -n "$SAVE_PROFILE" ]; then
-	if echo "$RESERVED_PROFILE_NAMES" | grep -q " $SAVE_PROFILE	"; then
+	if echo "$RESERVED_PROFILE_NAMES" | grep -q "^ $SAVE_PROFILE "; then
 		echo "Cannot save current configuration as profile '${SAVE_PROFILE}': This configuration name is a reserved virtual configuration."
 		exit 1
 	fi
