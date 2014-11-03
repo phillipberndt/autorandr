@@ -47,7 +47,7 @@
 XRANDR=/usr/bin/xrandr
 DISPER=/usr/bin/disper
 XDPYINFO=/usr/bin/xdpyinfo
-PROFILES=~/.autorandr/
+PROFILES=~/.autorandr
 CONFIG=~/.autorandr.conf
 RESERVED_PROFILE_NAMES=`cat <<EOF
  common     Clone all connected outputs at the largest common resolution
