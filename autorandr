@@ -277,26 +277,34 @@ config_equal() {
 load_cfg_xrandr() {
 	# sed 1: Prefix arguments with "--"
 	# sed 2: Merge arguments into one line per output
-	# sed 3: Merge into two lines, all --off outputs in the first one
+	# sed 3:  * Merge all --off outputs into the first line
+	#         * Place the output with --pos 0x0 on the second line
+	#         * Remaining outputs are appended as they appear
+	#         * Keep everything in hold buffer until the last line
+	# sed 4: Remove empty lines caused by G and H on empty hold buffer
 	sed 's/^/--/' "$1" | sed -e '
 		:START
 		/\n--output/{P;D}
 		s/\n/ /
 		N;bSTART' | sed -e '
-			### First line
 			/ --off/{
 				G
-				# Merge if next line contains --off
+				# Merge with next line if it contains --off
 				s/\n\([^\n]* --off\)/ \1/
 				h
 				$!d;b
 			}
-			### Last line
-			H;x
-			# Merge if previous line contains --mode
-			s/\(--mode [^\n]*\)\n/\1 /
-			h
-			$!d' | xargs -L 1 $XRANDR
+			/ --pos 0x0/{
+				G
+				# Swap lines 1 and 2 if --off is found
+				/ --off/ s/^\([^\n]*\)\n\([^\n]*\)/\2\n\1/
+				h
+				$!d;b
+			}
+			H
+			$!d
+			x' | sed -e '
+				/./ !d' | xargs -L 1 $XRANDR
 }
 
 load_cfg_disper() {
