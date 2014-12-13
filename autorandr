@@ -282,6 +282,7 @@ load_cfg_xrandr() {
 	#         * Remaining outputs are appended as they appear
 	#         * Keep everything in hold buffer until the last line
 	# sed 4: Remove empty lines caused by G and H on empty hold buffer
+	# sed 5: Join lines enabling screens in pairs of two (See https://github.com/phillipberndt/autorandr/pull/6)
 	sed 's/^/--/' "$1" | sed -e '
 		:START
 		/\n--output/{P;D}
@@ -304,7 +305,9 @@ load_cfg_xrandr() {
 			H
 			$!d
 			x' | sed -e '
-				/./ !d' | xargs -L 1 $XRANDR
+				/./ !d' | sed -e '
+					/--mode/{ N; s/\n/ /; }
+				' | xargs -L 1 $XRANDR
 }
 
 load_cfg_disper() {
