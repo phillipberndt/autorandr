@@ -2,26 +2,38 @@
 
 Automatically select a display configuration based on connected devices
 
-Stefan Tomanek <[stefan.tomanek@wertarbyte.de](stefan.tomanek@wertarbyte.de)>
-
 ## Branch information
 
-The original wertarbyte/autorandr tree seems unmaintained, with lots of open
-pull requests and issues. I forked it and merged what I thought were the most
-important changes. I will maintain this branch until wertarbyte finds the time
-to maintain his branch again.
+The original [wertarbyte/autorandr](https://github.com/wertarbyte/autorandr)
+tree seems unmaintained, with lots of open pull requests and issues. I forked
+it and merged what I thought were the most important changes. I will maintain
+this branch until @wertarbyte finds the time to maintain his branch again.
 
 ## License information and authors
 
-autorandr was originally written by Stefan Tomanek and not published under any
-Open Source license. He did so far not respond to requests regarding the code's
-license. In this fork, all code has been reimplemented by various authors that
+Stefan Tomanek came up with and wrote the initial version of autorandr. He
+currently does not maintain it, and did not express his opinion concerning an
+OSS license in two independent requests. To resolve the licensing issue, all
+non-trivial code in this fork has been reimplemented by various authors that
 have agreed to release their code under the terms of the GNU General Public
 License (version 3).
 
-Note that this license only applies to versions of autorandr from this fork
-that are committed after issue #7 is closed, and versions derived from that
-one. In particular, wertarbyte's original repository is still not OSS.
+This license will apply to versions of autorandr from this fork that are
+committed after issue #7 has been resolved, and versions derived from that one.
+**In particular, wertarbyte's original repository is still not OSS, and the current
+version in this repository is neither.**
+
+Contributors to this version of autorandr are:
+
+* Alexander Wirt
+* Chris Dunder
+* Maciej Sitarz
+* Matthew R Johnson
+* Phillip Berndt
+* Timo Bingmann
+* Tomasz Bogdal
+* stormc
+* tachylatus
 
 ## How to use
 
