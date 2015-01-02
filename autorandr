@@ -453,7 +453,27 @@ for SETUP_FILE in $PROFILES/*/setup; do
 		continue
 	fi
 
-	FILE_SETUP="$(cat "$PROFILES/$PROFILE/setup")"
+	# This sed command is for compatibility with old versions that did not try
+	# to normalize device names
+	FILE_SETUP="$(sed -re 's#-([A-Z]-)?##g; s#card[0-9]##;' "$PROFILES/$PROFILE/setup")"
+	# Detect the md5sum in fingerprint files created using the old sysfs fingerprinting
+	# If it is detected, output a warning and calculate the legacy variant of the current
+	# setup.
+	if echo "$FILE_SETUP" | grep -Eq "^[^ ]+ [0-9a-f]{32}$"; then
+		echo -n " (Obsolete fingerprint format. Please update using --save.) "
+
+		if [ -z "$LEGACY_CURRENT_SETUP" ]; then
+			LEGACY_CURRENT_SETUP="$(echo "$CURRENT_SETUP" | while read DEVICE EDID; do
+				echo -n "${DEVICE} "
+				echo -n "${EDID}" | xxd -r -ps | md5sum - | awk '{print $1}'
+			done)"
+		fi
+		FILE_SETUP="$(echo "$FILE_SETUP" | sort)"
+		if [ "$LEGACY_CURRENT_SETUP" = "$FILE_SETUP" ]; then
+			CURRENT_SETUP="$LEGACY_CURRENT_SETUP"
+		fi
+	fi
+
 	if [ "$CURRENT_SETUP" = "$FILE_SETUP" ]; then
 		echo " (detected)"
 		if [ "$CHANGE_PROFILE" -eq 1 ]; then
