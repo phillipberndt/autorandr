@@ -80,22 +80,30 @@ fi
 
 setup_fp_xrandr_edid() {
 	$XRANDR -q --verbose | awk '
-	/^[^ ]+ (dis)?connected / { DEV=$1; }
-	$1 ~ /^[a-f0-9]+$/ { ID[DEV] = ID[DEV] $1 }
-	END { for (X in ID) { print X " " ID[X]; } }'
+	ORS="";
+	/ (dis)?connected/ { DEVICE=gensub("-([A-Z]-)?", "", "g", $1) " "; }
+	/^[[:blank:]]+EDID:/ {
+		print DEVICE
+		DEVICE=""
+		for(getline; /^[[:blank:]]+[0-9a-f]+$/; getline) {
+			print $1;
+		}
+		print "\n";
+	}
+	END {
+		print "\n";
+	}
+	'
 }
 
 setup_fp_sysfs_edid() {
-	# xrandr triggers the reloading of EDID data
+	which xxd >/dev/null 2>&1 || return
 	$XRANDR -q > /dev/null
-	# hash the EDIDs of all _connected_ devices
-	for P in /sys/class/drm/card*-*/; do
-		# nothing found
-		[ ! -d "$P" ] && continue
-		if grep -q "^connected$" < "${P}status"; then
-			echo -n "$(basename "$P") "
-			md5sum ${P}edid | awk '{print $1}'
-		fi
+	for DEVICE in /sys/class/drm/card*-*; do
+		[ -e "${DEVICE}/status" ] && grep -q "^connected$" "${DEVICE}/status" || continue
+		echo -n "$(echo "${DEVICE}/edid" | sed -re 's#^.+card[0-9]+-([^/]+).+#\1#; s#-([A-Z]-)?##') "
+			xxd -c 256 -ps "${DEVICE}/edid" | awk 'ORS=""; /.+/ { print; }'
+		echo
 	done
 }
 
@@ -115,7 +123,7 @@ setup_fp() {
 		echo "Unable to fingerprint display configuration" >&2
 		return
 	fi
-	echo "$FP"
+	echo "$FINGERPRINT" | sort
 }
 
 current_cfg_xrandr() {
