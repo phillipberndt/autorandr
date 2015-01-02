@@ -11,6 +11,17 @@ pull requests and issues. I forked it and merged what I thought were the most
 important changes. I will maintain this branch until wertarbyte finds the time
 to maintain his branch again.
 
+## License information and authors
+
+autorandr was originally written by Stefan Tomanek and not published under any
+Open Source license. He did so far not respond to requests regarding the code's
+license. In this fork, all code has been reimplemented by various authors that
+have agreed to release their code under the terms of the GNU General Public
+License (version 3).
+
+Note that this license only applies to versions of autorandr from this fork
+that are committed after issue #7 is closed, and versions derived from that
+one. In particular, wertarbyte's original repository is still not OSS.
 
 ## How to use
 

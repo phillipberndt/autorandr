@@ -2,7 +2,11 @@
 #
 # Automatically select a display configuration based on connected devices
 #
-# Stefan Tomanek <stefan.tomanek@wertarbyte.de>
+# Copyright (c) 2013 Stefan Tomanek <stefan.tomanek@wertarbyte.de>
+#
+# THIS IS _NOT_ OSS CODE!
+#
+#
 #
 # How to use:
 #
