@@ -2,55 +2,16 @@
 #
 # Automatically select a display configuration based on connected devices
 #
-# Copyright (c) 2013 Stefan Tomanek <stefan.tomanek@wertarbyte.de>
+# autorandr was originally written by Stefan Tomanek <stefan.tomanek@wertarbyte.de>
+# For licensing reasons, this version does not contain non-trivial code from the
+# original version and from authors that did not consent with OSS licensing this
+# program.
 #
-# THIS IS _NOT_ OSS CODE!
+# THIS IS _NOT_ OSS CODE YET!
 #
-#
-#
-# How to use:
-#
-# Save your current display configuration and setup with:
-#  $ autorandr --save mobile
-#
-# Connect an additional display, configure your setup and save it:
-#  $ autorandr --save docked
-#
-# Now autorandr can detect which hardware setup is active:
-#  $ autorandr
-#    mobile
-#    docked (detected)
-#
-# To automatically reload your setup, just append --change to the command line
-#
-# To manually load a profile, you can use the --load <profile> option.
-#
-# autorandr tries to avoid reloading an identical configuration. To force the
-# (re)configuration, apply --force.
-#
-# To prevent a profile from being loaded, place a script call "block" in its
-# directory. The script is evaluated before the screen setup is inspected, and
-# in case of it returning a value of 0 the profile is skipped. This can be used
-# to query the status of a docking station you are about to leave.
-#
-# If no suitable profile can be identified, the current configuration is kept.
-# To change this behaviour and switch to a fallback configuration, specify
-# --default <profile>
-#
-# Another script called "postswitch "can be placed in the directory
-# ~/.autorandr as well as in all profile directories: The scripts are executed
-# after a mode switch has taken place and can notify window managers or other
-# applications about it.
-#
-#
-# While the script uses xrandr by default, calling it by the name "autodisper"
-# or "auto-disper" forces it to use the "disper" utility, which is useful for
-# controlling nvidia chipsets. The formats for fingerprinting the current setup
-# and saving/loading the current configuration are adjusted accordingly.
 
 XRANDR=/usr/bin/xrandr
 DISPER=/usr/bin/disper
-XDPYINFO=/usr/bin/xdpyinfo
 PROFILES=~/.autorandr
 CONFIG=~/.autorandr.conf
 RESERVED_PROFILE_NAMES=`cat <<EOF
@@ -72,7 +33,6 @@ SCRIPTNAME="$(basename $0)"
 # when called as autodisper/auto-disper, we assume different defaults
 if [ "$SCRIPTNAME" = "auto-disper" ] || [ "$SCRIPTNAME" = "autodisper" ]; then
 	echo "Assuming disper defaults..." >&2
-	FP_METHODS="setup_fp_disper"
 	CURRENT_CFG_METHOD="current_cfg_disper"
 	LOAD_METHOD="load_cfg_disper"
 fi
@@ -111,31 +71,21 @@ setup_fp_sysfs_edid() {
 	done
 }
 
-setup_fp_disper() {
-	$DISPER -l | grep '^display '
-}
-
 setup_fp() {
-	local FP="";
-	for M in $FP_METHODS; do
-		FP="$($M)"
-		if [ -n "$FP" ]; then
-			break
-		fi
+	FINGERPRINT=""
+	for METHOD in $FP_METHODS; do
+		FINGERPRINT="$($METHOD)"
+		[ -n "$FINGERPRINT" ] && break
 	done
-	if [ -z "$FP" ]; then
-		echo "Unable to fingerprint display configuration" >&2
-		return
+	if [ -z "$FINGERPRINT" ]; then
+		echo "Unable to fingerprint display configuration." >&2
+		return 0
 	fi
 	echo "$FINGERPRINT" | sort
 }
 
 current_cfg_xrandr() {
-	local PRIMARY_SETUP="";
-	if [ -x "$XDPYINFO" ]; then
-		PRIMARY_SETUP="$($XDPYINFO -ext XINERAMA | awk '/^  head #0:/ {printf $3 $5}')"
-	fi
-	$XRANDR -q | awk -v primary_setup="${PRIMARY_SETUP}" '
+	$XRANDR -q | awk '
 	# display is connected and has a mode
 	/^[^ ]+ connected [^(]/ {
 		print "output "$1;
@@ -146,8 +96,6 @@ current_cfg_xrandr() {
 		}
 		else {
 			split($3, A, "+");
-			if (A[1] A[2] "," A[3] == primary_setup)
-				print "primary";
 		}
 		if (($4 == "left") || ($4 == "right")) {
 			split(A[1], B, "x");
@@ -270,20 +218,16 @@ current_cfg() {
 }
 
 blocked() {
-	local PROFILE="$1"
-	[ ! -x "$PROFILES/$PROFILE/block" ] && return 1
-
-	"$PROFILES/$PROFILE/block" "$PROFILE"
+	[ ! -x "$PROFILES/$1/block" ] && return 1
+	"$PROFILES/$1/block" "$1"
 }
 
 config_equal() {
-	local PROFILE="$1"
-	if [ "$(cat "$PROFILES/$PROFILE/config")" = "$(current_cfg)" ]; then
-		echo "Config already loaded"
+	if [ "$(cat "$PROFILES/$1/config")" = "$(current_cfg)" ]; then
+		echo "Config already loaded." >&2
 		return 0
-	else
-		return 1
 	fi
+	return 1
 }
 
 load_cfg_xrandr() {
@@ -393,12 +337,13 @@ Usage: $SCRIPTNAME [options]
  To change this behaviour and switch to a fallback configuration, specify
  --default <profile>.
 
- Another script called "postswitch "can be placed in the directory
+ Another script called "postswitch" can be placed in the directory
  ~/.autorandr as well as in any profile directories: The scripts are executed
- after a mode switch has taken place and can notify window managers.
+ after a mode switch has taken place and can notify window managers. The same
+ goes for "preswitch", which will be executed before a mode switch.
 
  When called by the name "autodisper" or "auto-disper", the script uses "disper"
- instead of "xrandr" to detect, configure and save the display configuration.
+ instead of "xrandr" to configure and save the display configuration.
 
  If xrandr is used, the following virtual configurations are available:
 ${RESERVED_PROFILE_NAMES}
@@ -445,11 +390,11 @@ if [ -n "$LOAD_PROFILE" ]; then
 	exit $?
 fi
 
-for SETUP_FILE in $PROFILES/*/setup; do
-	if ! [ -e $SETUP_FILE ]; then
-		break
-	fi
-	PROFILE="$(basename $(dirname "$SETUP_FILE"))"
+for PROFILE_PATH in $PROFILES/*; do
+	PROFILE="$(basename "$PROFILE_PATH")"
+	SETUP_FILE="${PROFILE_PATH}/setup"
+
+	[ -e $SETUP_FILE ] || continue
 	echo -n "$PROFILE"
 
 	if blocked "$PROFILE"; then
