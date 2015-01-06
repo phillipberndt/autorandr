@@ -81,15 +81,15 @@ class XrandrOutput(object):
             \+(?P<x>[0-9]+)\+(?P<y>[0-9]+)\s+                                           # Position
             (?P<rotation>[^(]\S+)?                                                      # Has a value if the output is rotated
         ).*
-        (?:\s+(?:                                                                       # Properties of the output
+        (?:\s*(?:                                                                       # Properties of the output
             Gamma: (?P<gamma>[0-9\.:\s]+) |                                             # Gamma value
             Transform: (?P<transform>[0-9\.\s]+) |                                      # Transformation matrix
             EDID: (?P<edid>[0-9a-f\s]+) |                                               # EDID of the output
-            (?![0-9])[^:\s]+:.*(?:\s\\t[\\t ].+)*                                       # Other properties
+            (?![0-9])[^:\s][^:\n]+:.*(?:\s\\t[\\t ].+)*                                       # Other properties
         ))+
         \s*
         (?:  [0-9]+x[0-9]+.+?\*current.+\s+h:.+\s+v:.+clock\s+(?P<rate>[0-9\.]+)Hz\s* | # Interesting (current) resolution: Extract rate
-          [0-9]+x[0-9]+.+\s+h:.+\s+v:.+\s* |                                            # Other resolutions
+          [0-9]+x[0-9]+.+\s+h:.+\s+v:.+\s*                                              # Other resolutions
         )*
         $
     """
@@ -127,7 +127,11 @@ class XrandrOutput(object):
     @classmethod
     def from_xrandr_output(cls, xrandr_output):
         "Instanciate an XrandrOutput from the output of `xrandr --verbose'"
-        match = re.search(XrandrOutput.XRANDR_OUTPUT_REGEXP, xrandr_output).groupdict()
+        match_object = re.search(XrandrOutput.XRANDR_OUTPUT_REGEXP, xrandr_output)
+        remainder = xrandr_output[len(match_object.group(0)):]
+        if remainder:
+            raise RuntimeError("Parsing XRandR output failed, %d bytes left." % len(remainder))
+        match = match_object.groupdict()
 
         options = {}
         if not match["connected"]:
