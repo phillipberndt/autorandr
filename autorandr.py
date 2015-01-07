@@ -79,19 +79,29 @@ class XrandrOutput(object):
             (?P<primary>primary\ )?                                                     # Might be primary screen
             (?P<width>[0-9]+)x(?P<height>[0-9]+)                                        # Resolution
             \+(?P<x>[0-9]+)\+(?P<y>[0-9]+)\s+                                           # Position
-            (?P<rotation>[^(]\S+)?                                                      # Has a value if the output is rotated
+            (?:\(0x[0-9a-fA-F]+\)\s+)?                                                  # XID
+            (?P<rotate>(?:normal|left|right|inverted))\s+                               # Rotation
+            (?:(?P<reflect>X\ and\ Y|X|Y)\ axis)?                                       # Reflection
         ).*
         (?:\s*(?:                                                                       # Properties of the output
             Gamma: (?P<gamma>[0-9\.:\s]+) |                                             # Gamma value
             Transform: (?P<transform>[0-9\.\s]+) |                                      # Transformation matrix
             EDID: (?P<edid>[0-9a-f\s]+) |                                               # EDID of the output
-            (?![0-9])[^:\s][^:\n]+:.*(?:\s\\t[\\t ].+)*                                       # Other properties
+            (?![0-9])[^:\s][^:\n]+:.*(?:\s\\t[\\t ].+)*                                 # Other properties
         ))+
         \s*
-        (?:  [0-9]+x[0-9]+.+?\*current.+\s+h:.+\s+v:.+clock\s+(?P<rate>[0-9\.]+)Hz\s* | # Interesting (current) resolution: Extract rate
-          [0-9]+x[0-9]+.+\s+h:.+\s+v:.+\s*                                              # Other resolutions
-        )*
+        (?P<modes>(?:
+            [0-9]+x[0-9]+.+?\*current.+\s+h:.+\s+v:.+clock\s+(?P<rate>[0-9\.]+)Hz\s* |  # Interesting (current) resolution: Extract rate
+            [0-9]+x[0-9]+.+\s+h:.+\s+v:.+\s*                                            # Other resolutions
+        )*)
         $
+    """
+
+    XRANDR_OUTPUT_MODES_REGEXP = """(?x)
+        (?P<width>[0-9]+)x(?P<height>[0-9]+)
+        .*?(?P<preferred>\+preferred)?
+        \s+h:.+
+        \s+v:.+clock\s+(?P<rate>[0-9\.]+)Hz
     """
 
     def __repr__(self):
@@ -126,22 +136,45 @@ class XrandrOutput(object):
 
     @classmethod
     def from_xrandr_output(cls, xrandr_output):
-        "Instanciate an XrandrOutput from the output of `xrandr --verbose'"
-        match_object = re.search(XrandrOutput.XRANDR_OUTPUT_REGEXP, xrandr_output)
+        """Instanciate an XrandrOutput from the output of `xrandr --verbose'
+
+        This method also returns a list of modes supported by the output.
+        """
+        try:
+            match_object = re.search(XrandrOutput.XRANDR_OUTPUT_REGEXP, xrandr_output)
+        except:
+            raise RuntimeError("Parsing XRandR output failed, there is an error in the regular expression.")
+        if not match_object:
+            raise RuntimeError("Parsing XRandR output failed, the regular expression did not match.")
         remainder = xrandr_output[len(match_object.group(0)):]
         if remainder:
-            raise RuntimeError("Parsing XRandR output failed, %d bytes left." % len(remainder))
+            raise RuntimeError("Parsing XRandR output failed, %d bytes left unmatched after regular expression." % len(remainder))
+
+
         match = match_object.groupdict()
+
+        modes = []
+        if match["modes"]:
+            modes = [ x.groupdict() for x in re.finditer(XrandrOutput.XRANDR_OUTPUT_MODES_REGEXP, match["modes"]) ]
 
         options = {}
         if not match["connected"]:
             options["off"] = None
             edid = None
         else:
-            if not match["rotation"]:
+            if match["rotate"] not in ("left", "right"):
                 options["mode"] = "%sx%s" % (match["width"], match["height"])
             else:
                 options["mode"] = "%sx%s" % (match["height"], match["width"])
+            options["rotate"] = match["rotate"]
+            options["reflect"] = "normal"
+            if "reflect" in match:
+                if match["reflect"] == "X":
+                    options["reflect"] = "x"
+                elif match["reflect"] == "Y":
+                    options["reflect"] = "y"
+                elif match["reflect"] == "X and Y":
+                    options["reflect"] = "xy"
             options["pos"] = "%sx%s" % (match["x"], match["y"])
             if match["transform"]:
                 transformation = ",".join(match["transform"].strip().split())
@@ -157,7 +190,7 @@ class XrandrOutput(object):
                 options["rate"] = match["rate"]
             edid = "".join(match["edid"].strip().split())
 
-        return XrandrOutput(match["output"], edid, options)
+        return XrandrOutput(match["output"], edid, options), modes
 
     @classmethod
     def from_config_file(cls, edid_map, configuration):
@@ -206,9 +239,15 @@ def parse_xrandr_output():
 
     # Split at output boundaries and instanciate an XrandrOutput per output
     split_xrandr_output = re.split("(?m)^([^ ]+ (?:(?:dis)?connected|unknown connection).*)$", xrandr_output)
-    outputs = { split_xrandr_output[i].split()[0]: XrandrOutput.from_xrandr_output("".join(split_xrandr_output[i:i+2])) for i in range(1, len(split_xrandr_output), 2) }
+    outputs = {}
+    modes = {}
+    for i in range(1, len(split_xrandr_output), 2):
+        output_name = split_xrandr_output[i].split()[0]
+        output, output_modes = XrandrOutput.from_xrandr_output("".join(split_xrandr_output[i:i+2]))
+        outputs[output_name] = output
+        modes[output_name] = output_modes
 
-    return outputs
+    return outputs, modes
 
 def load_profiles(profile_path):
     "Load the stored profiles"
@@ -318,7 +357,7 @@ def main(argv):
 
     profile_path = os.path.expanduser("~/.autorandr")
     profiles = load_profiles(profile_path)
-    config = parse_xrandr_output()
+    config, modes = parse_xrandr_output()
 
     if "--fingerprint" in options:
         output_setup(config, sys.stdout)
