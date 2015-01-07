@@ -25,6 +25,7 @@
 #      This also requires to load all resolutions into the XrandrOutputs
 
 from __future__ import print_function
+import copy
 import getopt
 
 import binascii
@@ -35,6 +36,14 @@ import subprocess
 import sys
 
 from itertools import chain
+from collections import OrderedDict
+
+virtual_profiles = [
+    # (name, description, callback)
+    ("common", "Clone all connected outputs at the largest common resolution", None),
+    ("horizontal", "Stack all connected outputs horizontally at their largest resolution", None),
+    ("vertical", "Stack all connected outputs vertically at their largest resolution", None),
+]
 
 help_text = """
 Usage: autorandr [options]
@@ -63,7 +72,6 @@ Usage: autorandr [options]
  after a mode switch has taken place and can notify window managers.
 
  The following virtual configurations are available:
-     TODO
 """.strip()
 
 class XrandrOutput(object):
@@ -239,13 +247,14 @@ def parse_xrandr_output():
 
     # Split at output boundaries and instanciate an XrandrOutput per output
     split_xrandr_output = re.split("(?m)^([^ ]+ (?:(?:dis)?connected|unknown connection).*)$", xrandr_output)
-    outputs = {}
-    modes = {}
+    outputs = OrderedDict()
+    modes = OrderedDict()
     for i in range(1, len(split_xrandr_output), 2):
         output_name = split_xrandr_output[i].split()[0]
         output, output_modes = XrandrOutput.from_xrandr_output("".join(split_xrandr_output[i:i+2]))
         outputs[output_name] = output
-        modes[output_name] = output_modes
+        if output_modes:
+            modes[output_name] = output_modes
 
     return outputs, modes
 
@@ -313,7 +322,6 @@ def save_configuration(profile_path, configuration):
     "Save a configuration into a profile"
     if not os.path.isdir(profile_path):
         os.makedirs(profile_path)
-    outputs = sorted(configuration.keys(), key=lambda x: configuration[x].sort_key)
     with open(os.path.join(profile_path, "config"), "w") as config:
         output_configuration(configuration, config)
     with open(os.path.join(profile_path, "setup"), "w") as setup:
@@ -341,9 +349,47 @@ def apply_configuration(configuration, dry_run=False):
         if subprocess.call((base_argv[:] + configuration[remaining_outputs[index]].option_vector + (configuration[remaining_outputs[index + 1]].option_vector if index < len(remaining_outputs) - 1 else []))) != 0:
             return False
 
+def generate_virtual_profile(configuration, modes, profile_name):
+    "Generate one of the virtual profiles"
+    configuration = copy.deepcopy(configuration)
+    if profile_name == "common":
+        common_resolution = [ set(( ( mode["width"], mode["height"] ) for mode in output )) for output in modes.values() ]
+        common_resolution = reduce(lambda a, b: a & b, common_resolution[1:], common_resolution[0])
+        common_resolution = sorted(common_resolution, key=lambda a: int(a[0])*int(a[1]))
+        if common_resolution:
+            for output in configuration:
+                configuration[output].options = {}
+                if output in modes:
+                    configuration[output].options["mode"] = "%sx%s" % common_resolution[-1]
+                    configuration[output].options["pos"] = "0x0"
+                else:
+                    configuration[output].options["off"] = None
+    elif profile_name in ("horizontal", "vertical"):
+        shift = 0
+        if profile_name == "horizontal":
+            shift_index = "width"
+            pos_specifier = "%sx0"
+        else:
+            shift_index = "height"
+            pos_specifier = "0x%s"
+
+        for output in configuration:
+            configuration[output].options = {}
+            if output in modes:
+                mode = sorted(modes[output], key=lambda a: int(a["width"])*int(a["height"]) + (10**6 if a["preferred"] else 0))[-1]
+                configuration[output].options["mode"] = "%sx%s" % (mode["width"], mode["height"])
+                configuration[output].options["rate"] = mode["rate"]
+                configuration[output].options["pos"] = pos_specifier % shift
+                shift += int(mode[shift_index])
+            else:
+                configuration[output].options["off"] = None
+    return configuration
+
 def exit_help():
     "Print help and exit"
     print(help_text)
+    for profile in virtual_profiles:
+        print("  %-10s %s" % profile[:2])
     sys.exit(0)
 
 def exec_scripts(profile_path, script_name):
@@ -370,6 +416,9 @@ def main(argv):
     if "-s" in options:
         options["--save"] = options["-s"]
     if "--save" in options:
+        if options["--save"] in ( x[0] for x in virtual_profiles ):
+            print("Cannot save current configuration as profile '%s': This configuration name is a reserved virtual configuration." % options["--save"])
+            sys.exit(1)
         save_configuration(os.path.join(profile_path, options["--save"]), config)
         print("Saved current configuration as profile '%s'" % options["--save"])
         sys.exit(0)
@@ -384,17 +433,17 @@ def main(argv):
         options["--load"] = options["-l"]
     if "--load" in options:
         load_profile = options["--load"]
-
-    for profile_name in profiles.keys():
-        if profile_blocked(os.path.join(profile_path, profile_name)):
-            print("%s (blocked)" % profile_name)
-            continue
-        if detected_profile == profile_name:
-            print("%s (detected)" % profile_name)
-            if "-c" in options or "--change" in options:
-                load_profile = detected_profile
-        else:
-            print(profile_name)
+    else:
+        for profile_name in profiles.keys():
+            if profile_blocked(os.path.join(profile_path, profile_name)):
+                print("%s (blocked)" % profile_name)
+                continue
+            if detected_profile == profile_name:
+                print("%s (detected)" % profile_name)
+                if "-c" in options or "--change" in options:
+                    load_profile = detected_profile
+            else:
+                print(profile_name)
 
     if "-d" in options:
         options["--default"] = options["-d"]
@@ -402,7 +451,10 @@ def main(argv):
         load_profile = options["--default"]
 
     if load_profile:
-        profile = profiles[load_profile]
+        if load_profile in ( x[0] for x in virtual_profiles ):
+            profile = generate_virtual_profile(config, modes, load_profile)
+        else:
+            profile = profiles[load_profile]
         if profile == config and not "-f" in options and not "--force" in options:
             print("Config already loaded")
             sys.exit(0)
