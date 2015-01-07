@@ -218,7 +218,7 @@ class XrandrOutput(object):
                 fuzzy_output = re.sub("(card[0-9]+|-)", "", options["output"])
                 if fuzzy_output not in fuzzy_edid_map:
                     raise RuntimeError("Failed to find a corresponding output in config/setup for output `%s'" % options["output"])
-                edid = edid_map[edid_map.keys()[fuzzy_edid_map.index(fuzzy_output)]]
+                edid = edid_map[list(edid_map.keys())[fuzzy_edid_map.index(fuzzy_output)]]
         output = options["output"]
         del options["output"]
 
