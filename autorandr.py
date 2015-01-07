@@ -265,7 +265,7 @@ def output_configuration(configuration, config):
 
 def output_setup(configuration, setup):
     "Write a setup (fingerprint) file"
-    outputs = sorted(configuration.keys(), key=lambda x: configuration[x].sort_key)
+    outputs = sorted(configuration.keys())
     for output in outputs:
         if configuration[output].edid:
             print(output, configuration[output].edid, file=setup)
