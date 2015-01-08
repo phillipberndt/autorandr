@@ -416,7 +416,11 @@ def exec_scripts(profile_path, script_name):
             subprocess.call(script)
 
 def main(argv):
-    options = dict(getopt.getopt(argv[1:], "s:l:d:cfh", [ "dry-run", "change", "default=", "save=", "load=", "force", "fingerprint", "config", "help" ])[0])
+    try:
+       options = dict(getopt.getopt(argv[1:], "s:l:d:cfh", [ "dry-run", "change", "default=", "save=", "load=", "force", "fingerprint", "config", "help" ])[0])
+    except getopt.GetoptError as e:
+        print(str(e))
+        options = { "--help": True }
 
     profile_path = os.path.expanduser("~/.autorandr")
 
