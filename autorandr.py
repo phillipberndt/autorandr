@@ -422,13 +422,13 @@ def main(argv):
 
     try:
         profiles = load_profiles(profile_path)
-    except Exception, e:
+    except Exception as e:
         print("Failed to load profiles:\n%s" % str(e), file=sys.stderr)
         sys.exit(1)
 
     try:
         config, modes = parse_xrandr_output()
-    except Exception, e:
+    except Exception as e:
         print("Failed to parse current configuration from XRandR:\n%s" % str(e), file=sys.stderr)
         sys.exit(1)
 
@@ -448,7 +448,7 @@ def main(argv):
             sys.exit(1)
         try:
             save_configuration(os.path.join(profile_path, options["--save"]), config)
-        except Exception, e:
+        except Exception as e:
             print("Failed to save current configuration as profile '%s':\n%s" % (options["--save"], str(e)), file=sys.stderr)
             sys.exit(1)
         print("Saved current configuration as profile '%s'" % options["--save"])
@@ -497,7 +497,7 @@ def main(argv):
                 exec_scripts(os.path.join(profile_path, load_profile), "preswitch")
                 apply_configuration(profile, True)
                 exec_scripts(os.path.join(profile_path, load_profile), "postswitch")
-        except Exception, e:
+        except Exception as e:
             print("Failed to apply profile '%s':\n%s" % (load_profile, str(e)), file=sys.stderr)
             sys.exit(1)
 
@@ -506,6 +506,6 @@ def main(argv):
 if __name__ == '__main__':
     try:
         main(sys.argv)
-    except Exception, e:
+    except Exception as e:
         print("General failure. Please report this as a bug:\n%s" % (str(e),), file=sys.stderr)
         sys.exit(1)
