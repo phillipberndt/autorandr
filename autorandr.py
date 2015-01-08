@@ -21,8 +21,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
-# TODO Add virtual profiles common, horizontal, vertical
-#      This also requires to load all resolutions into the XrandrOutputs
 
 from __future__ import print_function
 import copy
@@ -48,14 +46,14 @@ virtual_profiles = [
 help_text = """
 Usage: autorandr [options]
 
--h, --help 		get this small help
--c, --change 		reload current setup
--s, --save <profile>	save your current setup to profile <profile>
--l, --load <profile> 	load profile <profile>
+-h, --help              get this small help
+-c, --change            reload current setup
+-s, --save <profile>    save your current setup to profile <profile>
+-l, --load <profile>    load profile <profile>
 -d, --default <profile> make profile <profile> the default profile
---force			force (re)loading of a profile
---fingerprint		fingerprint your current hardware setup
---config		dump your current xrandr setup
+--force                 force (re)loading of a profile
+--fingerprint           fingerprint your current hardware setup
+--config                dump your current xrandr setup
 --dry-run               don't change anything, only print the xrandr commands
 
  To prevent a profile from being loaded, place a script call "block" in its
@@ -102,7 +100,6 @@ class XrandrOutput(object):
             [0-9]+x[0-9]+.+?\*current.+\s+h:.+\s+v:.+clock\s+(?P<rate>[0-9\.]+)Hz\s* |  # Interesting (current) resolution: Extract rate
             [0-9]+x[0-9]+.+\s+h:.+\s+v:.+\s*                                            # Other resolutions
         )*)
-        $
     """
 
     XRANDR_OUTPUT_MODES_REGEXP = """(?x)
@@ -153,10 +150,12 @@ class XrandrOutput(object):
         except:
             raise RuntimeError("Parsing XRandR output failed, there is an error in the regular expression.")
         if not match_object:
-            raise RuntimeError("Parsing XRandR output failed, the regular expression did not match.")
+            debug = debug_regexp(XrandrOutput.XRANDR_OUTPUT_REGEXP, xrandr_output)
+            raise RuntimeError("Parsing XRandR output failed, the regular expression did not match: %s" % debug)
         remainder = xrandr_output[len(match_object.group(0)):]
         if remainder:
-            raise RuntimeError("Parsing XRandR output failed, %d bytes left unmatched after regular expression." % len(remainder))
+            raise RuntimeError(("Parsing XRandR output failed, %d bytes left unmatched after regular expression,"
+                                "starting with ..'%s'.") % (len(remainder), remainder[:10]))
 
 
         match = match_object.groupdict()
@@ -164,6 +163,8 @@ class XrandrOutput(object):
         modes = []
         if match["modes"]:
             modes = [ x.groupdict() for x in re.finditer(XrandrOutput.XRANDR_OUTPUT_MODES_REGEXP, match["modes"]) ]
+            if not modes:
+                raise RuntimeError("Parsing XRandR output failed, couldn't find any display modes")
 
         options = {}
         if not match["connected"]:
@@ -235,6 +236,22 @@ class XrandrOutput(object):
 
     def __eq__(self, other):
         return self.edid == other.edid and self.output == other.output and self.options == other.options
+
+def debug_regexp(pattern, string):
+    "Use the partial matching functionality of the regex module to display debug info on a non-matching regular expression"
+    try:
+        import regex
+        bounds = ( 0, len(string) )
+        while bounds[0] != bounds[1]:
+            half = int((bounds[0] + bounds[1]) / 2)
+            bounds = (half, bounds[1]) if regex.search(pattern, string[:half], partial=True) else (bounds[0], half - 1)
+        partial_length = bounds[0]
+        return ("Regular expression matched until position "
+              "%d, ..'%s', and did not match from '%s'.." % (partial_length, string[max(0, partial_length-20):partial_length],
+                                                             string[partial_length:partial_length+10]))
+    except ImportError:
+        pass
+    return "Debug information available if `regex' module is installed."
 
 def parse_xrandr_output():
     "Parse the output of `xrandr --verbose' into a list of outputs"
@@ -402,8 +419,18 @@ def main(argv):
     options = dict(getopt.getopt(argv[1:], "s:l:d:cfh", [ "dry-run", "change", "default=", "save=", "load=", "force", "fingerprint", "config", "help" ])[0])
 
     profile_path = os.path.expanduser("~/.autorandr")
-    profiles = load_profiles(profile_path)
-    config, modes = parse_xrandr_output()
+
+    try:
+        profiles = load_profiles(profile_path)
+    except Exception, e:
+        print("Failed to load profiles:\n%s" % str(e), file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        config, modes = parse_xrandr_output()
+    except Exception, e:
+        print("Failed to parse current configuration from XRandR:\n%s" % str(e), file=sys.stderr)
+        sys.exit(1)
 
     if "--fingerprint" in options:
         output_setup(config, sys.stdout)
@@ -417,9 +444,13 @@ def main(argv):
         options["--save"] = options["-s"]
     if "--save" in options:
         if options["--save"] in ( x[0] for x in virtual_profiles ):
-            print("Cannot save current configuration as profile '%s': This configuration name is a reserved virtual configuration." % options["--save"])
+            print("Cannot save current configuration as profile '%s':\nThis configuration name is a reserved virtual configuration." % options["--save"])
             sys.exit(1)
-        save_configuration(os.path.join(profile_path, options["--save"]), config)
+        try:
+            save_configuration(os.path.join(profile_path, options["--save"]), config)
+        except Exception, e:
+            print("Failed to save current configuration as profile '%s':\n%s" % (options["--save"], str(e)), file=sys.stderr)
+            sys.exit(1)
         print("Saved current configuration as profile '%s'" % options["--save"])
         sys.exit(0)
 
@@ -459,11 +490,22 @@ def main(argv):
             print("Config already loaded")
             sys.exit(0)
 
-        exec_scripts(os.path.join(profile_path, load_profile), "preswitch")
-        apply_configuration(profile, "--dry-run" in options)
-        exec_scripts(os.path.join(profile_path, load_profile), "postswitch")
+        try:
+            if "--dry-run" in options:
+                apply_configuration(profile, True)
+            else:
+                exec_scripts(os.path.join(profile_path, load_profile), "preswitch")
+                apply_configuration(profile, True)
+                exec_scripts(os.path.join(profile_path, load_profile), "postswitch")
+        except Exception, e:
+            print("Failed to apply profile '%s':\n%s" % (load_profile, str(e)), file=sys.stderr)
+            sys.exit(1)
 
     sys.exit(0)
 
 if __name__ == '__main__':
-    main(sys.argv)
+    try:
+        main(sys.argv)
+    except Exception, e:
+        print("General failure. Please report this as a bug:\n%s" % (str(e),), file=sys.stderr)
+        sys.exit(1)
