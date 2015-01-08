@@ -499,7 +499,7 @@ def main(argv):
                 apply_configuration(profile, True)
             else:
                 exec_scripts(os.path.join(profile_path, load_profile), "preswitch")
-                apply_configuration(profile, True)
+                apply_configuration(profile, False)
                 exec_scripts(os.path.join(profile_path, load_profile), "postswitch")
         except Exception as e:
             print("Failed to apply profile '%s':\n%s" % (load_profile, str(e)), file=sys.stderr)
