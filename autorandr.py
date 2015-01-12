@@ -32,6 +32,7 @@ import os
 import re
 import subprocess
 import sys
+from distutils.version import LooseVersion as Version
 
 from itertools import chain
 from collections import OrderedDict
@@ -113,9 +114,28 @@ class XrandrOutput(object):
         return "<%s%s %s>" % (self.output, (" %s..%s" % (self.edid[:5], self.edid[-5:])) if self.edid else "", " ".join(self.option_vector))
 
     @property
+    def options_with_defaults(self):
+        "Return the options dictionary, augmented with the default values that weren't set"
+        if "off" in self.options:
+            return self.options
+        options = {}
+        if xrandr_version() >= Version("1.3"):
+            options.update({
+                "transform": "1,0,0,0,1,0,0,0,1",
+            })
+        if xrandr_version() >= Version("1.2"):
+            options.update({
+                "reflect": "normal",
+                "rotate": "normal",
+                "gamma": "1:1:1",
+            })
+        options.update(self.options)
+        return options
+
+    @property
     def option_vector(self):
         "Return the command line parameters for XRandR for this instance"
-        return sum([["--%s" % option[0], option[1]] if option[1] else ["--%s" % option[0]] for option in chain((("output", self.output),), self.options.items())], [])
+        return sum([["--%s" % option[0], option[1]] if option[1] else ["--%s" % option[0]] for option in chain((("output", self.output),), self.options_with_defaults.items())], [])
 
     @property
     def option_string(self):
@@ -175,8 +195,8 @@ class XrandrOutput(object):
                 options["mode"] = "%sx%s" % (match["width"], match["height"])
             else:
                 options["mode"] = "%sx%s" % (match["height"], match["width"])
-            options["rotate"] = match["rotate"]
-            options["reflect"] = "normal"
+            if match["rotate"] != "normal":
+                options["rotate"] = match["rotate"]
             if "reflect" in match:
                 if match["reflect"] == "X":
                     options["reflect"] = "x"
@@ -189,8 +209,6 @@ class XrandrOutput(object):
                 transformation = ",".join(match["transform"].strip().split())
                 if transformation != "1.000000,0.000000,0.000000,0.000000,1.000000,0.000000,0.000000,0.000000,1.000000":
                     options["transform"] = transformation
-                else:
-                    options["transform"] = "none"
             if match["gamma"]:
                 gamma = match["gamma"].strip()
                 if gamma != "1.0:1.0:1.0":
@@ -236,6 +254,14 @@ class XrandrOutput(object):
 
     def __eq__(self, other):
         return self.edid == other.edid and self.output == other.output and self.options == other.options
+
+def xrandr_version():
+    "Return the version of XRandR that this system uses"
+    if getattr(xrandr_version, "version", False) is False:
+        version_string = os.popen("xrandr -v").read()
+        version = re.search("xrandr program version\s+([0-9\.]+)", version_string).group(1)
+        xrandr_version.version = Version(version)
+    return xrandr_version.version
 
 def debug_regexp(pattern, string):
     "Use the partial matching functionality of the regex module to display debug info on a non-matching regular expression"
