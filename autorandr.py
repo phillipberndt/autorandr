@@ -322,6 +322,10 @@ def load_profiles(profile_path):
             else:
                 buffer.append(line)
 
+        for output_name, output in config.items():
+            if "off" in output.options:
+                del config[output_name]
+
         profiles[profile] = config
 
     return profiles
@@ -383,14 +387,21 @@ def apply_configuration(configuration, dry_run=False):
     for output in outputs:
         if not configuration[output].edid:
             argv += configuration[output].option_vector
-    if subprocess.call(argv) != 0:
-        return False
+    if argv != base_argv:
+        if subprocess.call(argv) != 0:
+            return False
 
     # Enable remaining outputs in pairs of two
     remaining_outputs = [ x for x in outputs if configuration[x].edid ]
     for index in range(0, len(remaining_outputs), 2):
         if subprocess.call((base_argv[:] + configuration[remaining_outputs[index]].option_vector + (configuration[remaining_outputs[index + 1]].option_vector if index < len(remaining_outputs) - 1 else []))) != 0:
             return False
+
+def add_unused_outputs(source_configuration, target_configuration):
+    "Add outputs that are missing in target to target, in 'off' state"
+    for output_name, output in source_configuration.items():
+        if output_name not in target_configuration:
+            target_configuration[output_name] = XrandrOutput(output_name, output.edid, { "off": None })
 
 def generate_virtual_profile(configuration, modes, profile_name):
     "Generate one of the virtual profiles"
@@ -516,6 +527,7 @@ def main(argv):
             profile = generate_virtual_profile(config, modes, load_profile)
         else:
             profile = profiles[load_profile]
+        add_unused_outputs(config, profile)
         if profile == config and not "-f" in options and not "--force" in options:
             print("Config already loaded")
             sys.exit(0)
