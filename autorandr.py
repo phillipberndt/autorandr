@@ -526,7 +526,11 @@ def main(argv):
         if load_profile in ( x[0] for x in virtual_profiles ):
             profile = generate_virtual_profile(config, modes, load_profile)
         else:
-            profile = profiles[load_profile]
+            try:
+                profile = profiles[load_profile]
+            except KeyError:
+                print("Failed to load profile '%s':\nProfile not found" % load_profile, file=sys.stderr)
+                sys.exit(1)
         add_unused_outputs(config, profile)
         if profile == config and not "-f" in options and not "--force" in options:
             print("Config already loaded")
