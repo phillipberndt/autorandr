@@ -29,8 +29,8 @@
 
 XRANDR=/usr/bin/xrandr
 DISPER=/usr/bin/disper
-PROFILES=~/.autorandr
-CONFIG=~/.autorandr.conf
+PROFILES=~/.config/autorandr/profiles
+CONFIG=~/.config/autorandr/config
 RESERVED_PROFILE_NAMES=`cat <<EOF
  common     Clone all connected outputs at the largest common resolution
  horizontal Stack all connected outputs horizontally at their largest resolution
@@ -355,7 +355,7 @@ Usage: $SCRIPTNAME [options]
  --default <profile>.
 
  Another script called "postswitch" can be placed in the directory
- ~/.autorandr as well as in any profile directories: The scripts are executed
+ ~/.config/autorandr as well as in any profile directories: The scripts are executed
  after a mode switch has taken place and can notify window managers. The same
  goes for "preswitch", which will be executed before a mode switch.
 

@@ -71,7 +71,7 @@ To change this behaviour and switch to a fallback configuration, specify
 `--default <profile>`.
 
 Another script called `postswitch` can be placed in the directory
-`~/.autorandr` as well as in all profile directories: The scripts are executed
+`~/.config/autorandr` as well as in all profile directories: The scripts are executed
 after a mode switch has taken place and can notify window managers or other
 applications about it.
 
