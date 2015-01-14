@@ -322,8 +322,8 @@ def load_profiles(profile_path):
             else:
                 buffer.append(line)
 
-        for output_name, output in config.items():
-            if "off" in output.options:
+        for output_name in list(config.keys()):
+            if "off" in config[output_name].options:
                 del config[output_name]
 
         profiles[profile] = config
