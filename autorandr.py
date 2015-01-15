@@ -459,7 +459,12 @@ def main(argv):
         print(str(e))
         options = { "--help": True }
 
-    profile_path = os.path.expanduser("~/.config/autorandr/profiles")
+
+    profile_dir = os.path.expanduser("~/.autorandr")
+    if not os.path.isdir(profile_dir):
+        profile_dir = os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "autorandr")
+    
+    profile_path = os.path.join(profile_dir, "profiles")
 
     try:
         profiles = load_profiles(profile_path)
