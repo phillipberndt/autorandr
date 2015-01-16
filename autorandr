@@ -162,6 +162,7 @@ current_cfg_xrandr() {
 	$XRANDR -q | awk -v primary_setup="${PRIMARY_SETUP}" '
 	# display is connected and has a mode
 	/^[^ ]+ connected [^(]/ {
+		output=$1
 		print "output "$1;
 		if ($3 == "primary") {
 			print $3
@@ -187,9 +188,19 @@ current_cfg_xrandr() {
 		}
 		next;
 	}
+	/  [0-9]+x[0-9]+ .+/ {
+		if (output) {
+			for (n=1; n<10; n++) {
+				if($n ~ /[0-9]+\.[0-9]+\*/) {
+					print "rate " gensub(/(+|\*)/, "", "g", $n);
+				}
+			}
+		}
+	}
 	# disconnected or disabled displays
 	/^[^ ]+ (dis)?connected / ||
 	/^[^ ]+ unknown connection / {
+		output=""
 		print "output "$1;
 		print "off";
 		next;
