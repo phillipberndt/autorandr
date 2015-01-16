@@ -5,23 +5,14 @@ Automatically select a display configuration based on connected devices
 ## Branch information
 
 The original [wertarbyte/autorandr](https://github.com/wertarbyte/autorandr)
-tree seems unmaintained, with lots of open pull requests and issues. I forked
+tree is unmaintained, with lots of open pull requests and issues. I forked
 it and merged what I thought were the most important changes. I will maintain
 this branch until @wertarbyte finds the time to maintain his branch again.
 
 ## License information and authors
 
-Stefan Tomanek came up with and wrote the initial version of autorandr. He
-currently does not maintain it, and did not express his opinion concerning an
-OSS license in two independent requests. To resolve the licensing issue, all
-non-trivial code in this fork has been reimplemented by various authors that
-have agreed to release their code under the terms of the GNU General Public
-License (version 3).
-
-This license will apply to versions of autorandr from this fork that are
-committed after issue #7 has been resolved, and versions derived from that one.
-**In particular, wertarbyte's original repository is still not OSS, and the current
-version in this repository is neither.**
+autorandr is available under the terms of the GNU General Public License
+(version 3).
 
 Contributors to this version of autorandr are:
 
@@ -30,6 +21,7 @@ Contributors to this version of autorandr are:
 * Maciej Sitarz
 * Matthew R Johnson
 * Phillip Berndt
+* Stefan Tomanek
 * Timo Bingmann
 * Tomasz Bogdal
 * stormc
