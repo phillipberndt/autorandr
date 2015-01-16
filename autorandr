@@ -75,7 +75,7 @@ FORCE_LOAD=0
 DEFAULT_PROFILE=""
 SAVE_PROFILE=""
 
-FP_METHODS="setup_fp_sysfs_edid setup_fp_xrandr_edid"
+FP_METHODS="setup_fp_xrandr_edid setup_fp_sysfs_edid"
 CURRENT_CFG_METHOD="current_cfg_xrandr"
 LOAD_METHOD="load_cfg_xrandr"
 
