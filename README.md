@@ -27,6 +27,22 @@ Contributors to this version of autorandr are:
 * stormc
 * tachylatus
 
+## autorandr vs. autorandr.py
+
+The two files `autorandr` and `autorandr.py` are two independent versions of
+autorandr. For now, both are here, but I might move one of both versions into
+its own branch or repository someday. See [bug #7](https://github.com/phillipberndt/autorandr/issues/7)
+for details on why there are two versions around.
+
+The two versions are compatible with respect to the profile format and command
+line parameters, but
+
+* the *Python version* does not support auto-disper
+* the *bash version* does not support changes in available adapters and slightly esoteric configurations (like transformations and reflections)
+
+Active development in this repository is likely to occur preferably in the
+Python version.
+
 ## How to use
 
 Save your current display configuration and setup with:
