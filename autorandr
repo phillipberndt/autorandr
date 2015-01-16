@@ -99,6 +99,20 @@ if [ -f $CONFIG ]; then
 	. $CONFIG
 fi
 
+if ! which xxd 2>&1 >/dev/null; then
+	xxd() {
+		# xxd replacement for systems without vim. Ugly, but the only simple
+		# version that both Python 2 and 3 understand that I could come up with.
+		# awk can only do one direction, it has no ord() function.
+		if [ "$1" = "-r" ]; then
+			python -c "import binascii, sys; getattr(sys.stdout, 'buffer', sys.stdout).write(binascii.unhexlify(getattr(sys.stdin, 'buffer', sys.stdin).read()))"
+		else
+			python -c "import binascii, sys; getattr(sys.stdout, 'buffer', sys.stdout).write(binascii.hexlify(getattr(sys.stdin, 'buffer', sys.stdin).read()))"
+			echo
+		fi
+	}
+fi
+
 setup_fp_xrandr_edid() {
 	$XRANDR -q --verbose | awk '
 	ORS="";
@@ -118,12 +132,11 @@ setup_fp_xrandr_edid() {
 }
 
 setup_fp_sysfs_edid() {
-	which xxd >/dev/null 2>&1 || return
 	$XRANDR -q > /dev/null
 	for DEVICE in /sys/class/drm/card*-*; do
 		[ -e "${DEVICE}/status" ] && grep -q "^connected$" "${DEVICE}/status" || continue
 		echo -n "$(echo "${DEVICE}/edid" | sed -re 's#^.+card[0-9]+-([^/]+).+#\1#; s#-([A-Z]-)?##') "
-			xxd -c 256 -ps "${DEVICE}/edid" | awk 'ORS=""; /.+/ { print; }'
+			cat "${DEVICE}/edid" | xxd -c 256 -ps | awk 'ORS=""; /.+/ { print; }'
 		echo
 	done
 }
@@ -144,7 +157,7 @@ setup_fp() {
 		echo "Unable to fingerprint display configuration" >&2
 		return
 	fi
-	echo "$FINGERPRINT" | sort
+	echo "$FP" | sort
 }
 
 current_cfg_xrandr() {
