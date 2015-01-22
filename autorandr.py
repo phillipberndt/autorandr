@@ -242,17 +242,17 @@ class XrandrOutput(object):
             if line:
                 line = line.split(None, 1)
                 options[line[0]] = line[1] if len(line) > 1 else None
-        if "off" in options:
+
+        if options["output"] in edid_map:
+            edid = edid_map[options["output"]]
+        elif "off" in options:
             edid = None
         else:
-            if options["output"] in edid_map:
-                edid = edid_map[options["output"]]
-            else:
-                fuzzy_edid_map = [ re.sub("(card[0-9]+|-)", "", x) for x in edid_map.keys() ]
-                fuzzy_output = re.sub("(card[0-9]+|-)", "", options["output"])
-                if fuzzy_output not in fuzzy_edid_map:
-                    raise RuntimeError("Failed to find a corresponding output in config/setup for output `%s'" % options["output"])
-                edid = edid_map[list(edid_map.keys())[fuzzy_edid_map.index(fuzzy_output)]]
+            fuzzy_edid_map = [ re.sub("(card[0-9]+|-)", "", x) for x in edid_map.keys() ]
+            fuzzy_output = re.sub("(card[0-9]+|-)", "", options["output"])
+            if fuzzy_output not in fuzzy_edid_map:
+                raise RuntimeError("Failed to find a corresponding output in config/setup for output `%s'" % options["output"])
+            edid = edid_map[list(edid_map.keys())[fuzzy_edid_map.index(fuzzy_output)]]
         output = options["output"]
         del options["output"]
 
@@ -340,7 +340,7 @@ def load_profiles(profile_path):
                 buffer.append(line)
 
         for output_name in list(config.keys()):
-            if "off" in config[output_name].options:
+            if config[output_name].edid is None:
                 del config[output_name]
 
         profiles[profile] = config
