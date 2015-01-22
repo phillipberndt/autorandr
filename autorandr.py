@@ -278,6 +278,8 @@ def debug_regexp(pattern, string):
         bounds = ( 0, len(string) )
         while bounds[0] != bounds[1]:
             half = int((bounds[0] + bounds[1]) / 2)
+            if half == bounds[0]:
+                break
             bounds = (half, bounds[1]) if regex.search(pattern, string[:half], partial=True) else (bounds[0], half - 1)
         partial_length = bounds[0]
         return ("Regular expression matched until position "
