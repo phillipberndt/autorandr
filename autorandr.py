@@ -83,12 +83,14 @@ class XrandrOutput(object):
             disconnected |
             unknown\ connection |
             (?P<connected>connected)\s+                                                 # If connected:
+            (?:
             (?P<primary>primary\ )?                                                     # Might be primary screen
             (?P<width>[0-9]+)x(?P<height>[0-9]+)                                        # Resolution (might be overridden below!)
             \+(?P<x>[0-9]+)\+(?P<y>[0-9]+)\s+                                           # Position
             (?:\(0x[0-9a-fA-F]+\)\s+)?                                                  # XID
             (?P<rotate>(?:normal|left|right|inverted))\s+                               # Rotation
             (?:(?P<reflect>X\ and\ Y|X|Y)\ axis)?                                       # Reflection
+            )?                                                                          # .. but everything of the above only if the screen is in use.
         ).*
         (?:\s*(?:                                                                       # Properties of the output
             Gamma: (?P<gamma>[0-9\.:\s]+) |                                             # Gamma value
@@ -191,6 +193,9 @@ class XrandrOutput(object):
         if not match["connected"]:
             options["off"] = None
             edid = None
+        elif not match["width"]:
+            options["off"] = None
+            edid = "".join(match["edid"].strip().split())
         else:
             if "mode_width" in match:
                 options["mode"] = "%sx%s" % (match["mode_width"], match["mode_height"])
@@ -201,6 +206,8 @@ class XrandrOutput(object):
                     options["mode"] = "%sx%s" % (match["height"], match["width"])
             if match["rotate"] != "normal":
                 options["rotate"] = match["rotate"]
+            if "primary" in match and match["primary"]:
+                options["primary"] = None
             if "reflect" in match:
                 if match["reflect"] == "X":
                     options["reflect"] = "x"
