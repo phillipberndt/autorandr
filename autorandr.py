@@ -84,7 +84,7 @@ class XrandrOutput(object):
             unknown\ connection |
             (?P<connected>connected)\s+                                                 # If connected:
             (?P<primary>primary\ )?                                                     # Might be primary screen
-            (?P<width>[0-9]+)x(?P<height>[0-9]+)                                        # Resolution
+            (?P<width>[0-9]+)x(?P<height>[0-9]+)                                        # Resolution (might be overridden below!)
             \+(?P<x>[0-9]+)\+(?P<y>[0-9]+)\s+                                           # Position
             (?:\(0x[0-9a-fA-F]+\)\s+)?                                                  # XID
             (?P<rotate>(?:normal|left|right|inverted))\s+                               # Rotation
@@ -98,7 +98,8 @@ class XrandrOutput(object):
         ))+
         \s*
         (?P<modes>(?:
-            [0-9]+x[0-9]+.+?\*current.+\s+h:.+\s+v:.+clock\s+(?P<rate>[0-9\.]+)Hz\s* |  # Interesting (current) resolution: Extract rate
+            (?P<mode_width>[0-9]+)x(?P<mode_height>[0-9]+).+?\*current.+\s+
+                h:.+\s+v:.+clock\s+(?P<rate>[0-9\.]+)Hz\s* |                            # Interesting (current) resolution: Extract rate
             [0-9]+x[0-9]+.+\s+h:.+\s+v:.+\s*                                            # Other resolutions
         )*)
     """
@@ -191,10 +192,13 @@ class XrandrOutput(object):
             options["off"] = None
             edid = None
         else:
-            if match["rotate"] not in ("left", "right"):
-                options["mode"] = "%sx%s" % (match["width"], match["height"])
+            if "mode_width" in match:
+                options["mode"] = "%sx%s" % (match["mode_width"], match["mode_height"])
             else:
-                options["mode"] = "%sx%s" % (match["height"], match["width"])
+                if match["rotate"] not in ("left", "right"):
+                    options["mode"] = "%sx%s" % (match["width"], match["height"])
+                else:
+                    options["mode"] = "%sx%s" % (match["height"], match["width"])
             if match["rotate"] != "normal":
                 options["rotate"] = match["rotate"]
             if "reflect" in match:
@@ -209,6 +213,10 @@ class XrandrOutput(object):
                 transformation = ",".join(match["transform"].strip().split())
                 if transformation != "1.000000,0.000000,0.000000,0.000000,1.000000,0.000000,0.000000,0.000000,1.000000":
                     options["transform"] = transformation
+                    if "mode_width" not in match:
+                        # TODO We'd need to apply the reverse transformation here. Let's see if someone complains, I doubt that this
+                        # special case is actually required.
+                        print("Warning: Output %s has a transformation applied. Could not determine correct mode!", file=sys.stderr)
             if match["gamma"]:
                 gamma = match["gamma"].strip()
                 if gamma != "1.0:1.0:1.0":
