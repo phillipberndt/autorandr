@@ -277,8 +277,12 @@ def xrandr_version():
     "Return the version of XRandR that this system uses"
     if getattr(xrandr_version, "version", False) is False:
         version_string = os.popen("xrandr -v").read()
-        version = re.search("xrandr program version\s+([0-9\.]+)", version_string).group(1)
-        xrandr_version.version = Version(version)
+        try:
+            version = re.search("xrandr program version\s+([0-9\.]+)", version_string).group(1)
+            xrandr_version.version = Version(version)
+        except AttributeError:
+            xrandr_version.version = Version("1.3.0")
+
     return xrandr_version.version
 
 def debug_regexp(pattern, string):
