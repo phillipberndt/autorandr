@@ -483,6 +483,11 @@ def main(argv):
 
     try:
         profiles = load_profiles(profile_path)
+    except OSError as e:
+        if e.errno == 2: # No such file or directory
+            profiles = {}
+        else:
+            raise e
     except Exception as e:
         print("Failed to load profiles:\n%s" % str(e), file=sys.stderr)
         sys.exit(1)
