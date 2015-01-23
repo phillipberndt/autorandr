@@ -197,7 +197,7 @@ class XrandrOutput(object):
             options["off"] = None
             edid = "".join(match["edid"].strip().split())
         else:
-            if "mode_width" in match:
+            if "mode_width" in match and match["mode_width"]:
                 options["mode"] = "%sx%s" % (match["mode_width"], match["mode_height"])
             else:
                 if match["rotate"] not in ("left", "right"):
