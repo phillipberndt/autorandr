@@ -284,7 +284,7 @@ class XrandrOutput(object):
         return self.edid == other.edid
 
     def __eq__(self, other):
-        return self.edid == other.edid and self.output == other.output and self.options == other.options
+        return self.edid_equals(other) and self.output == other.output and self.options == other.options
 
 def xrandr_version():
     "Return the version of XRandR that this system uses"
