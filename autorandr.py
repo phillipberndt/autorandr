@@ -550,14 +550,14 @@ def main(argv):
     else:
         for profile_name in profiles.keys():
             if profile_blocked(os.path.join(profile_path, profile_name)):
-                print("%s (blocked)" % profile_name)
+                print("%s (blocked)" % profile_name, file=sys.stderr)
                 continue
             if detected_profile == profile_name:
-                print("%s (detected)" % profile_name)
+                print("%s (detected)" % profile_name, file=sys.stderr)
                 if "-c" in options or "--change" in options:
                     load_profile = detected_profile
             else:
-                print(profile_name)
+                print(profile_name, file=sys.stderr)
 
     if "-d" in options:
         options["--default"] = options["-d"]
@@ -574,8 +574,8 @@ def main(argv):
                 print("Failed to load profile '%s':\nProfile not found" % load_profile, file=sys.stderr)
                 sys.exit(1)
         add_unused_outputs(config, profile)
-        if profile == config and not "-f" in options and not "--force" in options:
-            print("Config already loaded")
+        if profile == dict(config) and not "-f" in options and not "--force" in options:
+            print("Config already loaded", file=sys.stderr)
             sys.exit(0)
 
         try:
