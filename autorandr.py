@@ -113,6 +113,18 @@ class XrandrOutput(object):
         \s+v:.+clock\s+(?P<rate>[0-9\.]+)Hz
     """
 
+    XRANDR_13_DEFAULTS = {
+        "transform": "1,0,0,0,1,0,0,0,1",
+    }
+
+    XRANDR_12_DEFAULTS = {
+        "reflect": "normal",
+        "rotate": "normal",
+        "gamma": "1.0:1.0:1.0",
+    }
+
+    XRANDR_DEFAULTS = dict(XRANDR_13_DEFAULTS.items() + XRANDR_12_DEFAULTS.items())
+
     def __repr__(self):
         return "<%s%s %s>" % (self.output, (" %s..%s" % (self.edid[:5], self.edid[-5:])) if self.edid else "", " ".join(self.option_vector))
 
@@ -123,15 +135,9 @@ class XrandrOutput(object):
             return self.options
         options = {}
         if xrandr_version() >= Version("1.3"):
-            options.update({
-                "transform": "1,0,0,0,1,0,0,0,1",
-            })
+            options.update(self.XRANDR_13_DEFAULTS)
         if xrandr_version() >= Version("1.2"):
-            options.update({
-                "reflect": "normal",
-                "rotate": "normal",
-                "gamma": "1:1:1",
-            })
+            options.update(self.XRANDR_12_DEFAULTS)
         options.update(self.options)
         return options
 
@@ -161,6 +167,16 @@ class XrandrOutput(object):
         self.output = output
         self.edid = edid
         self.options = options
+        self.remove_default_option_values()
+
+    def remove_default_option_values(self):
+        "Remove values from the options dictionary that are superflous"
+        if "off" in self.options and len(self.options.keys()) > 1:
+            self.options = { "off": None }
+            return
+        for option, default_value in self.XRANDR_DEFAULTS.items():
+            if option in self.options and self.options[option] == default_value:
+                del self.options[option]
 
     @classmethod
     def from_xrandr_output(cls, xrandr_output):
@@ -197,37 +213,34 @@ class XrandrOutput(object):
             options["off"] = None
             edid = "".join(match["edid"].strip().split())
         else:
-            if "mode_width" in match and match["mode_width"]:
+            if match["mode_width"]:
                 options["mode"] = "%sx%s" % (match["mode_width"], match["mode_height"])
             else:
                 if match["rotate"] not in ("left", "right"):
                     options["mode"] = "%sx%s" % (match["width"], match["height"])
                 else:
                     options["mode"] = "%sx%s" % (match["height"], match["width"])
-            if match["rotate"] != "normal":
-                options["rotate"] = match["rotate"]
-            if "primary" in match and match["primary"]:
+            options["rotate"] = match["rotate"]
+            if match["primary"]:
                 options["primary"] = None
-            if "reflect" in match:
-                if match["reflect"] == "X":
-                    options["reflect"] = "x"
-                elif match["reflect"] == "Y":
-                    options["reflect"] = "y"
-                elif match["reflect"] == "X and Y":
-                    options["reflect"] = "xy"
+            if match["reflect"] == "X":
+                options["reflect"] = "x"
+            elif match["reflect"] == "Y":
+                options["reflect"] = "y"
+            elif match["reflect"] == "X and Y":
+                options["reflect"] = "xy"
             options["pos"] = "%sx%s" % (match["x"], match["y"])
             if match["transform"]:
                 transformation = ",".join(match["transform"].strip().split())
                 if transformation != "1.000000,0.000000,0.000000,0.000000,1.000000,0.000000,0.000000,0.000000,1.000000":
                     options["transform"] = transformation
-                    if "mode_width" not in match:
+                    if not match["mode_width"]:
                         # TODO We'd need to apply the reverse transformation here. Let's see if someone complains, I doubt that this
                         # special case is actually required.
                         print("Warning: Output %s has a transformation applied. Could not determine correct mode!", file=sys.stderr)
             if match["gamma"]:
                 gamma = match["gamma"].strip()
-                if gamma != "1.0:1.0:1.0":
-                    options["gamma"] = gamma
+                options["gamma"] = gamma
             if match["rate"]:
                 options["rate"] = match["rate"]
             edid = "".join(match["edid"].strip().split())
