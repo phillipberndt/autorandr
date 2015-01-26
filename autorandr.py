@@ -422,7 +422,7 @@ def apply_configuration(configuration, dry_run=False):
     # Disable all unused outputs
     argv = base_argv[:]
     for output in outputs:
-        if not configuration[output].edid:
+        if not configuration[output].edid or "off" in configuration[output].options:
             argv += configuration[output].option_vector
     if argv != base_argv:
         if subprocess.call(argv) != 0:
