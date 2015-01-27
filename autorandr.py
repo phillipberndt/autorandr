@@ -123,7 +123,7 @@ class XrandrOutput(object):
         "gamma": "1.0:1.0:1.0",
     }
 
-    XRANDR_DEFAULTS = dict(XRANDR_13_DEFAULTS.items() + XRANDR_12_DEFAULTS.items())
+    XRANDR_DEFAULTS = dict(list(XRANDR_13_DEFAULTS.items()) + list(XRANDR_12_DEFAULTS.items()))
 
     def __repr__(self):
         return "<%s%s %s>" % (self.output, (" %s..%s" % (self.edid[:5], self.edid[-5:])) if self.edid else "", " ".join(self.option_vector))
