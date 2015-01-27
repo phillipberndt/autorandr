@@ -9,6 +9,12 @@ tree is unmaintained, with lots of open pull requests and issues. I forked
 it and merged what I thought were the most important changes. I will maintain
 this branch until @wertarbyte finds the time to maintain his branch again.
 
+This version is not currently under active development. If you experience any
+issues, give the Python version a try:
+
+ https://github.com/phillipberndt/autorandr
+
+
 ## License information and authors
 
 autorandr is available under the terms of the GNU General Public License
