@@ -9,7 +9,7 @@ _autorandr ()
 	prev="${COMP_WORDS[COMP_CWORD-1]}"
 
 	opts="-h -c -s -l -d"
-	lopts="--help --change --save --load --default --force --fingerprint --config"
+	lopts="--help --change --save --load --default --force --fingerprint --config --dry-run"
 	if [ -d ~/.autorandr ]; then
 		prfls="`find ~/.autorandr/* -maxdepth 1 -type d -printf '%f\n'`"
 	else
@@ -44,5 +44,3 @@ _autorandr ()
 	return 0
 }
 complete -F _autorandr autorandr
-complete -F _autorandr auto-disper
-

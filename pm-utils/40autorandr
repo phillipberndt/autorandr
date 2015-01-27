@@ -3,16 +3,7 @@
 # 40autorandr: Change autorandr profile on thaw/resume
 exec > /var/log/autorandr.log 2>&1
 
-# detect if we are being called as 40auto-disper or 40autorandr
-FORM=${0##*40}
-case $FORM in
-	auto-disper)
-		AUTORANDR="auto-disper -c --default default"
-		;;
-	*)
-		AUTORANDR="autorandr -c --default default"
-		;;
-esac
+AUTORANDR="autorandr -c --default default"
 
 detect_display()
 {

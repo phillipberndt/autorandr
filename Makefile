@@ -4,8 +4,7 @@ all:
 
 INSTALL_PATH=/usr/local/bin
 install:
-	install -D auto-disper ${DESTDIR}${INSTALL_PATH}/auto-disper
-	install -D -m 755 autorandr ${DESTDIR}${INSTALL_PATH}/autorandr
+	install -D -m 755 autorandr.py ${DESTDIR}${INSTALL_PATH}/autorandr
 	install -D -m 644 bash_completion/autorandr ${DESTDIR}/etc/bash_completion.d/autorandr
 
 hotplug:

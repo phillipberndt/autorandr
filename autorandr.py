@@ -4,7 +4,7 @@
 # autorandr.py
 # Copyright (c) 2015, Phillip Berndt
 #
-# Experimental autorandr rewrite in Python
+# Autorandr rewrite in Python
 #
 # This script aims to be fully compatible with the original autorandr.
 #

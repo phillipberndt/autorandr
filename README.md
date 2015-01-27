@@ -1,13 +1,29 @@
-# autorandr
-
+# autorandr 
 Automatically select a display configuration based on connected devices
 
 ## Branch information
 
+This is a compatible Python rewrite of
+[wertarbyte/autorandr](https://github.com/wertarbyte/autorandr).
+
 The original [wertarbyte/autorandr](https://github.com/wertarbyte/autorandr)
-tree is unmaintained, with lots of open pull requests and issues. I forked
-it and merged what I thought were the most important changes. I will maintain
-this branch until @wertarbyte finds the time to maintain his branch again.
+tree is unmaintained, with lots of open pull requests and issues. I forked it
+and merged what I thought were the most important changes. If you are searching
+for that version, see the [`legacy` branch](https://github.com/phillipberndt/autorandr/tree/legacy).
+Note that the Python version is better suited for non-standard configurations,
+like if you use `--transform` or `--reflect`. If you use `auto-disper`, you
+have to use the bash version, as there is no disper support in the Python
+version (yet). Both versions use a compatible configuration file format, so
+you can, to some extent, switch between them.  I will maintain the `legacy`
+branch until @wertarbyte finds the time to maintain his branch again.
+
+If you are interested in why there are two versions around, see
+[#7](https://github.com/phillipberndt/autorandr/issues/7),
+[#8](https://github.com/phillipberndt/autorandr/issues/8) and
+especially
+[#12](https://github.com/phillipberndt/autorandr/issues/12)
+if you are unhappy with this version and would like to contibute to the bash
+version.
 
 ## License information and authors
 
@@ -27,22 +43,6 @@ Contributors to this version of autorandr are:
 * Tomasz Bogdal
 * stormc
 * tachylatus
-
-## autorandr vs. autorandr.py
-
-The two files `autorandr` and `autorandr.py` are two independent versions of
-autorandr. For now, both are here, but I might move one of both versions into
-its own branch or repository someday. See [bug #7](https://github.com/phillipberndt/autorandr/issues/7)
-for details on why there are two versions around.
-
-The two versions are compatible with respect to the profile format and command
-line parameters, but
-
-* the *Python version* does not support auto-disper
-* the *bash version* does not support changes in available adapters and slightly esoteric configurations (like transformations and reflections)
-
-Active development in this repository is likely to occur preferably in the
-Python version.
 
 ## How to use
 
@@ -84,22 +84,5 @@ Another script called `postswitch` can be placed in the directory
 after a mode switch has taken place and can notify window managers or other
 applications about it.
 
-While the script uses xrandr by default, calling it by the name `autodisper`
-or `auto-disper` forces it to use the [disper](http://willem.engen.nl/projects/disper/)
-utility, which is useful for controlling nvidia chipsets. The formats for
-fingerprinting the current setup and saving/loading the current configuration
-are adjusted accordingly.
-
 To install autorandr call `make install`, define your setup and then call
 `make hotplug` to install hotplug scripts.
-
-For Debian using auto-disper:
-To make the screen auto-configure when your computer wakes up,
-* Copy auto-disper into /usr/local/bin/
-* Copy pm-utils/40auto-disper into /etc/pm/sleep.d/
-* (Assuming gnome) Run gnome-keybinding-properties and ADD a shortcut,
-  I called it "Run auto-disper", I set it to CTRL-F7, and the command is:
-  `auto-disper -c --default default`
-* Create a default disper setting... eg for laptop: unplug all monitors,
-  set up the screen nicely on the laptop display.
-  Then run `auto-disper --save laptop`
