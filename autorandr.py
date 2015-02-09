@@ -497,19 +497,21 @@ def main(argv):
         print(str(e))
         options = { "--help": True }
 
-    profile_dir = os.path.expanduser("~/.autorandr")
-    if not os.path.isdir(profile_dir):
-        profile_dir = os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "autorandr")
-
-    profile_path = os.path.join(profile_dir, "profiles")
-
+    profiles = {}
     try:
-        profiles = load_profiles(profile_path)
-    except OSError as e:
-        if e.errno == 2: # No such file or directory
-            profiles = {}
-        else:
-            raise e
+        # Load profiles from each XDG config directory
+        for directory in os.environ.get("XDG_CONFIG_DIRS", "").split(":"):
+            system_profile_path = os.path.join(directory, "autorandr")
+            if os.path.isdir(system_profile_path):
+                profiles.update(load_profiles(system_profile_path))
+        # For the user's profiles, prefer the legacy ~/.autorandr if it already exists
+        # profile_path is also used later on to store configurations
+        profile_path = os.path.expanduser("~/.autorandr")
+        if not os.path.isdir(profile_path):
+            # Elsewise, follow the XDG specification
+            profile_path = os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "autorandr")
+        if os.path.isdir(profile_path):
+            profiles.update(load_profiles(profile_path))
     except Exception as e:
         print("Failed to load profiles:\n%s" % str(e), file=sys.stderr)
         sys.exit(1)
