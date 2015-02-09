@@ -12,7 +12,7 @@ _autorandr ()
 	lopts="--help --change --save --load --default --force --fingerprint --config --dry-run"
 	if [ -d ~/.autorandr ]; then
 		prfls="`find ~/.autorandr/* -maxdepth 1 -type d -printf '%f\n'`"
-	if [ -d ~/.config/autorandr ]; then
+	elif [ -d ~/.config/autorandr ]; then
 		prfls="`find ~/.config/autorandr/* -maxdepth 1 -type d -printf '%f\n'`"
 	else
 		prfls=""
