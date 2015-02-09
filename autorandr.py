@@ -66,9 +66,10 @@ Usage: autorandr [options]
  To change this behaviour and switch to a fallback configuration, specify
  --default <profile>.
 
- Another script called "postswitch "can be placed in the directory
- ~/.config/autorandr as well as in any profile directories: The scripts are executed
- after a mode switch has taken place and can notify window managers.
+ Another script called "postswitch" can be placed in the directory
+ ~/.config/autorandr (or ~/.autorandr if you have an old installation) as well
+ as in any profile directories: The scripts are executed after a mode switch
+ has taken place and can notify window managers.
 
  The following virtual configurations are available:
 """.strip()
