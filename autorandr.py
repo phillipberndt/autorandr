@@ -95,7 +95,7 @@ class XrandrOutput(object):
         ).*
         (?:\s*(?:                                                                       # Properties of the output
             Gamma: (?P<gamma>[0-9\.:\s]+) |                                             # Gamma value
-            Transform: (?P<transform>[0-9\.\s]+) |                                      # Transformation matrix
+            Transform: (?P<transform>[\-0-9\.\s]+) |                                    # Transformation matrix
             EDID: (?P<edid>[0-9a-f\s]+) |                                               # EDID of the output
             (?![0-9])[^:\s][^:\n]+:.*(?:\s\\t[\\t ].+)*                                 # Other properties
         ))+
