@@ -94,9 +94,9 @@ class XrandrOutput(object):
             )?                                                                          # .. but everything of the above only if the screen is in use.
         ).*
         (?:\s*(?:                                                                       # Properties of the output
-            Gamma: (?P<gamma>[0-9\.:\s]+) |                                             # Gamma value
-            Transform: (?P<transform>[\-0-9\.\s]+) |                                    # Transformation matrix
-            EDID: (?P<edid>[0-9a-f\s]+) |                                               # EDID of the output
+            Gamma: (?P<gamma>[0-9\.: ]+) |                                              # Gamma value
+            Transform: (?P<transform>(?:[\-0-9\.]+\s+){3}) |                            # Transformation matrix
+            EDID: (?P<edid>\s*?(?:\\n\\t\\t[0-9a-f]+)+) |                               # EDID of the output
             (?![0-9])[^:\s][^:\n]+:.*(?:\s\\t[\\t ].+)*                                 # Other properties
         ))+
         \s*
@@ -186,6 +186,7 @@ class XrandrOutput(object):
         This method also returns a list of modes supported by the output.
         """
         try:
+            xrandr_output = xrandr_output.replace("\r\n", "\n")
             match_object = re.search(XrandrOutput.XRANDR_OUTPUT_REGEXP, xrandr_output)
         except:
             raise RuntimeError("Parsing XRandR output failed, there is an error in the regular expression.")
@@ -194,9 +195,8 @@ class XrandrOutput(object):
             raise RuntimeError("Parsing XRandR output failed, the regular expression did not match: %s" % debug)
         remainder = xrandr_output[len(match_object.group(0)):]
         if remainder:
-            raise RuntimeError(("Parsing XRandR output failed, %d bytes left unmatched after regular expression,"
-                                "starting with ..'%s'.") % (len(remainder), remainder[:10]))
-
+            raise RuntimeError(("Parsing XRandR output failed, %d bytes left unmatched after regular expression, "
+                                "starting at byte %d with ..'%s'.") % (len(remainder), len(len(match_object.group(0))), remainder[:10]))
 
         match = match_object.groupdict()
 
