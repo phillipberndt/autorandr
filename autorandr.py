@@ -422,18 +422,29 @@ def apply_configuration(configuration, dry_run=False):
 
     # Disable all unused outputs
     argv = base_argv[:]
+    disable_argv = []
     for output in outputs:
         if not configuration[output].edid or "off" in configuration[output].options:
-            argv += configuration[output].option_vector
-    if argv != base_argv:
-        if subprocess.call(argv) != 0:
-            return False
+            disable_argv += configuration[output].option_vector
+    if disable_argv:
+        if subprocess.call(base_argv + disable_argv) != 0:
+            # Disabling the outputs failed. Retry with the next command:
+            # Sometimes disabling of outputs fails due to an invalid RRSetScreenSize.
+            # This does not occur if simultaneously the primary screen is reset.
+            pass
+        else:
+            disable_argv = []
 
     # Enable remaining outputs in pairs of two
     remaining_outputs = [ x for x in outputs if configuration[x].edid ]
     for index in range(0, len(remaining_outputs), 2):
-        if subprocess.call((base_argv[:] + configuration[remaining_outputs[index]].option_vector + (configuration[remaining_outputs[index + 1]].option_vector if index < len(remaining_outputs) - 1 else []))) != 0:
-            return False
+        argv = base_argv[:]
+        if disable_argv:
+            argv += disable_argv
+            disable_argv = []
+        argv += configuration[remaining_outputs[index]].option_vector + (configuration[remaining_outputs[index + 1]].option_vector if index < len(remaining_outputs) - 1 else [])
+        if subprocess.call(argv) != 0:
+            raise RuntimeError("Command failed: %s" % " ".join(argv))
 
 def add_unused_outputs(source_configuration, target_configuration):
     "Add outputs that are missing in target to target, in 'off' state"
