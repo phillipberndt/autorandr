@@ -328,6 +328,8 @@ def parse_xrandr_output():
 
     # Split at output boundaries and instanciate an XrandrOutput per output
     split_xrandr_output = re.split("(?m)^([^ ]+ (?:(?:dis)?connected|unknown connection).*)$", xrandr_output)
+    if len(split_xrandr_output) < 2:
+        raise RuntimeError("No output boundaries found")
     outputs = OrderedDict()
     modes = OrderedDict()
     for i in range(1, len(split_xrandr_output), 2):
