@@ -145,12 +145,12 @@ class XrandrOutput(object):
     @property
     def option_vector(self):
         "Return the command line parameters for XRandR for this instance"
-        return sum([["--%s" % option[0], option[1]] if option[1] else ["--%s" % option[0]] for option in chain((("output", self.output),), self.options_with_defaults.items())], [])
+        return sum([["--%s" % option[0], option[1]] if option[1] else ["--%s" % option[0]] for option in chain((("output", self.output),), sorted(self.options_with_defaults.items()))], [])
 
     @property
     def option_string(self):
         "Return the command line parameters in the configuration file format"
-        return "\n".join([ " ".join(option) if option[1] else option[0] for option in chain((("output", self.output),), self.options.items())])
+        return "\n".join([ " ".join(option) if option[1] else option[0] for option in chain((("output", self.output),), sorted(self.options.items()))])
 
     @property
     def sort_key(self):
