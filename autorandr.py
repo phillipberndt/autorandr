@@ -364,24 +364,27 @@ def load_profiles(profile_path):
             if config[output_name].edid is None:
                 del config[output_name]
 
-        profiles[profile] = config
+        profiles[profile] = { "config": config, "path": os.path.join(profile_path, profile), "config-mtime": os.stat(config_name).st_mtime }
 
     return profiles
 
-def find_profile(current_config, profiles):
-    "Find a profile matching the currently connected outputs"
+def find_profiles(current_config, profiles):
+    "Find profiles matching the currently connected outputs"
+    detected_profiles = []
     for profile_name, profile in profiles.items():
+        config = profile["config"]
         matches = True
-        for name, output in profile.items():
+        for name, output in config.items():
             if not output.edid:
                 continue
             if name not in current_config or not output.edid_equals(current_config[name]):
                 matches = False
                 break
-        if not matches or any(( name not in profile.keys() for name in current_config.keys() if current_config[name].edid )):
+        if not matches or any(( name not in config.keys() for name in current_config.keys() if current_config[name].edid )):
             continue
         if matches:
-            return profile_name
+            detected_profiles.append(profile_name)
+    return detected_profiles
 
 def profile_blocked(profile_path):
     "Check if a profile is blocked"
@@ -411,6 +414,14 @@ def save_configuration(profile_path, configuration):
         output_configuration(configuration, config)
     with open(os.path.join(profile_path, "setup"), "w") as setup:
         output_setup(configuration, setup)
+
+def update_mtime(filename):
+    "Update a file's mtime"
+    try:
+        os.utime(filename, None)
+        return True
+    except:
+        return False
 
 def apply_configuration(configuration, dry_run=False):
     "Apply a configuration"
@@ -523,6 +534,8 @@ def main(argv):
             profile_path = os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "autorandr")
         if os.path.isdir(profile_path):
             profiles.update(load_profiles(profile_path))
+        # Sort by descending mtime
+        profiles = OrderedDict(sorted(profiles.items(), key=lambda x: -x[1]["config-mtime"]))
     except Exception as e:
         print("Failed to load profiles:\n%s" % str(e), file=sys.stderr)
         sys.exit(1)
@@ -558,7 +571,7 @@ def main(argv):
     if "-h" in options or "--help" in options:
         exit_help()
 
-    detected_profile = find_profile(config, profiles)
+    detected_profiles = find_profiles(config, profiles)
     load_profile = False
 
     if "-l" in options:
@@ -570,10 +583,10 @@ def main(argv):
             if profile_blocked(os.path.join(profile_path, profile_name)):
                 print("%s (blocked)" % profile_name, file=sys.stderr)
                 continue
-            if detected_profile == profile_name:
+            if profile_name in detected_profiles:
                 print("%s (detected)" % profile_name, file=sys.stderr)
-                if "-c" in options or "--change" in options:
-                    load_profile = detected_profile
+                if ("-c" in options or "--change" in options) and not load_profile:
+                    load_profile = profile_name
             else:
                 print(profile_name, file=sys.stderr)
 
@@ -584,25 +597,30 @@ def main(argv):
 
     if load_profile:
         if load_profile in ( x[0] for x in virtual_profiles ):
-            profile = generate_virtual_profile(config, modes, load_profile)
+            load_config = generate_virtual_profile(config, modes, load_profile)
+            scripts_path = os.path.join(profile_path, load_profile)
         else:
             try:
                 profile = profiles[load_profile]
+                load_config = profile["config"]
+                scripts_path = profile["path"]
             except KeyError:
                 print("Failed to load profile '%s':\nProfile not found" % load_profile, file=sys.stderr)
                 sys.exit(1)
-        add_unused_outputs(config, profile)
-        if profile == dict(config) and not "-f" in options and not "--force" in options:
+            if load_profile in detected_profiles and detected_profiles[0] != load_profile:
+                update_mtime(os.path.join(scripts_path, "config"))
+        add_unused_outputs(config, load_config)
+        if load_config == dict(config) and not "-f" in options and not "--force" in options:
             print("Config already loaded", file=sys.stderr)
             sys.exit(0)
 
         try:
             if "--dry-run" in options:
-                apply_configuration(profile, True)
+                apply_configuration(load_config, True)
             else:
-                exec_scripts(os.path.join(profile_path, load_profile), "preswitch")
-                apply_configuration(profile, False)
-                exec_scripts(os.path.join(profile_path, load_profile), "postswitch")
+                exec_scripts(scripts_path, "preswitch")
+                apply_configuration(load_config, False)
+                exec_scripts(scripts_path, "postswitch")
         except Exception as e:
             print("Failed to apply profile '%s':\n%s" % (load_profile, str(e)), file=sys.stderr)
             sys.exit(1)
