@@ -33,6 +33,7 @@ import re
 import subprocess
 import sys
 from distutils.version import LooseVersion as Version
+from copy import copy
 
 from itertools import chain
 from collections import OrderedDict
@@ -428,30 +429,34 @@ def update_mtime(filename):
 def apply_configuration(configuration, dry_run=False):
     "Apply a configuration"
     outputs = sorted(configuration.keys(), key=lambda x: configuration[x].sort_key)
+
     if dry_run:
         base_argv = [ "echo", "xrandr" ]
     else:
         base_argv = [ "xrandr" ]
 
-    # Disable all unused outputs
-    argv = base_argv[:]
-    disable_argv = []
+    # Find outputs to enable/disable
+    disable_outputs = []
+    remaining_outputs = []
     for output in outputs:
         if not configuration[output].edid or "off" in configuration[output].options:
-            disable_argv += configuration[output].option_vector
-    if disable_argv:
-        if subprocess.call(base_argv + disable_argv) != 0:
-            # Disabling the outputs failed. Retry with the next command:
-            # Sometimes disabling of outputs fails due to an invalid RRSetScreenSize.
-            # This does not occur if simultaneously the primary screen is reset.
-            pass
+            disable_outputs.append(output)
         else:
-            disable_argv = []
+            remaining_outputs.append(output)
+
+    # Sanity check
+    if not remaining_outputs and disable_outputs:
+            raise RuntimeError("No outputs to enable on selected profile!")
+
+    # First disable outputs when enabling the first output,
+    # as having zero enabled outputs can lead to errors
+    disable_argv = []
+    for output in disable_outputs:
+        disable_argv += configuration[output].option_vector
 
     # Enable remaining outputs in pairs of two
-    remaining_outputs = [ x for x in outputs if configuration[x].edid ]
     for index in range(0, len(remaining_outputs), 2):
-        argv = base_argv[:]
+        argv = copy(base_argv)
         if disable_argv:
             argv += disable_argv
             disable_argv = []
