@@ -449,6 +449,10 @@ def apply_configuration(configuration, dry_run=False):
             disable_argv = []
 
     # Enable remaining outputs in pairs of two
+    # This is required because some drivers can't handle enabling many outputs
+    # in one call. See
+    # https://github.com/phillipberndt/autorandr/pull/6
+    # and commits f4cce4d and 8429886.
     remaining_outputs = [ x for x in outputs if configuration[x].edid ]
     for index in range(0, len(remaining_outputs), 2):
         argv = base_argv[:]
