@@ -351,7 +351,7 @@ def load_profiles(profile_path):
         if not os.path.isfile(config_name) or not os.path.isfile(setup_name):
             continue
 
-        edids = dict([ x.strip().split() for x in open(setup_name).readlines() ])
+        edids = dict([ x.strip().split() for x in open(setup_name).readlines() if x.strip() ])
 
         config = {}
         buffer = []
