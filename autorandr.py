@@ -433,33 +433,39 @@ def apply_configuration(configuration, dry_run=False):
     else:
         base_argv = [ "xrandr" ]
 
-    # Disable all unused outputs
-    argv = base_argv[:]
-    disable_argv = []
+    # There are several xrandr / driver bugs we need to take care of here:
+    # - We cannot enable more than two screens at the same time
+    #   See https://github.com/phillipberndt/autorandr/pull/6
+    #   and commits f4cce4d and 8429886.
+    # - We cannot disable all screens
+    #   See https://github.com/phillipberndt/autorandr/pull/20
+    # - We should disable screens before enabling others, because there's
+    #   a limit on the number of enabled screens
+    # - We must make sure that the screen at 0x0 is activated first,
+    #   or the other (first) screen to be activated would be moved there.
+
+    disable_outputs = []
+    enable_outputs = []
     for output in outputs:
         if not configuration[output].edid or "off" in configuration[output].options:
-            disable_argv += configuration[output].option_vector
-    if disable_argv:
-        if subprocess.call(base_argv + disable_argv) != 0:
+            disable_outputs.append(configuration[output].option_vector)
+        else:
+            enable_outputs.append(configuration[output].option_vector)
+
+    # Disable all but the last of the outputs to be disabled
+    if len(disable_outputs) > 1:
+        if subprocess.call(base_argv + list(chain.from_iterable(disable_outputs[:-1]))) != 0:
             # Disabling the outputs failed. Retry with the next command:
             # Sometimes disabling of outputs fails due to an invalid RRSetScreenSize.
             # This does not occur if simultaneously the primary screen is reset.
             pass
         else:
-            disable_argv = []
+            disable_outputs = disable_outputs[-1:]
 
-    # Enable remaining outputs in pairs of two
-    # This is required because some drivers can't handle enabling many outputs
-    # in one call. See
-    # https://github.com/phillipberndt/autorandr/pull/6
-    # and commits f4cce4d and 8429886.
-    remaining_outputs = [ x for x in outputs if configuration[x].edid ]
-    for index in range(0, len(remaining_outputs), 2):
-        argv = base_argv[:]
-        if disable_argv:
-            argv += disable_argv
-            disable_argv = []
-        argv += configuration[remaining_outputs[index]].option_vector + (configuration[remaining_outputs[index + 1]].option_vector if index < len(remaining_outputs) - 1 else [])
+    # Enable the remaining outputs in pairs of two operations
+    operations = disable_outputs + enable_outputs
+    for index in range(0, len(operations), 2):
+        argv = base_argv + list(chain.from_iterable(operations[index:index+2]))
         if subprocess.call(argv) != 0:
             raise RuntimeError("Command failed: %s" % " ".join(argv))
 
@@ -468,6 +474,12 @@ def add_unused_outputs(source_configuration, target_configuration):
     for output_name, output in source_configuration.items():
         if output_name not in target_configuration:
             target_configuration[output_name] = XrandrOutput(output_name, output.edid, { "off": None })
+
+def remove_irrelevant_outputs(source_configuration, target_configuration):
+    "Remove outputs from target that ought to be 'off' and already are"
+    for output_name, output in source_configuration.items():
+        if "off" in output.options and output_name in target_configuration and "off" in target_configuration[output_name].options:
+            del target_configuration[output_name]
 
 def generate_virtual_profile(configuration, modes, profile_name):
     "Generate one of the virtual profiles"
@@ -619,6 +631,7 @@ def main(argv):
         if load_config == dict(config) and not "-f" in options and not "--force" in options:
             print("Config already loaded", file=sys.stderr)
             sys.exit(0)
+        remove_irrelevant_outputs(config, load_config)
 
         try:
             if "--dry-run" in options:
