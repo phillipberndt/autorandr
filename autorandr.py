@@ -466,7 +466,7 @@ def apply_configuration(configuration, dry_run=False):
     # disable the last two screens. This is a problem, so if this would happen, instead disable only
     # one screen in the first call below.
     if len(disable_outputs) > 0 and len(disable_outputs) % 2 == 0:
-        # In the context of a xrandr call that changes the display change, `--query' should do nothing
+        # In the context of a xrandr call that changes the display state, `--query' should do nothing
         disable_outputs.insert(0, ['--query'])
 
     # Enable the remaining outputs in pairs of two operations
