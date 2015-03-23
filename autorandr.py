@@ -390,7 +390,7 @@ def find_profiles(current_config, profiles):
 
 def profile_blocked(profile_path):
     "Check if a profile is blocked"
-    script = os.path.join(profile_path, "blocked")
+    script = os.path.join(profile_path, "block")
     if not os.access(script, os.X_OK | os.F_OK):
         return False
     return subprocess.call(script) == 0
