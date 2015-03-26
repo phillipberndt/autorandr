@@ -41,8 +41,10 @@ Contributors to this version of autorandr are:
 * Stefan Tomanek
 * Timo Bingmann
 * Tomasz Bogdal
+* Victor Häggqvist
 * stormc
 * tachylatus
+* andersonjacob
 
 ## How to use
 
