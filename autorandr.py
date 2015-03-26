@@ -126,6 +126,8 @@ class XrandrOutput(object):
 
     XRANDR_DEFAULTS = dict(list(XRANDR_13_DEFAULTS.items()) + list(XRANDR_12_DEFAULTS.items()))
 
+    EDID_UNAVAILABLE = "--CONNECTED-BUT-EDID-UNAVAILABLE-"
+
     def __repr__(self):
         return "<%s%s %s>" % (self.output, (" %s..%s" % (self.edid[:5], self.edid[-5:])) if self.edid else "", " ".join(self.option_vector))
 
@@ -212,7 +214,7 @@ class XrandrOutput(object):
             edid = None
         elif not match["width"]:
             options["off"] = None
-            edid = "".join(match["edid"].strip().split())
+            edid = "".join(match["edid"].strip().split()) if match["edid"] else "%s-%s" % (XrandrOutput.EDID_UNAVAILABLE, match["output"])
         else:
             if match["mode_width"]:
                 options["mode"] = "%sx%s" % (match["mode_width"], match["mode_height"])
@@ -244,7 +246,7 @@ class XrandrOutput(object):
                 options["gamma"] = gamma
             if match["rate"]:
                 options["rate"] = match["rate"]
-            edid = "".join(match["edid"].strip().split())
+            edid = "".join(match["edid"].strip().split()) if match["edid"] else "%s-%s" % (XrandrOutput.EDID_UNAVAILABLE, match["output"])
 
         return XrandrOutput(match["output"], edid, options), modes
 
@@ -278,9 +280,9 @@ class XrandrOutput(object):
     def edid_equals(self, other):
         "Compare to another XrandrOutput's edid and on/off-state, taking legacy autorandr behaviour (md5sum'ing) into account"
         if self.edid and other.edid:
-            if len(self.edid) == 32 and len(other.edid) != 32:
+            if len(self.edid) == 32 and len(other.edid) != 32 and not other.edid.startswith(XrandrOutput.EDID_UNAVAILABLE):
                 return hashlib.md5(binascii.unhexlify(other.edid)).hexdigest() == self.edid
-            if len(self.edid) != 32 and len(other.edid) == 32:
+            if len(self.edid) != 32 and len(other.edid) == 32 and not self.edid.startswith(XrandrOutput.EDID_UNAVAILABLE):
                 return hashlib.md5(binascii.unhexlify(self.edid)).hexdigest() == other.edid
         return self.edid == other.edid
 
