@@ -83,16 +83,17 @@ class XrandrOutput(object):
         (?:                                                                             # Differentiate disconnected and connected in first line
             disconnected |
             unknown\ connection |
-            (?P<connected>connected)\s+                                                 # If connected:
-            (?:
+            (?P<connected>connected)
+        )
+        (?:\s*
             (?P<primary>primary\ )?                                                     # Might be primary screen
             (?P<width>[0-9]+)x(?P<height>[0-9]+)                                        # Resolution (might be overridden below!)
             \+(?P<x>[0-9]+)\+(?P<y>[0-9]+)\s+                                           # Position
             (?:\(0x[0-9a-fA-F]+\)\s+)?                                                  # XID
             (?P<rotate>(?:normal|left|right|inverted))\s+                               # Rotation
             (?:(?P<reflect>X\ and\ Y|X|Y)\ axis)?                                       # Reflection
-            )?                                                                          # .. but everything of the above only if the screen is in use.
-        ).*
+        )?                                                                              # .. but everything of the above only if the screen is in use.
+        (?:[\ \t]*\(.+)?
         (?:\s*(?:                                                                       # Properties of the output
             Gamma: (?P<gamma>[0-9\.: ]+) |                                              # Gamma value
             Transform: (?P<transform>(?:[\-0-9\. ]+\s+){3}) |                           # Transformation matrix
@@ -158,6 +159,8 @@ class XrandrOutput(object):
     def sort_key(self):
         "Return a key to sort the outputs for xrandr invocation"
         if not self.edid:
+            return -2
+        if "off" in self.options:
             return -1
         if "pos" in self.options:
             x, y = map(float, self.options["pos"].split("x"))
@@ -210,11 +213,12 @@ class XrandrOutput(object):
 
         options = {}
         if not match["connected"]:
-            options["off"] = None
             edid = None
-        elif not match["width"]:
-            options["off"] = None
+        else:
             edid = "".join(match["edid"].strip().split()) if match["edid"] else "%s-%s" % (XrandrOutput.EDID_UNAVAILABLE, match["output"])
+
+        if not match["width"]:
+            options["off"] = None
         else:
             if match["mode_width"]:
                 options["mode"] = "%sx%s" % (match["mode_width"], match["mode_height"])
@@ -246,7 +250,6 @@ class XrandrOutput(object):
                 options["gamma"] = gamma
             if match["rate"]:
                 options["rate"] = match["rate"]
-            edid = "".join(match["edid"].strip().split()) if match["edid"] else "%s-%s" % (XrandrOutput.EDID_UNAVAILABLE, match["output"])
 
         return XrandrOutput(match["output"], edid, options), modes
 
