@@ -430,9 +430,9 @@ def update_mtime(filename):
     except:
         return False
 
-def apply_configuration(configuration, dry_run=False):
+def apply_configuration(new_configuration, current_configuration, dry_run=False):
     "Apply a configuration"
-    outputs = sorted(configuration.keys(), key=lambda x: configuration[x].sort_key)
+    outputs = sorted(new_configuration.keys(), key=lambda x: new_configuration[x].sort_key)
     if dry_run:
         base_argv = [ "echo", "xrandr" ]
     else:
@@ -448,24 +448,41 @@ def apply_configuration(configuration, dry_run=False):
     #   a limit on the number of enabled screens
     # - We must make sure that the screen at 0x0 is activated first,
     #   or the other (first) screen to be activated would be moved there.
+    # - If an active screen already has a transformation and remains active,
+    #   the xrandr call fails with an invalid RRSetScreenSize parameter error.
+    #   Update the configuration in 3 passes in that case.  (On Haswell graphics,
+    #   at least.)
 
+    auxiliary_changes_pre = []
     disable_outputs = []
     enable_outputs = []
+    remain_active_count = 0
     for output in outputs:
-        if not configuration[output].edid or "off" in configuration[output].options:
-            disable_outputs.append(configuration[output].option_vector)
+        if not new_configuration[output].edid or "off" in new_configuration[output].options:
+            disable_outputs.append(new_configuration[output].option_vector)
         else:
-            enable_outputs.append(configuration[output].option_vector)
+            if "off" not in current_configuration[output].options:
+                remain_active_count += 1
+            enable_outputs.append(new_configuration[output].option_vector)
+            if xrandr_version() >= Version("1.3.0") and "transform" in current_configuration[output].options:
+                auxiliary_changes_pre.append(["--output", output, "--transform", "none"])
 
-    # Disable all but the last of the outputs to be disabled
-    if len(disable_outputs) > 1:
-        if subprocess.call(base_argv + list(chain.from_iterable(disable_outputs[:-1]))) != 0:
+    # Perform pe-change auxiliary changes
+    if auxiliary_changes_pre:
+        argv = base_argv + list(chain.from_iterable(auxiliary_changes_pre))
+        if subprocess.call(argv) != 0:
+            raise RuntimeError("Command failed: %s" % " ".join(argv))
+
+    # Disable unused outputs, but make sure that there always is at least one active screen
+    disable_keep = 0 if remain_active_count else 1
+    if len(disable_outputs) > disable_keep:
+        if subprocess.call(base_argv + list(chain.from_iterable(disable_outputs[:-1] if disable_keep else disable_outputs))) != 0:
             # Disabling the outputs failed. Retry with the next command:
             # Sometimes disabling of outputs fails due to an invalid RRSetScreenSize.
             # This does not occur if simultaneously the primary screen is reset.
             pass
         else:
-            disable_outputs = disable_outputs[-1:]
+            disable_outputs = disable_outputs[-1:] if disable_keep else []
 
     # If disable_outputs still has more than one output in it, one of the xrandr-calls below would
     # disable the last two screens. This is a problem, so if this would happen, instead disable only
@@ -647,10 +664,10 @@ def main(argv):
 
         try:
             if "--dry-run" in options:
-                apply_configuration(load_config, True)
+                apply_configuration(load_config, config, True)
             else:
                 exec_scripts(scripts_path, "preswitch")
-                apply_configuration(load_config, False)
+                apply_configuration(load_config, config, False)
                 exec_scripts(scripts_path, "postswitch")
         except Exception as e:
             print("Failed to apply profile '%s':\n%s" % (load_profile, str(e)), file=sys.stderr)
