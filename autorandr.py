@@ -85,8 +85,9 @@ class XrandrOutput(object):
             unknown\ connection |
             (?P<connected>connected)
         )
-        (?:\s*
-            (?P<primary>primary\ )?                                                     # Might be primary screen
+        \s*
+        (?P<primary>primary\ )?                                                         # Might be primary screen
+        (?:\s*                                                                          # The remainder of the first line only appears as one or not at all:
             (?P<width>[0-9]+)x(?P<height>[0-9]+)                                        # Resolution (might be overridden below!)
             \+(?P<x>[0-9]+)\+(?P<y>[0-9]+)\s+                                           # Position
             (?:\(0x[0-9a-fA-F]+\)\s+)?                                                  # XID
