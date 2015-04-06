@@ -87,14 +87,15 @@ class XrandrOutput(object):
         )
         \s*
         (?P<primary>primary\ )?                                                         # Might be primary screen
-        (?:\s*                                                                          # The remainder of the first line only appears as one or not at all:
+        (?:\s*
             (?P<width>[0-9]+)x(?P<height>[0-9]+)                                        # Resolution (might be overridden below!)
             \+(?P<x>[0-9]+)\+(?P<y>[0-9]+)\s+                                           # Position
             (?:\(0x[0-9a-fA-F]+\)\s+)?                                                  # XID
             (?P<rotate>(?:normal|left|right|inverted))\s+                               # Rotation
             (?:(?P<reflect>X\ and\ Y|X|Y)\ axis)?                                       # Reflection
         )?                                                                              # .. but everything of the above only if the screen is in use.
-        (?:[\ \t]*\(.+)?
+        (?:[\ \t]*\([^\)]+\))(?:\s*[0-9]+mm\sx\s[0-9]+mm)?
+        (?:[\ \t]*panning\ (?P<panning>[0-9]+x[0-9]+\+[0-9]+\+[0-9]+))?                 # Panning information
         (?:\s*(?:                                                                       # Properties of the output
             Gamma: (?P<gamma>[0-9\.: ]+) |                                              # Gamma value
             Transform: (?P<transform>(?:[\-0-9\. ]+\s+){3}) |                           # Transformation matrix
@@ -118,6 +119,7 @@ class XrandrOutput(object):
 
     XRANDR_13_DEFAULTS = {
         "transform": "1,0,0,0,1,0,0,0,1",
+        "panning": "0x0",
     }
 
     XRANDR_12_DEFAULTS = {
@@ -238,6 +240,8 @@ class XrandrOutput(object):
             elif match["reflect"] == "X and Y":
                 options["reflect"] = "xy"
             options["pos"] = "%sx%s" % (match["x"], match["y"])
+            if match["panning"]:
+                options["panning"] = match["panning"]
             if match["transform"]:
                 transformation = ",".join(match["transform"].strip().split())
                 if transformation != "1.000000,0.000000,0.000000,0.000000,1.000000,0.000000,0.000000,0.000000,1.000000":
