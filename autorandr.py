@@ -106,9 +106,9 @@ class XrandrOutput(object):
         ))+
         \s*
         (?P<modes>(?:
-            (?P<mode_width>[0-9]+)x(?P<mode_height>[0-9]+).+?\*current.+\s+
+            (?P<mode_width>[0-9]+)x(?P<mode_height>[0-9]+).+?\*current.*\s+
                 h:.+\s+v:.+clock\s+(?P<rate>[0-9\.]+)Hz\s* |                            # Interesting (current) resolution: Extract rate
-            [0-9]+x[0-9]+.+\s+h:.+\s+v:.+\s*                                            # Other resolutions
+            [0-9]+x[0-9]+(?:(?!\*current).)+\s+h:.+\s+v:.+\s*                           # Other resolutions
         )*)
     """
 
