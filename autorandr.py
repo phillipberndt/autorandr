@@ -96,6 +96,8 @@ class XrandrOutput(object):
         )?                                                                              # .. but everything of the above only if the screen is in use.
         (?:[\ \t]*\([^\)]+\))(?:\s*[0-9]+mm\sx\s[0-9]+mm)?
         (?:[\ \t]*panning\ (?P<panning>[0-9]+x[0-9]+\+[0-9]+\+[0-9]+))?                 # Panning information
+        (?:[\ \t]*tracking\ (?P<tracking>[0-9]+x[0-9]+\+[0-9]+\+[0-9]+))?               # Tracking information
+        (?:[\ \t]*border\ (?P<border>(?:[0-9]+/){3}[0-9]+))?                            # Border information
         (?:\s*(?:                                                                       # Properties of the output
             Gamma: (?P<gamma>[0-9\.: ]+) |                                              # Gamma value
             Transform: (?P<transform>(?:[\-0-9\. ]+\s+){3}) |                           # Transformation matrix
@@ -241,7 +243,12 @@ class XrandrOutput(object):
                 options["reflect"] = "xy"
             options["pos"] = "%sx%s" % (match["x"], match["y"])
             if match["panning"]:
-                options["panning"] = match["panning"]
+                panning = [ match["panning"] ]
+                if match["tracking"]:
+                    panning += [ "/", match["tracking"] ]
+                    if match["border"]:
+                        panning += [ "/", match["border"] ]
+                options["panning"] = "".join(panning)
             if match["transform"]:
                 transformation = ",".join(match["transform"].strip().split())
                 if transformation != "1.000000,0.000000,0.000000,0.000000,1.000000,0.000000,0.000000,0.000000,1.000000":
