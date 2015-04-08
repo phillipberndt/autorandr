@@ -89,7 +89,7 @@ class XrandrOutput(object):
         (?P<primary>primary\ )?                                                         # Might be primary screen
         (?:\s*
             (?P<width>[0-9]+)x(?P<height>[0-9]+)                                        # Resolution (might be overridden below!)
-            \+(?P<x>[0-9]+)\+(?P<y>[0-9]+)\s+                                           # Position
+            \+(?P<x>-?[0-9]+)\+(?P<y>-?[0-9]+)\s+                                       # Position
             (?:\(0x[0-9a-fA-F]+\)\s+)?                                                  # XID
             (?P<rotate>(?:normal|left|right|inverted))\s+                               # Rotation
             (?:(?P<reflect>X\ and\ Y|X|Y)\ axis)?                                       # Reflection
