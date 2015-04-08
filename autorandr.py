@@ -206,7 +206,7 @@ class XrandrOutput(object):
         remainder = xrandr_output[len(match_object.group(0)):]
         if remainder:
             raise RuntimeError(("Parsing XRandR output failed, %d bytes left unmatched after regular expression, "
-                                "starting at byte %d with ..'%s'.") % (len(remainder), len(len(match_object.group(0))), remainder[:10]))
+                                "starting at byte %d with ..'%s'.") % (len(remainder), len(match_object.group(0)), remainder[:10]))
 
         match = match_object.groupdict()
 
@@ -256,7 +256,7 @@ class XrandrOutput(object):
                     if not match["mode_width"]:
                         # TODO We'd need to apply the reverse transformation here. Let's see if someone complains, I doubt that this
                         # special case is actually required.
-                        print("Warning: Output %s has a transformation applied. Could not determine correct mode!", file=sys.stderr)
+                        print("Warning: Output %s has a transformation applied. Could not determine correct mode! Using `%s'." % (match["output"], options["mode"]), file=sys.stderr)
             if match["gamma"]:
                 gamma = match["gamma"].strip()
                 options["gamma"] = gamma
