@@ -74,6 +74,36 @@ Usage: autorandr [options]
  The following virtual configurations are available:
 """.strip()
 
+class AutorandrException(Exception):
+    def __init__(self, message, original_exception=None, report_bug=False):
+        self.message = message
+        self.report_bug = report_bug
+        if original_exception:
+            self.original_exception = original_exception
+            trace = sys.exc_info()[2]
+            while trace.tb_next:
+                trace = trace.tb_next
+            self.line = trace.tb_lineno
+        else:
+            try:
+                import inspect
+                self.line = inspect.currentframe().f_back.f_lineno
+            except:
+                self.line = None
+            self.original_exception = None
+
+    def __str__(self):
+        retval = [ self.message ]
+        if self.line:
+            retval.append(" (line %d)" % self.line)
+        if self.original_exception:
+            retval.append(":\n  " % self.line)
+            retval.append(str(self.original_exception).replace("\n", "\n  "))
+        if self.report_bug:
+            retval.append("\nThis appears to be a bug. Please help improving autorandr by reporting it upstream."
+                         "\nPlease attach the output of `xrandr --verbose` to your bug report if appropriate.")
+        return "".join(retval)
+
 class XrandrOutput(object):
     "Represents an XRandR output"
 
@@ -199,14 +229,14 @@ class XrandrOutput(object):
             xrandr_output = xrandr_output.replace("\r\n", "\n")
             match_object = re.search(XrandrOutput.XRANDR_OUTPUT_REGEXP, xrandr_output)
         except:
-            raise RuntimeError("Parsing XRandR output failed, there is an error in the regular expression.")
+            raise AutorandrException("Parsing XRandR output failed, there is an error in the regular expression.", report_bug = True)
         if not match_object:
             debug = debug_regexp(XrandrOutput.XRANDR_OUTPUT_REGEXP, xrandr_output)
-            raise RuntimeError("Parsing XRandR output failed, the regular expression did not match: %s" % debug)
+            raise AutorandrException("Parsing XRandR output failed, the regular expression did not match: %s" % debug, report_bug = True)
         remainder = xrandr_output[len(match_object.group(0)):]
         if remainder:
-            raise RuntimeError(("Parsing XRandR output failed, %d bytes left unmatched after regular expression, "
-                                "starting at byte %d with ..'%s'.") % (len(remainder), len(match_object.group(0)), remainder[:10]))
+            raise AutorandrException(("Parsing XRandR output failed, %d bytes left unmatched after regular expression, "
+                                "starting at byte %d with ..'%s'.") % (len(remainder), len(match_object.group(0)), remainder[:10]), report_bug=True)
 
         match = match_object.groupdict()
 
@@ -214,7 +244,7 @@ class XrandrOutput(object):
         if match["modes"]:
             modes = [ x.groupdict() for x in re.finditer(XrandrOutput.XRANDR_OUTPUT_MODES_REGEXP, match["modes"]) ]
             if not modes:
-                raise RuntimeError("Parsing XRandR output failed, couldn't find any display modes")
+                raise AutorandrException("Parsing XRandR output failed, couldn't find any display modes", report_bug=True)
 
         options = {}
         if not match["connected"]:
@@ -285,8 +315,7 @@ class XrandrOutput(object):
             if fuzzy_output in fuzzy_edid_map:
                 edid = edid_map[list(edid_map.keys())[fuzzy_edid_map.index(fuzzy_output)]]
             elif "off" not in options:
-                raise RuntimeError("Failed to find an EDID for output `%s' in setup file, required as `%s' is not off in config file."
-                                   % (options["output"], options["output"]))
+                raise AutorandrException("Failed to find an EDID for output `%s' in setup file, required as `%s' is not off in config file." % (options["output"], options["output"]))
         output = options["output"]
         del options["output"]
 
@@ -332,13 +361,13 @@ def debug_regexp(pattern, string):
                                                              string[partial_length:partial_length+10]))
     except ImportError:
         pass
-    return "Debug information available if `regex' module is installed."
+    return "Debug information would be available if the `regex' module was installed."
 
 def parse_xrandr_output():
     "Parse the output of `xrandr --verbose' into a list of outputs"
     xrandr_output = os.popen("xrandr -q --verbose").read()
     if not xrandr_output:
-        raise RuntimeError("Failed to run xrandr")
+        raise AutorandrException("Failed to run xrandr")
 
     # We are not interested in screens
     xrandr_output = re.sub("(?m)^Screen [0-9].+", "", xrandr_output).strip()
@@ -346,7 +375,7 @@ def parse_xrandr_output():
     # Split at output boundaries and instanciate an XrandrOutput per output
     split_xrandr_output = re.split("(?m)^([^ ]+ (?:(?:dis)?connected|unknown connection).*)$", xrandr_output)
     if len(split_xrandr_output) < 2:
-        raise RuntimeError("No output boundaries found")
+        raise AutorandrException("No output boundaries found", report_bug=True)
     outputs = OrderedDict()
     modes = OrderedDict()
     for i in range(1, len(split_xrandr_output), 2):
@@ -483,7 +512,7 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
     if auxiliary_changes_pre:
         argv = base_argv + list(chain.from_iterable(auxiliary_changes_pre))
         if subprocess.call(argv) != 0:
-            raise RuntimeError("Command failed: %s" % " ".join(argv))
+            raise AutorandrException("Command failed: %s" % " ".join(argv))
 
     # Disable unused outputs, but make sure that there always is at least one active screen
     disable_keep = 0 if remain_active_count else 1
@@ -508,7 +537,7 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
     for index in range(0, len(operations), 2):
         argv = base_argv + list(chain.from_iterable(operations[index:index+2]))
         if subprocess.call(argv) != 0:
-            raise RuntimeError("Command failed: %s" % " ".join(argv))
+            raise AutorandrException("Command failed: %s" % " ".join(argv))
 
 def add_unused_outputs(source_configuration, target_configuration):
     "Add outputs that are missing in target to target, in 'off' state"
@@ -596,14 +625,9 @@ def main(argv):
         # Sort by descending mtime
         profiles = OrderedDict(sorted(profiles.items(), key=lambda x: -x[1]["config-mtime"]))
     except Exception as e:
-        print("Failed to load profiles:\n%s" % str(e), file=sys.stderr)
-        sys.exit(1)
+        raise AutorandrException("Failed to load profiles", e)
 
-    try:
-        config, modes = parse_xrandr_output()
-    except Exception as e:
-        print("Failed to parse current configuration from XRandR:\n%s" % str(e), file=sys.stderr)
-        sys.exit(1)
+    config, modes = parse_xrandr_output()
 
     if "--fingerprint" in options:
         output_setup(config, sys.stdout)
@@ -617,13 +641,11 @@ def main(argv):
         options["--save"] = options["-s"]
     if "--save" in options:
         if options["--save"] in ( x[0] for x in virtual_profiles ):
-            print("Cannot save current configuration as profile '%s':\nThis configuration name is a reserved virtual configuration." % options["--save"])
-            sys.exit(1)
+            raise AutorandrException("Cannot save current configuration as profile '%s':\nThis configuration name is a reserved virtual configuration." % options["--save"])
         try:
             save_configuration(os.path.join(profile_path, options["--save"]), config)
         except Exception as e:
-            print("Failed to save current configuration as profile '%s':\n%s" % (options["--save"], str(e)), file=sys.stderr)
-            sys.exit(1)
+            raise AutorandrException("Failed to save current configuration as profile '%s'" % (options["--save"],), e)
         print("Saved current configuration as profile '%s'" % options["--save"])
         sys.exit(0)
 
@@ -664,8 +686,7 @@ def main(argv):
                 load_config = profile["config"]
                 scripts_path = profile["path"]
             except KeyError:
-                print("Failed to load profile '%s':\nProfile not found" % load_profile, file=sys.stderr)
-                sys.exit(1)
+                raise AutorandrException("Failed to load profile '%s': Profile not found" % load_profile)
             if load_profile in detected_profiles and detected_profiles[0] != load_profile:
                 update_mtime(os.path.join(scripts_path, "config"))
         add_unused_outputs(config, load_config)
@@ -682,14 +703,20 @@ def main(argv):
                 apply_configuration(load_config, config, False)
                 exec_scripts(scripts_path, "postswitch")
         except Exception as e:
-            print("Failed to apply profile '%s':\n%s" % (load_profile, str(e)), file=sys.stderr)
-            sys.exit(1)
+            raise AutorandrException("Failed to apply profile '%s'" % load_profile, e, True)
 
     sys.exit(0)
 
 if __name__ == '__main__':
     try:
         main(sys.argv)
+    except AutorandrException as e:
+        print(file=sys.stderr)
+        print(e, file=sys.stderr)
+        sys.exit(1)
     except Exception as e:
-        print("General failure. Please report this as a bug:\n%s" % (str(e),), file=sys.stderr)
+        trace = sys.exc_info()[2]
+        while trace.tb_next:
+            trace = trace.tb_next
+            print("\nUnhandled exception in line %d. Please report this as a bug:\n  %s" % (trace.tb_lineno, "\n  ".join(str(e).split("\n")),), file=sys.stderr)
         sys.exit(1)
