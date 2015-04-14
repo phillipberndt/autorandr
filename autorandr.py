@@ -97,7 +97,7 @@ class AutorandrException(Exception):
         if self.line:
             retval.append(" (line %d)" % self.line)
         if self.original_exception:
-            retval.append(":\n  " % self.line)
+            retval.append(":\n  ")
             retval.append(str(self.original_exception).replace("\n", "\n  "))
         if self.report_bug:
             retval.append("\nThis appears to be a bug. Please help improving autorandr by reporting it upstream."
