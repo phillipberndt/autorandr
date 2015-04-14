@@ -136,17 +136,17 @@ class XrandrOutput(object):
         ))+
         \s*
         (?P<modes>(?:
-            (?P<mode_width>[0-9]+)x(?P<mode_height>[0-9]+).+?\*current.*\s+
-                h:.+\s+v:.+clock\s+(?P<rate>[0-9\.]+)Hz\s* |                            # Interesting (current) resolution: Extract rate
-            [0-9]+x[0-9]+(?:(?!\*current).)+\s+h:.+\s+v:.+\s*                           # Other resolutions
+            (?P<mode_name>\S+).+?\*current.*\s+                                         # Interesting (current) resolution: Extract rate
+             h:\s+width\s+(?P<mode_width>[0-9]+).+\s+
+             v:\s+height\s+(?P<mode_height>[0-9]+).+clock\s+(?P<rate>[0-9\.]+)Hz\s* |
+            \S+(?:(?!\*current).)+\s+h:.+\s+v:.+\s*                                     # Other resolutions
         )*)
     """
 
     XRANDR_OUTPUT_MODES_REGEXP = """(?x)
-        (?P<width>[0-9]+)x(?P<height>[0-9]+)
-        .*?(?P<preferred>\+preferred)?
-        \s+h:.+
-        \s+v:.+clock\s+(?P<rate>[0-9\.]+)Hz
+        (?P<name>\S+).+?(?P<preferred>\+preferred)?\s+
+         h:\s+width\s+(?P<width>[0-9]+).+\s+
+         v:\s+height\s+(?P<height>[0-9]+).+clock\s+(?P<rate>[0-9\.]+)Hz\s* |
     """
 
     XRANDR_13_DEFAULTS = {
@@ -242,7 +242,7 @@ class XrandrOutput(object):
 
         modes = []
         if match["modes"]:
-            modes = [ x.groupdict() for x in re.finditer(XrandrOutput.XRANDR_OUTPUT_MODES_REGEXP, match["modes"]) ]
+            modes = [ x.groupdict() for x in re.finditer(XrandrOutput.XRANDR_OUTPUT_MODES_REGEXP, match["modes"]) if x.group("name") ]
             if not modes:
                 raise AutorandrException("Parsing XRandR output failed, couldn't find any display modes", report_bug=True)
 
@@ -255,7 +255,9 @@ class XrandrOutput(object):
         if not match["width"]:
             options["off"] = None
         else:
-            if match["mode_width"]:
+            if match["mode_name"]:
+                options["mode"] = match["mode_name"]
+            elif match["mode_width"]:
                 options["mode"] = "%sx%s" % (match["mode_width"], match["mode_height"])
             else:
                 if match["rotate"] not in ("left", "right"):
@@ -283,7 +285,7 @@ class XrandrOutput(object):
                 transformation = ",".join(match["transform"].strip().split())
                 if transformation != "1.000000,0.000000,0.000000,0.000000,1.000000,0.000000,0.000000,0.000000,1.000000":
                     options["transform"] = transformation
-                    if not match["mode_width"]:
+                    if not match["mode_name"]:
                         # TODO We'd need to apply the reverse transformation here. Let's see if someone complains, I doubt that this
                         # special case is actually required.
                         print("Warning: Output %s has a transformation applied. Could not determine correct mode! Using `%s'." % (match["output"], options["mode"]), file=sys.stderr)
@@ -562,7 +564,7 @@ def generate_virtual_profile(configuration, modes, profile_name):
             for output in configuration:
                 configuration[output].options = {}
                 if output in modes:
-                    configuration[output].options["mode"] = "%sx%s" % common_resolution[-1]
+                    configuration[output].options["mode"] = [ x["name"] for x in sorted(modes[output], key=lambda x: 0 if x["preferred"] else 1) if x["width"] == common_resolution[-1][0] and x["height"] == common_resolution[-1][1] ][0]
                     configuration[output].options["pos"] = "0x0"
                 else:
                     configuration[output].options["off"] = None
@@ -579,7 +581,7 @@ def generate_virtual_profile(configuration, modes, profile_name):
             configuration[output].options = {}
             if output in modes:
                 mode = sorted(modes[output], key=lambda a: int(a["width"])*int(a["height"]) + (10**6 if a["preferred"] else 0))[-1]
-                configuration[output].options["mode"] = "%sx%s" % (mode["width"], mode["height"])
+                configuration[output].options["mode"] = mode["name"]
                 configuration[output].options["rate"] = mode["rate"]
                 configuration[output].options["pos"] = pos_specifier % shift
                 shift += int(mode[shift_index])
