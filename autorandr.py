@@ -713,12 +713,13 @@ if __name__ == '__main__':
     try:
         main(sys.argv)
     except AutorandrException as e:
-        print(file=sys.stderr)
         print(e, file=sys.stderr)
         sys.exit(1)
     except Exception as e:
-        trace = sys.exc_info()[2]
-        while trace.tb_next:
-            trace = trace.tb_next
-            print("\nUnhandled exception in line %d. Please report this as a bug:\n  %s" % (trace.tb_lineno, "\n  ".join(str(e).split("\n")),), file=sys.stderr)
-        sys.exit(1)
+        if not len(str(e)):  # BdbQuit
+            print("Exception: {0}".format(e.__class__.__name__))
+            sys.exit(2)
+
+        print("Unhandled exception ({0}). Please report this as a bug.".format(
+            e), file=sys.stderr)
+        raise
