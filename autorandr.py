@@ -720,6 +720,5 @@ if __name__ == '__main__':
             print("Exception: {0}".format(e.__class__.__name__))
             sys.exit(2)
 
-        print("Unhandled exception ({0}). Please report this as a bug.".format(
-            e), file=sys.stderr)
+        print("Unhandled exception ({0}). Please report this as a bug.".format(e), file=sys.stderr)
         raise
