@@ -38,6 +38,9 @@ from functools import reduce
 from itertools import chain
 from collections import OrderedDict
 
+import posix
+
+
 virtual_profiles = [
     # (name, description, callback)
     ("common", "Clone all connected outputs at the largest common resolution", None),
@@ -611,8 +614,10 @@ def main(argv):
     try:
        options = dict(getopt.getopt(argv[1:], "s:l:d:cfh", [ "dry-run", "change", "default=", "save=", "load=", "force", "fingerprint", "config", "help" ])[0])
     except getopt.GetoptError as e:
-        print(str(e))
-        options = { "--help": True }
+        print("Failed to parse options: {0}.\n"
+              "Use --help to get usage information.".format(str(e)),
+              file=sys.stderr)
+        sys.exit(posix.EX_USAGE)
 
     profiles = {}
     try:
