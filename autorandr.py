@@ -56,6 +56,8 @@ Usage: autorandr [options]
 -s, --save <profile>    save your current setup to profile <profile>
 -l, --load <profile>    load profile <profile>
 -d, --default <profile> make profile <profile> the default profile
+--skip-options <option> comma separated list of xrandr arguments (e.g. "gamma")
+                        to skip both in detecting changes and applying a profile
 --force                 force (re)loading of a profile
 --fingerprint           fingerprint your current hardware setup
 --config                dump your current xrandr setup
@@ -182,7 +184,12 @@ class XrandrOutput(object):
         if xrandr_version() >= Version("1.2"):
             options.update(self.XRANDR_12_DEFAULTS)
         options.update(self.options)
-        return options
+        return { a: b for a, b in options.items() if a not in self.ignored_options }
+
+    @property
+    def filtered_options(self):
+        "Return a dictionary of options without ignored options"
+        return { a: b for a, b in self.options.items() if a not in self.ignored_options }
 
     @property
     def option_vector(self):
@@ -192,7 +199,7 @@ class XrandrOutput(object):
     @property
     def option_string(self):
         "Return the command line parameters in the configuration file format"
-        return "\n".join([ " ".join(option) if option[1] else option[0] for option in chain((("output", self.output),), sorted(self.options.items()))])
+        return "\n".join([ " ".join(option) if option[1] else option[0] for option in chain((("output", self.output),), sorted(self.filtered_options.items()))])
 
     @property
     def sort_key(self):
@@ -212,7 +219,12 @@ class XrandrOutput(object):
         self.output = output
         self.edid = edid
         self.options = options
+        self.ignored_options = []
         self.remove_default_option_values()
+
+    def set_ignored_options(self, options):
+        "Set a list of xrandr options that are never used (neither when comparing configurations nor when applying them)"
+        self.ignored_options = list(options)
 
     def remove_default_option_values(self):
         "Remove values from the options dictionary that are superflous"
@@ -341,7 +353,7 @@ class XrandrOutput(object):
         return self.edid == other.edid
 
     def __eq__(self, other):
-        return self.edid_equals(other) and self.output == other.output and self.options == other.options
+        return self.edid_equals(other) and self.output == other.output and self.filtered_options == other.filtered_options
 
 def xrandr_version():
     "Return the version of XRandR that this system uses"
@@ -612,7 +624,7 @@ def exec_scripts(profile_path, script_name):
 
 def main(argv):
     try:
-       options = dict(getopt.getopt(argv[1:], "s:l:d:cfh", [ "dry-run", "change", "default=", "save=", "load=", "force", "fingerprint", "config", "help" ])[0])
+       options = dict(getopt.getopt(argv[1:], "s:l:d:cfh", [ "dry-run", "change", "default=", "save=", "load=", "force", "fingerprint", "config", "skip-options=", "help" ])[0])
     except getopt.GetoptError as e:
         print("Failed to parse options: {0}.\n"
               "Use --help to get usage information.".format(str(e)),
@@ -648,6 +660,14 @@ def main(argv):
     if "--config" in options:
         output_configuration(config, sys.stdout)
         sys.exit(0)
+
+    if "--skip-options" in options:
+        skip_options = [ y[2:] if y[:2] == "--" else y for y in ( x.strip() for x in options["--skip-options"].split(",") ) ]
+        for profile in profiles.values():
+            for output in profile["config"].values():
+                output.set_ignored_options(skip_options)
+        for output in config.values():
+            output.set_ignored_options(skip_options)
 
     if "-s" in options:
         options["--save"] = options["-s"]
