@@ -34,6 +34,7 @@ import subprocess
 import sys
 from distutils.version import LooseVersion as Version
 
+from functools import reduce
 from itertools import chain
 from collections import OrderedDict
 
