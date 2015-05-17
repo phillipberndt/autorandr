@@ -129,7 +129,7 @@ class XrandrOutput(object):
         (?:[\ \t]*tracking\ (?P<tracking>[0-9]+x[0-9]+\+[0-9]+\+[0-9]+))?               # Tracking information
         (?:[\ \t]*border\ (?P<border>(?:[0-9]+/){3}[0-9]+))?                            # Border information
         (?:\s*(?:                                                                       # Properties of the output
-            Gamma: (?P<gamma>[0-9\.: ]+) |                                              # Gamma value
+            Gamma: (?P<gamma>(?:inf|[0-9\.: e])+) |                                     # Gamma value
             Transform: (?P<transform>(?:[\-0-9\. ]+\s+){3}) |                           # Transformation matrix
             EDID: (?P<edid>\s*?(?:\\n\\t\\t[0-9a-f]+)+) |                               # EDID of the output
             (?![0-9])[^:\s][^:\n]+:.*(?:\s\\t[\\t ].+)*                                 # Other properties
@@ -291,6 +291,10 @@ class XrandrOutput(object):
                         print("Warning: Output %s has a transformation applied. Could not determine correct mode! Using `%s'." % (match["output"], options["mode"]), file=sys.stderr)
             if match["gamma"]:
                 gamma = match["gamma"].strip()
+                # xrandr prints different values in --verbose than it accepts as a parameter value for --gamma
+                # Also, it is not able to work with non-standard gamma ramps. Finally, it auto-corrects 0 to 1,
+                # so we approximate by 1e-10.
+                gamma = ":".join([ str(max(1e-10, round(1./float(x), 3))) for x in gamma.split(":") ])
                 options["gamma"] = gamma
             if match["rate"]:
                 options["rate"] = match["rate"]
