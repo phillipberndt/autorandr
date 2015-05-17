@@ -34,6 +34,7 @@ Contributors to this version of autorandr are:
 
 * Alexander Wirt
 * Chris Dunder
+* Daniel Hahler
 * Maciej Sitarz
 * Matthew R Johnson
 * Phillip Berndt
