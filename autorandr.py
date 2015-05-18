@@ -155,7 +155,8 @@ class XrandrOutput(object):
             (?P<rotate>(?:normal|left|right|inverted))\s+                               # Rotation
             (?:(?P<reflect>X\ and\ Y|X|Y)\ axis)?                                       # Reflection
         )?                                                                              # .. but only if the screen is in use.
-        (?:[\ \t]*\([^\)]+\))(?:\s*[0-9]+mm\sx\s[0-9]+mm)?
+        (?:[\ \t]*\([^\)]+\))\s*
+        (?:(?P<physical_width>[0-9]+)mm\sx\s(?P<physical_height>[0-9]+)mm)?             # Physical size
         (?:[\ \t]*panning\ (?P<panning>[0-9]+x[0-9]+\+[0-9]+\+[0-9]+))?                 # Panning information
         (?:[\ \t]*tracking\ (?P<tracking>[0-9]+x[0-9]+\+[0-9]+\+[0-9]+))?               # Tracking information
         (?:[\ \t]*border\ (?P<border>(?:[0-9]+/){3}[0-9]+))?                            # Border information
@@ -195,6 +196,7 @@ class XrandrOutput(object):
 
     XRANDR_DEFAULTS = dict(list(XRANDR_13_DEFAULTS.items()) + list(XRANDR_12_DEFAULTS.items()))
 
+    METRE_TO_INCH = 39.3700787402
     EDID_UNAVAILABLE = "--CONNECTED-BUT-EDID-UNAVAILABLE-"
 
     def __repr__(self):
@@ -366,6 +368,11 @@ class XrandrOutput(object):
                 options["gamma"] = gamma
             if match["rate"]:
                 options["rate"] = match["rate"]
+            if match["physical_width"]:
+                width_inches = int(match["physical_width"]) * 1e-3 * XrandrOutput.METRE_TO_INCH
+                height_inches = int(match["physical_height"]) * 1e-3 * XrandrOutput.METRE_TO_INCH
+                if width_inches and height_inches:
+                    print("\033[1mDebug\033[0m: Output %s reports %3.2f x %3.2f DPI" % (match["output"], int(match["width"]) / width_inches, int(match["height"]) / height_inches))
 
         return XrandrOutput(match["output"], edid, options), modes
 
