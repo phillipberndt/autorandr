@@ -352,6 +352,9 @@ class XrandrOutput(object):
                 return hashlib.md5(binascii.unhexlify(self.edid)).hexdigest() == other.edid
         return self.edid == other.edid
 
+    def __ne__(self, other):
+        return not (self == other)
+
     def __eq__(self, other):
         return self.edid_equals(other) and self.output == other.output and self.filtered_options == other.filtered_options
 
@@ -561,6 +564,13 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
         if subprocess.call(argv) != 0:
             raise AutorandrException("Command failed: %s" % " ".join(argv))
 
+def is_equal_configuration(source_configuration, target_configuration):
+    "Check if all outputs from target are already configured correctly in source"
+    for output in target_configuration.keys():
+        if (output not in source_configuration) or (source_configuration[output] != target_configuration[output]):
+            return False
+    return True
+
 def add_unused_outputs(source_configuration, target_configuration):
     "Add outputs that are missing in target to target, in 'off' state"
     for output_name, output in source_configuration.items():
@@ -696,12 +706,14 @@ def main(argv):
             if profile_blocked(os.path.join(profile_path, profile_name)):
                 print("%s (blocked)" % profile_name, file=sys.stderr)
                 continue
+            props = []
             if profile_name in detected_profiles:
-                print("%s (detected)" % profile_name, file=sys.stderr)
+                props.append("(detected)")
                 if ("-c" in options or "--change" in options) and not load_profile:
                     load_profile = profile_name
-            else:
-                print(profile_name, file=sys.stderr)
+            if is_equal_configuration(config, profiles[profile_name]["config"]):
+                props.append("(current)")
+            print("%s%s%s" % (profile_name, " " if props else "", " ".join(props)), file=sys.stderr)
 
     if "-d" in options:
         options["--default"] = options["-d"]
