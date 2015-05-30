@@ -613,13 +613,13 @@ def generate_virtual_profile(configuration, modes, profile_name):
     "Generate one of the virtual profiles"
     configuration = copy.deepcopy(configuration)
     if profile_name == "common":
-        common_resolution = [ set(( ( mode["width"], mode["height"] ) for mode in output )) for output in modes.values() ]
+        common_resolution = [ set(( ( mode["width"], mode["height"] ) for mode in output_modes )) for output, output_modes in modes.items() if configuration[output].edid ]
         common_resolution = reduce(lambda a, b: a & b, common_resolution[1:], common_resolution[0])
         common_resolution = sorted(common_resolution, key=lambda a: int(a[0])*int(a[1]))
         if common_resolution:
             for output in configuration:
                 configuration[output].options = {}
-                if output in modes:
+                if output in modes and configuration[output].edid:
                     configuration[output].options["mode"] = [ x["name"] for x in sorted(modes[output], key=lambda x: 0 if x["preferred"] else 1) if x["width"] == common_resolution[-1][0] and x["height"] == common_resolution[-1][1] ][0]
                     configuration[output].options["pos"] = "0x0"
                 else:
@@ -635,7 +635,7 @@ def generate_virtual_profile(configuration, modes, profile_name):
 
         for output in configuration:
             configuration[output].options = {}
-            if output in modes:
+            if output in modes and configuration[output].edid:
                 mode = sorted(modes[output], key=lambda a: int(a["width"])*int(a["height"]) + (10**6 if a["preferred"] else 0))[-1]
                 configuration[output].options["mode"] = mode["name"]
                 configuration[output].options["rate"] = mode["rate"]
