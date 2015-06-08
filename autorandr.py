@@ -799,6 +799,12 @@ def main(argv):
         except Exception as e:
             raise AutorandrException("Failed to apply profile '%s'" % load_profile, e, True)
 
+        if "--dry-run" not in options and "--debug" in options:
+            new_config, _ = parse_xrandr_output()
+            if not is_equal_configuration(new_config, load_config):
+                print("The configuration change did not go as expected:")
+                print_profile_differences(new_config, load_config)
+
     sys.exit(0)
 
 if __name__ == '__main__':
