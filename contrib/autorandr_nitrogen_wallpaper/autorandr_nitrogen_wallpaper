@@ -1,0 +1,83 @@
+#!/bin/bash
+
+# autorandr_nitrogen_wallpaper
+# Copyright (c) 2015, Ondra 'Kepi' Kudlík, http://kepi.cz
+#
+# Simple script to switch wallpapers when autorandr change profile
+#
+# Usage
+# =====
+#
+# 1. place this script (or better symlink it from autorandr location)
+#    to ~/.config/autorandr/postswitch
+# 2. run "nitrogen" and set wallpapers for current profile as you wish
+# 3. run ~/.config/autorandr/postswitch savebg
+# 4. repeat steps 2-3 for any profile you wish
+#
+# License
+# =======
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+# 
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+NITROGEN_HOME="$HOME/.config/nitrogen"
+NITROGEN_BG="$NITROGEN_HOME/bg-saved.cfg"
+
+# try to detect profile
+PROFILE=$(autorandr 2>&1| grep detected |awk '{ print $1 }')
+[[ -n "$PROFILE" ]] || exit 1
+
+PROFILE_BG_FILE="bg-saved.$PROFILE.cfg"
+PROFILE_BG="$NITROGEN_HOME/$PROFILE_BG_FILE"
+
+# save background for detected profile
+if [[ $1 = 'savebg' ]]; then
+    # nitrogen config doesnt exist, instruct to run it first
+    if [[ ! -f "$NITROGEN_BG" ]]; then
+        echo "wallpaper: you need to first run 'nitrogen' and set your wallpapers"
+        exit 2
+    fi
+    # nitrogen config exists but is broken symlink, just remove it and instruct to run it first
+    if [ ! -e "$NITROGEN_BG" ] ; then
+        /usr/bin/unlink "$NITROGEN_BG"
+        echo "wallpaper: you need to first run 'nitrogen' and set your wallpapers (config was broken)"
+        exit 3
+    fi
+
+    /bin/cp -L "$NITROGEN_BG" "$PROFILE_BG"
+
+# load background for detected profile
+else
+    # we have some profile background config for this setup
+    if [[ -f "$PROFILE_BG" ]]; then
+        # nitrogen original file exists and not symlink
+        if [[ -f "$NITROGEN_BG" ]] && [[ ! -L "$NITROGEN_BG" ]]; then
+            echo "wallpaper: Backing up nitrogen saved bg to $NITROGEN_BG.backup" 
+            /bin/mv "$NITROGEN_BG" "$NITROGEN_BG".backup
+        fi
+        
+        # set symlink
+        echo "wallpaper: Found saved wallpaper for profile $PROFILE - changing"
+        ln -f -s "$PROFILE_BG_FILE" "$NITROGEN_BG"
+        # call nitrogen
+        nitrogen --restore
+    else
+        echo "wallpaper: No saved wallpaper found for profile $PROFILE"
+    fi
+fi
