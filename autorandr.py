@@ -23,22 +23,21 @@
 #
 
 from __future__ import print_function
-import copy
-import getopt
 
 import binascii
+import copy
+import getopt
 import hashlib
 import os
+import posix
 import re
 import subprocess
 import sys
-from distutils.version import LooseVersion as Version
 
+from collections import OrderedDict
+from distutils.version import LooseVersion as Version
 from functools import reduce
 from itertools import chain
-from collections import OrderedDict
-
-import posix
 
 
 virtual_profiles = [
