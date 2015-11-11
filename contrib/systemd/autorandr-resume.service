@@ -1,0 +1,9 @@
+[Unit]
+Description=autorandr resume hook
+After=sleep.target
+
+[Service]
+ExecStart=/etc/pm/sleep.d/40autorandr thaw
+
+[Install]
+WantedBy=sleep.target

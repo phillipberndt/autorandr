@@ -87,5 +87,4 @@ Another script called `postswitch` can be placed in the directory
 after a mode switch has taken place and can notify window managers or other
 applications about it.
 
-To install autorandr call `make install`, define your setup and then call
-`make hotplug` to install hotplug scripts.
+To install autorandr call `make install`.
