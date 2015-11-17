@@ -543,6 +543,8 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
     #   the xrandr call fails with an invalid RRSetScreenSize parameter error.
     #   Update the configuration in 3 passes in that case.  (On Haswell graphics,
     #   at least.)
+    # - Some implementations can not handle --transform at all, so avoid it unless
+    #   necessary. (See https://github.com/phillipberndt/autorandr/issues/37)
 
     auxiliary_changes_pre = []
     disable_outputs = []
@@ -554,9 +556,20 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
         else:
             if "off" not in current_configuration[output].options:
                 remain_active_count += 1
-            enable_outputs.append(new_configuration[output].option_vector)
-            if xrandr_version() >= Version("1.3.0") and "transform" in current_configuration[output].options:
-                auxiliary_changes_pre.append(["--output", output, "--transform", "none"])
+
+            option_vector = new_configuration[output].option_vector
+            if xrandr_version() >= Version("1.3.0"):
+                if "transform" in current_configuration[output].options:
+                    auxiliary_changes_pre.append(["--output", output, "--transform", "none"])
+                else:
+                    try:
+                        transform_index = option_vector.index("--transform")
+                        if option_vector[transform_index+1] == XrandrOutput.XRANDR_DEFAULTS["transform"]:
+                            option_vector = option_vector[:transform_index] + option_vector[transform_index+2:]
+                    except ValueError:
+                        pass
+
+            enable_outputs.append(option_vector)
 
     # Perform pe-change auxiliary changes
     if auxiliary_changes_pre:
