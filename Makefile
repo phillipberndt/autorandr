@@ -45,7 +45,7 @@ uninstall_pmutils:
 	rm -f ${DESTDIR}/etc/pm/sleep.d/40autorandr
 
 # Rules for systemd
-HAVE_SYSTEMD=$(shell grep -q systemd $$(readlink -f $$(cat /proc/1/cmdline)) && echo "y")
+HAVE_SYSTEMD=$(shell grep -q systemd $$(readlink -f $$(awk '{print $$1}' /proc/1/cmdline)) && echo "y")
 ifeq ($(HAVE_SYSTEMD),y)
 DEFAULT_TARGETS+=systemd
 endif
