@@ -39,7 +39,7 @@ DEFAULT_TARGETS+=pmutils
 endif
 
 install_pmutils:
-	install -D -m 644 contrib/pm-utils/40autorandr ${DESTDIR}/etc/pm/sleep.d/40autorandr
+	install -D -m 755 contrib/pm-utils/40autorandr ${DESTDIR}/etc/pm/sleep.d/40autorandr
 
 uninstall_pmutils:
 	rm -f ${DESTDIR}/etc/pm/sleep.d/40autorandr
