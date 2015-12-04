@@ -7,9 +7,19 @@ AUTORANDR="autorandr -c --default default"
 
 detect_display()
 {
+	# Wait for the system to recognize the changed state, see bug #30
+	# Note the ampersand below, this runs asynchroneously.
+	sleep 5
+
 	for X in /tmp/.X11-unix/X*; do
 		D="${X##/tmp/.X11-unix/X}"
-		user=`who | awk -vD="$D" '$2 ~ ":"D"(.[0-9])?$" {print $1}' | head -1`
+		# Prefer w to who, see bug #39
+		if [ -x "`which w`" ]; then
+			user="`w -h | awk -vD="$D" '$2 ~ ":"D"(.[0-9])?$" || $3 ~ ":"D"(.[0-9])?$" {print $1}' | head -n1`"
+		else
+			user="`who --all | awk -vD="$D" '$3 ~ ":"D"(.[0-9])?$" {print $1}' | head -1`"
+		fi
+
 		if [ x"$user" != x"" ]; then
 			logger "autorandr: Changing display configuration for user '$user'"
 			export DISPLAY=":$D"
@@ -20,6 +30,6 @@ detect_display()
 
 case "$1" in
 	thaw|resume)
-		detect_display
+		detect_display &
 		;;
 esac
