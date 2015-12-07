@@ -16,6 +16,11 @@ detect_display()
 		# Prefer w to who, see bug #39
 		if [ -x "`which w`" ]; then
 			user="`w -h | awk -vD="$D" '$2 ~ ":"D"(.[0-9])?$" || $3 ~ ":"D"(.[0-9])?$" {print $1}' | head -n1`"
+
+			if [ -z "$user" ];	then
+				# Try xinit as a fallback, see bug #39
+				user="`w -h | awk -vD="$D" '$7 ~ "xinit" && $0 ~ ":"D"(.[0-9])?" {print $1}' | head -n1`"
+			fi
 		else
 			user="`who --all | awk -vD="$D" '$3 ~ ":"D"(.[0-9])?$" {print $1}' | head -1`"
 		fi
