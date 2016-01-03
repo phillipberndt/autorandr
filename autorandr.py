@@ -484,12 +484,21 @@ def find_profiles(current_config, profiles):
             detected_profiles.append(profile_name)
     return detected_profiles
 
-def profile_blocked(profile_path):
-    "Check if a profile is blocked"
+def profile_blocked(profile_path, meta_information=None):
+    """Check if a profile is blocked.
+
+    meta_information is expected to be an dictionary. It will be passed to the block scripts
+    in the environment, as variables called AUTORANDR_<CAPITALIZED_KEY_HERE>.
+    """
     script = os.path.join(profile_path, "block")
     if not os.access(script, os.X_OK | os.F_OK):
         return False
-    return subprocess.call(script) == 0
+    if meta_information:
+        env = os.environ.copy()
+        env.update({ "AUTORANDR_%s" % str(key).upper(): str(value) for (key, value) in meta_information.items() })
+    else:
+        env = os.environ.copy()
+    return subprocess.call(script, env=env) == 0
 
 def output_configuration(configuration, config):
     "Write a configuration file"
@@ -757,8 +766,19 @@ def main(argv):
     if "--load" in options:
         load_profile = options["--load"]
     else:
+        # Find the active profile(s) first, for the block script (See #42)
+        current_profiles = []
         for profile_name in profiles.keys():
-            if profile_blocked(os.path.join(profile_path, profile_name)):
+            configs_are_equal = is_equal_configuration(config, profiles[profile_name]["config"])
+            if configs_are_equal:
+                current_profiles.append(profile_name)
+        block_script_metadata = {
+            "CURRENT_PROFILE":  "".join(current_profiles[:1]),
+            "CURRENT_PROFILES": ":".join(current_profiles)
+        }
+
+        for profile_name in profiles.keys():
+            if profile_blocked(os.path.join(profile_path, profile_name), block_script_metadata):
                 print("%s (blocked)" % profile_name, file=sys.stderr)
                 continue
             props = []
@@ -766,8 +786,7 @@ def main(argv):
                 props.append("(detected)")
                 if ("-c" in options or "--change" in options) and not load_profile:
                     load_profile = profile_name
-            configs_are_equal = is_equal_configuration(config, profiles[profile_name]["config"])
-            if configs_are_equal:
+            if profile_name in current_profiles:
                 props.append("(current)")
             print("%s%s%s" % (profile_name, " " if props else "", " ".join(props)), file=sys.stderr)
             if not configs_are_equal and "--debug" in options and profile_name in detected_profiles:
