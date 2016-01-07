@@ -701,18 +701,31 @@ def exec_scripts(profile_path, script_name, meta_information=None):
     else:
         env = os.environ.copy()
 
-    for folder in chain((profile_path, os.path.dirname(profile_path)),
+    # If there are multiple candidates, the XDG spec tells to only use the first one.
+    ran_scripts = set()
+
+    user_profile_path = os.path.expanduser("~/.autorandr")
+    if not os.path.isdir(user_profile_path):
+        user_profile_path = os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "autorandr")
+
+    for folder in chain((profile_path, os.path.dirname(profile_path), user_profile_path),
                         (os.path.join(x, "autorandr") for x in os.environ.get("XDG_CONFIG_DIRS", "").split(":"))):
-        script = os.path.join(folder, script_name)
-        if os.access(script, os.X_OK | os.F_OK):
-            all_ok &= subprocess.call(script, env=env) != 0
+
+        if script_name not in ran_scripts:
+            script = os.path.join(folder, script_name)
+            if os.access(script, os.X_OK | os.F_OK):
+                all_ok &= subprocess.call(script, env=env) != 0
+                ran_scripts.add(script_name)
 
         script_folder = os.path.join(folder, "%s.d" % script_name)
         if os.access(script_folder, os.R_OK | os.X_OK) and os.path.isdir(script_folder):
             for file_name in os.listdir(script_folder):
-                script = os.path.join(script_folder, file_name)
-                if os.access(script, os.X_OK | os.F_OK):
-                    all_ok &= subprocess.call(script, env=env) != 0
+                check_name = "d/%s" % (file_name,)
+                if check_name not in ran_scripts:
+                    script = os.path.join(script_folder, file_name)
+                    if os.access(script, os.X_OK | os.F_OK):
+                        all_ok &= subprocess.call(script, env=env) != 0
+                        ran_scripts.add(check_name)
 
     return all_ok
 
@@ -728,7 +741,8 @@ def main(argv):
     profiles = {}
     try:
         # Load profiles from each XDG config directory
-        for directory in os.environ.get("XDG_CONFIG_DIRS", "").split(":"):
+        # The XDG spec says that earlier entries should take precedence, so reverse the order
+        for directory in reversed(os.environ.get("XDG_CONFIG_DIRS", "").split(":")):
             system_profile_path = os.path.join(directory, "autorandr")
             if os.path.isdir(system_profile_path):
                 profiles.update(load_profiles(system_profile_path))
