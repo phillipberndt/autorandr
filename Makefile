@@ -79,6 +79,7 @@ ifeq ($(HAVE_NITROGEN),y)
 DEFAULT_TARGETS+=nitrogen
 endif
 
+# Rules for nitrogen
 NITROGEN=autorandr_nitrogen_wallpaper
 install_nitrogen:
 	install -D -m 755 contrib/${NITROGEN}/${NITROGEN} ${DESTDIR}${PREFIX}/bin/${NITROGEN}
