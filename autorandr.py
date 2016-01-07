@@ -490,15 +490,7 @@ def profile_blocked(profile_path, meta_information=None):
     meta_information is expected to be an dictionary. It will be passed to the block scripts
     in the environment, as variables called AUTORANDR_<CAPITALIZED_KEY_HERE>.
     """
-    script = os.path.join(profile_path, "block")
-    if not os.access(script, os.X_OK | os.F_OK):
-        return False
-    if meta_information:
-        env = os.environ.copy()
-        env.update({ "AUTORANDR_%s" % str(key).upper(): str(value) for (key, value) in meta_information.items() })
-    else:
-        env = os.environ.copy()
-    return subprocess.call(script, env=env) == 0
+    return not exec_scripts(profile_path, "block", meta_information)
 
 def output_configuration(configuration, config):
     "Write a configuration file"
@@ -690,11 +682,39 @@ def exit_help():
         print("  %-10s %s" % profile[:2])
     sys.exit(0)
 
-def exec_scripts(profile_path, script_name):
-    "Run userscripts"
-    for script in (os.path.join(profile_path, script_name), os.path.join(os.path.dirname(profile_path), script_name)):
+def exec_scripts(profile_path, script_name, meta_information=None):
+    """"Run userscripts
+
+    This will run all executables from the profile folder, and global per-user
+    and system-wide configuration folders, named script_name or residing in
+    subdirectories named script_name.d.
+
+    meta_information is expected to be an dictionary. It will be passed to the block scripts
+    in the environment, as variables called AUTORANDR_<CAPITALIZED_KEY_HERE>.
+
+    Returns True unless any of the scripts exited with non-zero exit status.
+    """
+    all_ok = True
+    if meta_information:
+        env = os.environ.copy()
+        env.update({ "AUTORANDR_%s" % str(key).upper(): str(value) for (key, value) in meta_information.items() })
+    else:
+        env = os.environ.copy()
+
+    for folder in chain((profile_path, os.path.dirname(profile_path)),
+                        (os.path.join(x, "autorandr") for x in os.environ.get("XDG_CONFIG_DIRS", "").split(":"))):
+        script = os.path.join(folder, script_name)
         if os.access(script, os.X_OK | os.F_OK):
-            subprocess.call(script)
+            all_ok &= subprocess.call(script, env=env) != 0
+
+        script_folder = os.path.join(folder, "%s.d" % script_name)
+        if os.access(script_folder, os.R_OK | os.X_OK) and os.path.isdir(script_folder):
+            for file_name in os.listdir(script_folder):
+                script = os.path.join(script_folder, file_name)
+                if os.access(script, os.X_OK | os.F_OK):
+                    all_ok &= subprocess.call(script, env=env) != 0
+
+    return all_ok
 
 def main(argv):
     try:
@@ -749,7 +769,9 @@ def main(argv):
         if options["--save"] in ( x[0] for x in virtual_profiles ):
             raise AutorandrException("Cannot save current configuration as profile '%s':\nThis configuration name is a reserved virtual configuration." % options["--save"])
         try:
-            save_configuration(os.path.join(profile_path, options["--save"]), config)
+            profile_folder = os.path.join(profile_path, options["--save"])
+            save_configuration(profile_folder, config)
+            exec_scripts(profile_folder, "postsave", {"CURRENT_PROFILE": options["--save"], "PROFILE_FOLDER": profile_folder})
         except Exception as e:
             raise AutorandrException("Failed to save current configuration as profile '%s'" % (options["--save"],), e)
         print("Saved current configuration as profile '%s'" % options["--save"])
@@ -824,9 +846,13 @@ def main(argv):
             if "--dry-run" in options:
                 apply_configuration(load_config, config, True)
             else:
-                exec_scripts(scripts_path, "preswitch")
+                script_metadata = {
+                    "CURRENT_PROFILE": load_profile,
+                    "PROFILE_FOLDER": scripts_path,
+                }
+                exec_scripts(scripts_path, "preswitch", script_metadata)
                 apply_configuration(load_config, config, False)
-                exec_scripts(scripts_path, "postswitch")
+                exec_scripts(scripts_path, "postswitch", script_metadata)
         except Exception as e:
             raise AutorandrException("Failed to apply profile '%s'" % load_profile, e, True)
 

@@ -87,4 +87,10 @@ Another script called `postswitch` can be placed in the directory
 after a mode switch has taken place and can notify window managers or other
 applications about it.
 
+All scripts can also be placed in any of the `$XDG_CONFIG_DIRS`. In addition to
+the script names themselves, any executables in subdirectories named
+`script_name.d` (e.g. `postswitch.d`) are executed as well. In scripts, some of
+autorandr's state is exposed as environment variables prefixed with `AUTORANDR_`.
+The most useful one is `$AUTORANDR_CURRENT_PROFILE`.
+
 To install autorandr call `make install`.
