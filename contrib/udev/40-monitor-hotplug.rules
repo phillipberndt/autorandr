@@ -1,1 +1,1 @@
-ACTION=="change", SUBSYSTEM=="drm", RUN+="/etc/pm/sleep.d/40autorandr thaw"
+ACTION=="change", SUBSYSTEM=="drm", RUN+="/bin/systemctl start autorandr-resume.service"
