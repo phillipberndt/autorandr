@@ -18,15 +18,22 @@ detect_display()
 			user="`w -h | awk -vD="$D" '$2 ~ ":"D"(.[0-9])?$" || $3 ~ ":"D"(.[0-9])?$" {print $1}' | head -n1`"
 
 			if [ -z "$user" ];	then
-				# Try xinit as a fallback, see bug #39
-				user="`w -h | awk -vD="$D" '$7 ~ "xinit" && $0 ~ ":"D"(.[0-9])?" {print $1}' | head -n1`"
+				# This fallback checks if there is exactly one user (except
+				# root) logged in an interactive session and assumes the
+				# session belongs to him. See bug #39.
+				user="`w -hu | awk '/^\w+/ && $1 !~ "root" { users[$1]=$1; } ENDFILE { if(asort(users) == 1) for(u in users) print users[u]; }'`"
 			fi
 		else
 			user="`who --all | awk -vD="$D" '$3 ~ ":"D"(.[0-9])?$" {print $1}' | head -1`"
+
+			if [ -z "$user" ];	then
+				# Same fallback as above; see bug #39.
+				user="`who -u | awk '/^\w+/ && $1 !~ "root" { users[$1]=$1; } ENDFILE { if(asort(users) == 1) for(u in users) print users[u]; }'`"
+			fi
 		fi
 
 		if [ x"$user" != x"" ]; then
-			logger "autorandr: Changing display configuration for user '$user'"
+			logger "autorandr: Changing display configuration for display :$D, user '$user'"
 			export DISPLAY=":$D"
 			/bin/su -c "${AUTORANDR}" "$user"
 		fi
