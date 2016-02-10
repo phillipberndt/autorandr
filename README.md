@@ -36,6 +36,7 @@ Contributors to this version of autorandr are:
 * Chris Dunder
 * Daniel Hahler
 * Maciej Sitarz
+* Mathias Svensson
 * Matthew R Johnson
 * Phillip Berndt
 * Rasmus Wriedt Larsen
