@@ -6,7 +6,7 @@ exec > /var/log/autorandr.log 2>&1
 AUTORANDR="autorandr -c --default default"
 
 # Work around #44: Long user names in w
-export PROCPS_USERLEN=40
+export PROCPS_USERLEN=32
 
 detect_display()
 {
