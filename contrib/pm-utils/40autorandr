@@ -5,6 +5,9 @@ exec > /var/log/autorandr.log 2>&1
 
 AUTORANDR="autorandr -c --default default"
 
+# Work around #44: Long user names in w
+export PROCPS_USERLEN=40
+
 detect_display()
 {
 	# Wait for the system to recognize the changed state, see bug #30
