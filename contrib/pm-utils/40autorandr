@@ -10,10 +10,6 @@ export PROCPS_USERLEN=32
 
 detect_display()
 {
-	# Wait for the system to recognize the changed state, see bug #30
-	# Note the ampersand below, this runs asynchroneously.
-	sleep 5
-
 	for X in /tmp/.X11-unix/X*; do
 		D="${X##/tmp/.X11-unix/X}"
 		# Prefer w to who, see bug #39
@@ -43,8 +39,12 @@ detect_display()
 	done
 }
 
+if grep -q systemd $(readlink -f $(awk '{print $1}' /proc/1/cmdline)) && [ "$2" = "udev" ]; then
+    exec /bin/systemctl start autorandr-resume.service
+fi
+
 case "$1" in
 	thaw|resume)
-		detect_display &
+		detect_display
 		;;
 esac
