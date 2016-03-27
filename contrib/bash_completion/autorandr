@@ -8,8 +8,8 @@ _autorandr ()
 	cur="${COMP_WORDS[COMP_CWORD]}"
 	prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-	opts="-h -c -s -l -d"
-	lopts="--help --change --save --load --default --force --fingerprint --config --dry-run"
+	opts="-h -c -s -r -l -d"
+	lopts="--help --change --save --remove --load --default --force --fingerprint --config --dry-run"
 	if [ -d ~/.autorandr ]; then
 		prfls="`find ~/.autorandr/* -maxdepth 1 -type d -printf '%f\n'`"
 	elif [ -d ~/.config/autorandr ]; then
@@ -35,7 +35,7 @@ _autorandr ()
 		esac
 
 	case "${prev}" in
-		-l|--load|-d|--default)
+		-r|--remove|-l|--load|-d|--default)
 			COMPREPLY=( $( compgen -W "${prfls}" -- $cur ) )
 			return 0
 			;;
