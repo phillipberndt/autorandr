@@ -801,11 +801,23 @@ def main(argv):
         if options["--remove"] not in profiles.keys():
             raise AutorandrException("Cannot remove profile '%s':\nThis profile does not exist." % options["--remove"])
         try:
+            remove = True
             profile_folder = os.path.join(profile_path, options["--remove"])
-            shutil.rmtree(profile_folder)
+            profile_dirlist = os.listdir(profile_folder)
+            profile_dirlist.remove("config")
+            profile_dirlist.remove("setup")
+            if profile_dirlist:
+                print("Profile folder '%s' contains the following:\n---\n%s\n---" % (options["--remove"], "\n".join(profile_dirlist)))
+                response = input("Do you really want to remove profile '%s'? If so, type 'yes': " % options["--remove"]).strip()
+                if response != "yes":
+                    remove = False
+            if remove is True:
+                shutil.rmtree(profile_folder)
+                print("Removed profile '%s'" % options["--remove"])
+            else:
+                print("Profile '%s' was not removed" % options["--remove"])
         except Exception as e:
             raise AutorandrException("Failed to remove profile '%s'" % (options["--remove"],), e)
-        print("Removed profile '%s'" % options["--remove"])
         sys.exit(0)
 
     if "-h" in options or "--help" in options:

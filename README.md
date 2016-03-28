@@ -47,6 +47,7 @@ Contributors to this version of autorandr are:
 * stormc
 * tachylatus
 * andersonjacob
+* Simon Wydooghe
 
 ## How to use
 
