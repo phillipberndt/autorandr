@@ -40,6 +40,10 @@ from distutils.version import LooseVersion as Version
 from functools import reduce
 from itertools import chain
 
+try:
+    input = raw_input
+except NameError:
+    pass
 
 virtual_profiles = [
     # (name, description, callback)
@@ -807,7 +811,7 @@ def main(argv):
             profile_dirlist.remove("config")
             profile_dirlist.remove("setup")
             if profile_dirlist:
-                print("Profile folder '%s' contains the following:\n---\n%s\n---" % (options["--remove"], "\n".join(profile_dirlist)))
+                print("Profile folder '%s' contains the following additional files:\n---\n%s\n---" % (options["--remove"], "\n".join(profile_dirlist)))
                 response = input("Do you really want to remove profile '%s'? If so, type 'yes': " % options["--remove"]).strip()
                 if response != "yes":
                     remove = False
