@@ -33,12 +33,17 @@ import posix
 import re
 import subprocess
 import sys
+import shutil
 
 from collections import OrderedDict
 from distutils.version import LooseVersion as Version
 from functools import reduce
 from itertools import chain
 
+try:
+    input = raw_input
+except NameError:
+    pass
 
 virtual_profiles = [
     # (name, description, callback)
@@ -53,6 +58,7 @@ Usage: autorandr [options]
 -h, --help              get this small help
 -c, --change            reload current setup
 -s, --save <profile>    save your current setup to profile <profile>
+-r, --remove <profile>  remove profile <profile>
 -l, --load <profile>    load profile <profile>
 -d, --default <profile> make profile <profile> the default profile
 --skip-options <option> comma separated list of xrandr arguments (e.g. "gamma")
@@ -731,7 +737,7 @@ def exec_scripts(profile_path, script_name, meta_information=None):
 
 def main(argv):
     try:
-       options = dict(getopt.getopt(argv[1:], "s:l:d:cfh", [ "dry-run", "change", "default=", "save=", "load=", "force", "fingerprint", "config", "debug", "skip-options=", "help" ])[0])
+        options = dict(getopt.getopt(argv[1:], "s:r:l:d:cfh", [ "dry-run", "change", "default=", "save=", "remove=", "load=", "force", "fingerprint", "config", "debug", "skip-options=", "help" ])[0])
     except getopt.GetoptError as e:
         print("Failed to parse options: {0}.\n"
               "Use --help to get usage information.".format(str(e)),
@@ -789,6 +795,33 @@ def main(argv):
         except Exception as e:
             raise AutorandrException("Failed to save current configuration as profile '%s'" % (options["--save"],), e)
         print("Saved current configuration as profile '%s'" % options["--save"])
+        sys.exit(0)
+
+    if "-r" in options:
+        options["--remove"] = options["-r"]
+    if "--remove" in options:
+        if options["--remove"] in ( x[0] for x in virtual_profiles ):
+            raise AutorandrException("Cannot remove profile '%s':\nThis configuration name is a reserved virtual configuration." % options["--remove"])
+        if options["--remove"] not in profiles.keys():
+            raise AutorandrException("Cannot remove profile '%s':\nThis profile does not exist." % options["--remove"])
+        try:
+            remove = True
+            profile_folder = os.path.join(profile_path, options["--remove"])
+            profile_dirlist = os.listdir(profile_folder)
+            profile_dirlist.remove("config")
+            profile_dirlist.remove("setup")
+            if profile_dirlist:
+                print("Profile folder '%s' contains the following additional files:\n---\n%s\n---" % (options["--remove"], "\n".join(profile_dirlist)))
+                response = input("Do you really want to remove profile '%s'? If so, type 'yes': " % options["--remove"]).strip()
+                if response != "yes":
+                    remove = False
+            if remove is True:
+                shutil.rmtree(profile_folder)
+                print("Removed profile '%s'" % options["--remove"])
+            else:
+                print("Profile '%s' was not removed" % options["--remove"])
+        except Exception as e:
+            raise AutorandrException("Failed to remove profile '%s'" % (options["--remove"],), e)
         sys.exit(0)
 
     if "-h" in options or "--help" in options:
