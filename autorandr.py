@@ -898,6 +898,9 @@ def main(argv):
                     "PROFILE_FOLDER": scripts_path,
                 }
                 exec_scripts(scripts_path, "preswitch", script_metadata)
+                if "--debug" in options:
+                    print("Going to run:")
+                    apply_configuration(load_config, config, True)
                 apply_configuration(load_config, config, False)
                 exec_scripts(scripts_path, "postswitch", script_metadata)
         except Exception as e:
