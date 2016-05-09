@@ -39,7 +39,7 @@ detect_display()
 	done
 }
 
-if grep -q systemd $(readlink -f $(awk '{print $1}' /proc/1/cmdline)) && [ "$2" = "udev" ]; then
+if grep -q systemd /proc/1/comm && [ "$2" = "udev" ]; then
     exec /bin/systemctl start autorandr-resume.service
 fi
 
