@@ -85,9 +85,12 @@ To change this behaviour and switch to a fallback configuration, specify
 `--default <profile>`.
 
 Another script called `postswitch` can be placed in the directory
-`~/.config/autorandr` (or `~/.autorandr` if you have an old installation) as well as in all profile directories: The scripts are executed
-after a mode switch has taken place and can notify window managers or other
-applications about it.
+`~/.config/autorandr` (or `~/.autorandr` if you have an old installation) as
+well as in all profile directories: The scripts are executed after a mode
+switch has taken place and can notify window managers or other applications
+about it. The same holds for `preswitch`, which is executed before the switch
+takes place, and `postsave`, which is executed after a profile was
+stored/altered.
 
 All scripts can also be placed in any of the `$XDG_CONFIG_DIRS`. In addition to
 the script names themselves, any executables in subdirectories named
