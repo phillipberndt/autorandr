@@ -62,7 +62,7 @@ ifeq ($(HAVE_UDEV),y)
 DEFAULT_TARGETS+=udev
 endif
 
-install_udev:
+install_udev: install_pmutils
 	install -D -m 644 contrib/udev/40-monitor-hotplug.rules ${DESTDIR}/etc/udev/rules.d/40-monitor-hotplug.rules
 ifeq (${USER},root)
 	udevadm control --reload-rules
@@ -71,7 +71,7 @@ else
 	@echo "    udevadm control --reload-rules"
 endif
 
-uninstall_udev:
+uninstall_udev: uninstall_pmutils
 	rm -f ${DESTDIR}/etc/udev/rules.d/40-monitor-hotplug.rules
 
 
