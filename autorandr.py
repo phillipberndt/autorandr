@@ -112,7 +112,8 @@ class AutorandrException(Exception):
             retval.append(":\n  ")
             retval.append(str(self.original_exception).replace("\n", "\n  "))
         if self.report_bug:
-            retval.append("\nThis appears to be a bug. Please help improving autorandr by reporting it upstream."
+            retval.append("\nThis appears to be a bug. Please help improving autorandr by reporting it upstream:"
+                          "\nhttps://github.com/phillipberndt/autorandr/issues"
                          "\nPlease attach the output of `xrandr --verbose` to your bug report if appropriate.")
         return "".join(retval)
 
@@ -925,5 +926,5 @@ if __name__ == '__main__':
             print("Exception: {0}".format(e.__class__.__name__))
             sys.exit(2)
 
-        print("Unhandled exception ({0}). Please report this as a bug.".format(e), file=sys.stderr)
+        print("Unhandled exception ({0}). Please report this as a bug at https://github.com/phillipberndt/autorandr/issues.".format(e), file=sys.stderr)
         raise
