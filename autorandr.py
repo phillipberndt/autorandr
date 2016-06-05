@@ -34,6 +34,7 @@ import re
 import subprocess
 import sys
 import shutil
+import time
 
 from collections import OrderedDict
 from distutils.version import LooseVersion as Version
@@ -529,6 +530,25 @@ def update_mtime(filename):
     except:
         return False
 
+def call_and_retry(*args, **kwargs):
+    """Wrapper around subprocess.call that retries failed calls.
+
+    This function calls subprocess.call and on non-zero exit states,
+    waits a second and then retries once. This mitigates #47,
+    a timing issue with some drivers.
+    """
+    kwargs_redirected = dict(kwargs)
+    if hasattr(subprocess, "DEVNULL"):
+        kwargs_redirected["stdout"] = getattr(subprocess, "DEVNULL")
+    else:
+        kwargs_redirected["stdout"] = open(os.devnull, "w")
+    kwargs_redirected["stderr"] = kwargs_redirected["stdout"]
+    retval = subprocess.call(*args, **kwargs_redirected)
+    if retval != 0:
+        time.sleep(1)
+        retval = subprocess.call(*args, **kwargs)
+    return retval
+
 def apply_configuration(new_configuration, current_configuration, dry_run=False):
     "Apply a configuration"
     outputs = sorted(new_configuration.keys(), key=lambda x: new_configuration[x].sort_key)
@@ -582,13 +602,13 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
     # Perform pe-change auxiliary changes
     if auxiliary_changes_pre:
         argv = base_argv + list(chain.from_iterable(auxiliary_changes_pre))
-        if subprocess.call(argv) != 0:
+        if call_and_retry(argv) != 0:
             raise AutorandrException("Command failed: %s" % " ".join(argv))
 
     # Disable unused outputs, but make sure that there always is at least one active screen
     disable_keep = 0 if remain_active_count else 1
     if len(disable_outputs) > disable_keep:
-        if subprocess.call(base_argv + list(chain.from_iterable(disable_outputs[:-1] if disable_keep else disable_outputs))) != 0:
+        if call_and_retry(base_argv + list(chain.from_iterable(disable_outputs[:-1] if disable_keep else disable_outputs))) != 0:
             # Disabling the outputs failed. Retry with the next command:
             # Sometimes disabling of outputs fails due to an invalid RRSetScreenSize.
             # This does not occur if simultaneously the primary screen is reset.
@@ -607,7 +627,7 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
     operations = disable_outputs + enable_outputs
     for index in range(0, len(operations), 2):
         argv = base_argv + list(chain.from_iterable(operations[index:index+2]))
-        if subprocess.call(argv) != 0:
+        if call_and_retry(argv) != 0:
             raise AutorandrException("Command failed: %s" % " ".join(argv))
 
 def is_equal_configuration(source_configuration, target_configuration):
