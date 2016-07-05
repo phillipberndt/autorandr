@@ -736,7 +736,7 @@ def exec_scripts(profile_path, script_name, meta_information=None):
         user_profile_path = os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "autorandr")
 
     for folder in chain((profile_path, os.path.dirname(profile_path), user_profile_path),
-                        (os.path.join(x, "autorandr") for x in os.environ.get("XDG_CONFIG_DIRS", "").split(":"))):
+                        (os.path.join(x, "autorandr") for x in os.environ.get("XDG_CONFIG_DIRS", "/etc/xdg").split(":"))):
 
         if script_name not in ran_scripts:
             script = os.path.join(folder, script_name)
@@ -769,7 +769,7 @@ def main(argv):
     try:
         # Load profiles from each XDG config directory
         # The XDG spec says that earlier entries should take precedence, so reverse the order
-        for directory in reversed(os.environ.get("XDG_CONFIG_DIRS", "").split(":")):
+        for directory in reversed(os.environ.get("XDG_CONFIG_DIRS", "/etc/xdg").split(":")):
             system_profile_path = os.path.join(directory, "autorandr")
             if os.path.isdir(system_profile_path):
                 profiles.update(load_profiles(system_profile_path))
