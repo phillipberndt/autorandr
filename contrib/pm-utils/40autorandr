@@ -34,7 +34,6 @@ find_user() {
 			done
 		done
 		)"
-		user=
 		if [ -n "$user" ]; then
 			echo $user
 			return 0
@@ -60,7 +59,6 @@ find_user() {
 		fi
 	fi
 
-	user=
 	if [ -n "$user" ]; then
 		echo $user
 		return 0
