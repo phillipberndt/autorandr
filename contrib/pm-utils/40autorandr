@@ -12,7 +12,7 @@ find_user() {
 	# Determine user owning the display session from $1
 	D="$1"
 
-	# Prefer loginctl over all others, see bug #49
+	# Prefer loginctl over all others, see bug #39
 	if [ -x "`which loginctl`" ]; then
 		# Based on http://unix.stackexchange.com/questions/203844/how-to-find-out-the-current-active-xserver-display-number/204498
 		# by SO user intelfx
@@ -94,7 +94,7 @@ detect_display()
 	for X in /tmp/.X11-unix/X*; do
 		D="${X##/tmp/.X11-unix/X}"
 
-		user="$(find_user "$D")"
+		user="$(find_user ":$D")"
 
 		if [ x"$user" != x"" ]; then
 			logger "autorandr: Changing display configuration for display :$D, user '$user'"
