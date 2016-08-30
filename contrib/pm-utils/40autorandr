@@ -18,20 +18,28 @@ find_user() {
 		# by SO user intelfx
 		user="$(
 		loginctl list-sessions --no-legend | while read id uid user seat; do
-			 loginctl show-session -p Display -p Active "$id" | while IFS='=' read property value; do
-				case "$property" in
-					Active)
-						if [ "$value" != "yes" ]; then
-							continue
-						fi
-						;;
-					Display)
-						if [ -n "$value" -a "$value" = "$D" ]; then
-							echo $user
-						fi
-						;;
-				esac
-			done
+			session=$(loginctl show-session -p Display -p Active "$id")
+			first=$(echo $session | cut -d" " -f1)
+			second=$(echo $session | cut -d" " -f2)
+
+			if [ -n $(echo "$first" | grep "Display") ]; then
+				display=$first
+				active=$second
+			else
+				display=$second
+				active=$first
+			fi
+
+			active_value=$(echo "$active" | cut -d"=" -f2)
+			display_value=$(echo "$display" | cut -d"=" -f2)
+
+			if [ "$active_value" != "yes" ]; then
+				continue
+			fi
+
+			if [ -n $display_value -a "$display_value" = "$D" ]; then
+				echo $user
+			fi
 		done
 		)"
 		if [ -n "$user" ]; then
