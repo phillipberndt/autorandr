@@ -3,7 +3,7 @@ Description=autorandr resume hook
 After=sleep.target
 
 [Service]
-ExecStart=/etc/pm/sleep.d/40autorandr thaw
+ExecStart=/usr/bin/autorandr --batch -c --default default
 
 [Install]
 WantedBy=sleep.target

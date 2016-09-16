@@ -30,6 +30,7 @@ import getopt
 import hashlib
 import os
 import posix
+import pwd
 import re
 import subprocess
 import sys
@@ -69,6 +70,7 @@ Usage: autorandr [options]
 --config                dump your current xrandr setup
 --dry-run               don't change anything, only print the xrandr commands
 --debug                 enable verbose output
+--batch                 run autorandr for all users with active X11 sessions
 
  To prevent a profile from being loaded, place a script call "block" in its
  directory. The script is evaluated before the screen setup is inspected, and
@@ -756,14 +758,89 @@ def exec_scripts(profile_path, script_name, meta_information=None):
 
     return all_ok
 
+def dispatch_call_to_sessions(argv):
+    """Invoke autorandr for each open local X11 session with the given options.
+
+    The function iterates over all processes not owned by root and checks
+    whether they have a DISPLAY variable set. It strips the screen from any
+    variable it finds (i.e. :0.0 becomes :0) and checks whether this display
+    has been handled already. If it has not, it forks, changes uid/gid to
+    the user owning the process, reuses the process's environment and runs
+    autorandr with the parameters from argv.
+
+    This function requires root permissions. It only works for X11 servers that
+    have at least one non-root process running. It is susceptible for attacks
+    where one user runs a process with another user's DISPLAY variable - in
+    this case, it might happen that autorandr is invoked for the other user,
+    which won't work. Since no other harm than prevention of automated
+    execution of autorandr can be done this way, the assumption is that in this
+    situation, the local administrator will handle the situation."""
+    X11_displays_done = set()
+
+    autorandr_binary = os.path.abspath(argv[0])
+
+    for directory in os.listdir("/proc"):
+        directory = os.path.join("/proc/", directory)
+        if not os.path.isdir(directory):
+            continue
+        environ_file = os.path.join(directory, "environ")
+        if not os.path.isfile(environ_file):
+            continue
+        uid = os.stat(environ_file).st_uid
+        if uid == 0:
+            continue
+
+        process_environ = {}
+        for environ_entry in open(environ_file).read().split("\0"):
+            if "=" in environ_entry:
+                name, value = environ_entry.split("=", 1)
+                if name == "DISPLAY" and "." in value:
+                    value = value[:value.find(".")]
+                process_environ[name] = value
+        display = process_environ["DISPLAY"] if "DISPLAY" in process_environ else None
+
+        if display and display not in X11_displays_done:
+            try:
+                pwent = pwd.getpwuid(uid)
+            except KeyError:
+                # User has no pwd entry
+                continue
+
+            print("Running autorandr as %s for display %s" % (pwent.pw_name, display))
+            child_pid = os.fork()
+            if child_pid == 0:
+                # This will throw an exception if any of the privilege changes fails,
+                # so it should be safe. Also, note that since the environment
+                # is taken from a process owned by the user, reusing it should
+                # not leak any information.
+                os.setgroups([])
+                os.setresgid(pwent.pw_gid, pwent.pw_gid, pwent.pw_gid)
+                os.setresuid(pwent.pw_uid, pwent.pw_uid, pwent.pw_uid)
+                os.chdir(pwent.pw_dir)
+                os.environ.clear()
+                os.environ.update(process_environ)
+                os.execl(autorandr_binary, autorandr_binary, *argv[1:])
+                os.exit(1)
+            os.waitpid(child_pid, 0)
+
+            X11_displays_done.add(display)
+
 def main(argv):
     try:
-        options = dict(getopt.getopt(argv[1:], "s:r:l:d:cfh", [ "dry-run", "change", "default=", "save=", "remove=", "load=", "force", "fingerprint", "config", "debug", "skip-options=", "help" ])[0])
+        options = dict(getopt.getopt(argv[1:], "s:r:l:d:cfh", [ "batch", "dry-run", "change", "default=", "save=", "remove=", "load=", "force", "fingerprint", "config", "debug", "skip-options=", "help" ])[0])
     except getopt.GetoptError as e:
         print("Failed to parse options: {0}.\n"
               "Use --help to get usage information.".format(str(e)),
               file=sys.stderr)
         sys.exit(posix.EX_USAGE)
+
+    # Batch mode
+    if "--batch" in options:
+        if ("DISPLAY" not in os.environ or not os.environ["DISPLAY"]) and os.getuid() == 0:
+            dispatch_call_to_sessions([ x for x in argv if x != "--batch" ])
+        else:
+            print("--batch mode can only be used by root and if $DISPLAY is unset")
+        return
 
     profiles = {}
     try:
