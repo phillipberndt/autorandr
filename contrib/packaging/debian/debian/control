@@ -1,0 +1,14 @@
+Package: autorandr
+Version: 1.0
+Section: x11
+Priority: optional
+Maintainer: Phillip Berndt <phillip.berndt@googlemail.com>
+Build-Depends: debhelper (>=9)
+Standards-Version: 3.9.6
+Homepage: https://github.com/phillipberndt/autorandr
+Architecture: all
+Depends: x11-xserver-utils, python
+Description: Automatically select a display configuration for connected devices
+ Autorandr is a script for managing xrandr configurations based on the
+ connected devices. It can be set up to automatically switch to a stored
+ configuration whenever a change in the configuration is detected.
