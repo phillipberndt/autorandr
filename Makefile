@@ -73,6 +73,19 @@ endif
 
 uninstall_udev:
 	rm -f ${DESTDIR}/etc/udev/rules.d/40-monitor-hotplug.rules
+	
+HAVE_NITROGEN=$(shell type nitrogen &>/dev/null && echo "y")
+ifeq ($(HAVE_NITROGEN),y)
+DEFAULT_TARGETS+=nitrogen
+endif
+
+# Rules for nitrogen
+NITROGEN=autorandr_nitrogen_wallpaper
+install_nitrogen:
+	install -D -m 755 contrib/${NITROGEN}/${NITROGEN} ${DESTDIR}${PREFIX}/bin/${NITROGEN}
+
+uninstall_nitrogen:
+	rm -f ${DESTDIR}${PREFIX}/bin/${NITROGEN}
 
 
 TARGETS=$(DEFAULT_TARGETS)
