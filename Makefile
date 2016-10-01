@@ -1,7 +1,7 @@
 DESTDIR=/
 PREFIX=/usr/
 
-.PHONY: all install uninstall autorandr bash_completion pmutils systemd udev
+.PHONY: all install uninstall autorandr bash_completion autostart_config pmutils systemd udev
 
 all:
 	@echo "Call \"make install\" to install this program."
@@ -36,6 +36,15 @@ install_bash_completion:
 
 uninstall_bash_completion:
 	rm -f ${DESTDIR}/${BASH_COMPLETION_DIR}/autorandr
+
+# Rules for autostart config
+XDG_AUTOSTART_DIR=/etc/xdg/autostart
+
+install_autostart_config:
+	install -D -m 644 contrib/etc/xdg/autostart/autorandr.desktop ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr.desktop
+
+uninstall_autostart_config:
+	rm -f ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr.desktop
 
 # Rules for pmutils
 PM_UTILS_DIR=/etc/pm/sleep.d
