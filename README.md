@@ -38,6 +38,7 @@ Contributors to this version of autorandr are:
 * Maciej Sitarz
 * Mathias Svensson
 * Matthew R Johnson
+* Nazar Mokrynskyi
 * Phillip Berndt
 * Rasmus Wriedt Larsen
 * Stefan Tomanek
