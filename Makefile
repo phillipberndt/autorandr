@@ -39,6 +39,7 @@ uninstall_bash_completion:
 
 # Rules for autostart config
 XDG_AUTOSTART_DIR=/etc/xdg/autostart
+DEFAULT_TARGETS+=autostart_config
 
 install_autostart_config:
 	install -D -m 644 contrib/etc/xdg/autostart/autorandr.desktop ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr.desktop
