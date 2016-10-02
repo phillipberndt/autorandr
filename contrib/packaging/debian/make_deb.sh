@@ -34,7 +34,7 @@ mkdir $D
 # Debian(ish) specific part
 make -C "$P/../../../" \
 	DESTDIR="$D" \
-	TARGETS="autorandr bash_completion pmutils systemd udev" \
+	TARGETS="autorandr bash_completion autostart_config pmutils systemd udev" \
 	BASH_COMPLETION_DIR=/usr/share/bash-completion/completions \
 	SYSTEMD_UNIT_DIR=/lib/systemd/system \
 	PM_UTILS_DIR=/usr/lib/pm-utils/sleep.d \
@@ -44,7 +44,7 @@ make -C "$P/../../../" \
 SIZE=$(du -s $D | awk '{print $1}')
 
 cp -r "$P/debian" "$D/DEBIAN"
-[ -d "$D/etc" ] && (cd $D; find etc) > "$D/DEBIAN/conffiles"
+[ -d "$D/etc" ] && (cd $D; find etc -type f) > "$D/DEBIAN/conffiles"
 sed -i -re "s#Version:.+#Version: $V#" "$D/DEBIAN/control"
 echo "Installed-Size: $SIZE" >> "$D/DEBIAN/control"
 fakeroot dpkg-deb -b "$D" "$O"
