@@ -51,30 +51,40 @@ Contributors to this version of autorandr are:
 * Simon Wydooghe
 
 ## Installation/removal
-For Debian-based distributives (including Ubuntu) it is recommended to call `make deb` to obtain a package that can be installed and removed with `dpkg`.
+You can use the `autorandr.py` script as a stand-alone binary. If you'd like to
+install it as a system-wide application, there is a Makefile included that also
+places some configuration files in appropriate directories such that autorandr
+is invoked automatically when a monitor is connected or removed, the system
+wakes up from suspend, or a user logs into an X11 session.
 
-On other distributives you can install autorandr by calling `make install` and remove it by calling `make uninstall`.
+For Debian-based distributions (including Ubuntu) it is recommended to call
+`make deb` to obtain a package that can be installed and removed with `dpkg`.
 
-If you can contribute packaging script for other distributives, we will appreciate it.
+On Arch Linux, there is [an aur package
+available](https://aur.archlinux.org/packages/autorandr-git/).
+
+On other distributions you can install autorandr by calling `make install` and
+remove it by calling `make uninstall`. Run `make` without arguments to obtain a
+list of what exactly will be installed.
+
+We appreciate packaging scripts for other distributions, please file a pull
+request if you write one.
 
 ## How to use
 
 Save your current display configuration and setup with:
-```
-autorandr --save mobile
-```
+
+    autorandr --save mobile
 
 Connect an additional display, configure your setup and save it:
-```
-autorandr --save docked
-```
+
+    autorandr --save docked
 
 Now autorandr can detect which hardware setup is active:
-```
- $ autorandr
-   mobile
-   docked (detected)
-```
+
+    $ autorandr
+      mobile
+      docked (detected)
 
 To automatically reload your setup, just append `--change` to the command line
 
@@ -90,7 +100,14 @@ to query the status of a docking station you are about to leave.
 
 If no suitable profile can be identified, the current configuration is kept.
 To change this behaviour and switch to a fallback configuration, specify
-`--default <profile>`.
+`--default <profile>`. The system-wide installation of autorandr by default
+calls autorandr with a parameter `--default default`. There are three special,
+virtual configurations called `horizontal`, `vertical` and `common`. They
+automatically generate a configuration that incorporates all screens
+connected to the computer. You can symlink `default` to one of these
+names in your configuration directory to have autorandr use any of them
+as the default configuration without you having to change the system-wide
+configuration.
 
 Another script called `postswitch` can be placed in the directory
 `~/.config/autorandr` (or `~/.autorandr` if you have an old installation) as
@@ -106,7 +123,6 @@ the script names themselves, any executables in subdirectories named
 autorandr's state is exposed as environment variables prefixed with `AUTORANDR_`.
 The most useful one is `$AUTORANDR_CURRENT_PROFILE`.
 
-## Apply configuration on login
-With recent versions of autorandr you typically do not need to add autorandr to `~/.xprofile`, since an autostart configuration file will be installed at `/etc/xdg/autostart/autorandr.desktop` by the makefile. It will select an appropriate profile automatically.
+## Changelog
 
-If you need to customize this behaviour, you can always disable or modify it by placing an alternative desktop file with the same name in `~/.config/autostart` or by using a GUI configuration tool for autostart like `gnome-session-properties`.
+* *2016-10-03* Install a desktop file to `/etc/xdg/autostart` by default
