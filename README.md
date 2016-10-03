@@ -51,9 +51,9 @@ Contributors to this version of autorandr are:
 * Simon Wydooghe
 
 ## Installation/removal
-For Debian-based distributives (including Ubuntu) it is recommended to call `make deb` to obtain package that can be afterwards installed and removed with `dpkg`.
+For Debian-based distributives (including Ubuntu) it is recommended to call `make deb` to obtain a package that can be installed and removed with `dpkg`.
 
-On other distributives you can install autorandr by calling `make install` and remove by calling `make uninstall`.
+On other distributives you can install autorandr by calling `make install` and remove it by calling `make uninstall`.
 
 If you can contribute packaging script for other distributives, we will appreciate it.
 
@@ -107,6 +107,6 @@ autorandr's state is exposed as environment variables prefixed with `AUTORANDR_`
 The most useful one is `$AUTORANDR_CURRENT_PROFILE`.
 
 ## Apply configuration on login
-With recent version you typically do not need to add autorandr to `~/.xprofile`, since autostart config file will be added at `/etc/xdg/autostart/autorandr.desktop`. It will select appropriate profile automatically.
+With recent versions of autorandr you typically do not need to add autorandr to `~/.xprofile`, since an autostart configuration file will be installed at `/etc/xdg/autostart/autorandr.desktop` by the makefile. It will select an appropriate profile automatically.
 
-However, if you need to customize this, you can always disable or modify it by placing alternative desktop file in `~/.config/autostart` or using GUI like `gnome-session-properties`.
+If you need to customize this behaviour, you can always disable or modify it by placing an alternative desktop file with the same name in `~/.config/autostart` or by using a GUI configuration tool for autostart like `gnome-session-properties`.
