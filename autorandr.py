@@ -476,6 +476,17 @@ def load_profiles(profile_path):
 
     return profiles
 
+def get_symlinks(profile_path):
+    "Load all symlinks from a directory"
+
+    symlinks = {}
+    for link in os.listdir(profile_path):
+        file_name = os.path.join(profile_path, link)
+        if os.path.islink(file_name):
+            symlinks[link] = os.readlink(file_name)
+
+    return symlinks
+
 def find_profiles(current_config, profiles):
     "Find profiles matching the currently connected outputs"
     detected_profiles = []
@@ -843,6 +854,7 @@ def main(argv):
         return
 
     profiles = {}
+    profile_symlinks = {}
     try:
         # Load profiles from each XDG config directory
         # The XDG spec says that earlier entries should take precedence, so reverse the order
@@ -850,6 +862,7 @@ def main(argv):
             system_profile_path = os.path.join(directory, "autorandr")
             if os.path.isdir(system_profile_path):
                 profiles.update(load_profiles(system_profile_path))
+                profile_symlinks.update(get_symlinks(system_profile_path))
         # For the user's profiles, prefer the legacy ~/.autorandr if it already exists
         # profile_path is also used later on to store configurations
         profile_path = os.path.expanduser("~/.autorandr")
@@ -858,10 +871,13 @@ def main(argv):
             profile_path = os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "autorandr")
         if os.path.isdir(profile_path):
             profiles.update(load_profiles(profile_path))
+            profile_symlinks.update(get_symlinks(profile_path))
         # Sort by descending mtime
         profiles = OrderedDict(sorted(profiles.items(), key=lambda x: -x[1]["config-mtime"]))
     except Exception as e:
         raise AutorandrException("Failed to load profiles", e)
+
+    profile_symlinks = { k: v for k, v in profile_symlinks.items() if v in (x[0] for x in virtual_profiles) or v in profiles }
 
     config, modes = parse_xrandr_output()
 
@@ -965,6 +981,11 @@ def main(argv):
         load_profile = options["--default"]
 
     if load_profile:
+        if load_profile in profile_symlinks:
+            if "--debug" in options:
+                print("'%s' symlinked to '%s'" % (load_profile, profile_symlinks[load_profile]))
+            load_profile = profile_symlinks[load_profile]
+
         if load_profile in ( x[0] for x in virtual_profiles ):
             load_config = generate_virtual_profile(config, modes, load_profile)
             scripts_path = os.path.join(profile_path, load_profile)
