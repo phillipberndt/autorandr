@@ -72,7 +72,7 @@ Usage: autorandr [options]
 --debug                 enable verbose output
 --batch                 run autorandr for all users with active X11 sessions
 
- To prevent a profile from being loaded, place a script call "block" in its
+ To prevent a profile from being loaded, place a script called "block" in its
  directory. The script is evaluated before the screen setup is inspected, and
  in case of it returning a value of 0 the profile is skipped. This can be used
  to query the status of a docking station you are about to leave.
