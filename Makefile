@@ -9,7 +9,17 @@ all:
 	@echo
 	@echo "The following components were autodetected and will be installed:"
 	@echo " "$(DEFAULT_TARGETS)
-	@echo "You can use the TARGETS variable to override, e.g. \"make install TAGETS='autorandr pmutils'\"."
+	@echo
+	@echo "The following locations have been detected (from pkg-config):"
+	@echo " - SYSTEMD_UNIT_DIR: $(SYSTEMD_UNIT_DIR)"
+	@echo " - UDEV_RULES_DIR: $(UDEV_RULES_DIR)"
+	@echo " - PM_SLEEPHOOKS_DIR: $(PM_SLEEPHOOKS_DIR)"
+	@echo
+	@echo "You can use the TARGETS variable to override this, but need to set"
+	@echo "the SYSTEMD_UNIT_DIR, PM_SLEEPHOOKS_DIR and UDEV_RULES_DIR variables"
+	@echo "in case they were not detected correctly."
+	@echo
+	@echo 'E.g. "make install TARGETS='autorandr pmutils' PM_UTILS_DIR=/etc/pm/sleep.d".'
 	@echo
 	@echo "The following additional targets are available:"
 	@echo
@@ -48,39 +58,41 @@ uninstall_autostart_config:
 	rm -f ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr.desktop
 
 # Rules for pmutils
-PM_UTILS_DIR=/etc/pm/sleep.d
-HAVE_PMUTILS=$(shell [ -x /usr/sbin/pm-suspend ] && echo "y")
-ifeq ($(HAVE_PMUTILS),y)
+PM_SLEEPHOOKS_DIR:=$(shell pkg-config --variable=pm_sleephooks pm-utils 2>/dev/null)
+ifneq (,$(PM_SLEEPHOOKS_DIR))
 DEFAULT_TARGETS+=pmutils
 endif
 
 install_pmutils:
-	install -D -m 755 contrib/pm-utils/40autorandr ${DESTDIR}/${PM_UTILS_DIR}/40autorandr
+	$(if $(PM_SLEEPHOOKS_DIR),,$(error PM_SLEEPHOOKS_DIR is not defined))
+	install -D -m 755 contrib/pm-utils/40autorandr ${DESTDIR}/${PM_SLEEPHOOKS_DIR}/40autorandr
 
 uninstall_pmutils:
-	rm -f ${DESTDIR}/${PM_UTILS_DIR}/40autorandr
+	$(if $(PM_SLEEPHOOKS_DIR),,$(error PM_SLEEPHOOKS_DIR is not defined))
+	rm -f ${DESTDIR}/${PM_SLEEPHOOKS_DIR}/40autorandr
 
 # Rules for systemd
-SYSTEMD_UNIT_DIR=/etc/systemd/system/
-HAVE_SYSTEMD=$(shell grep -q systemd /proc/1/comm && echo "y")
-ifeq ($(HAVE_SYSTEMD),y)
+SYSTEMD_UNIT_DIR:=$(shell pkg-config --variable=systemdsystemunitdir systemd 2>/dev/null)
+ifneq (,$(SYSTEMD_UNIT_DIR))
 DEFAULT_TARGETS+=systemd
 endif
 
 install_systemd:
+	$(if $(SYSTEMD_UNIT_DIR),,$(error SYSTEMD_UNIT_DIR is not defined))
 	install -D -m 644 contrib/systemd/autorandr-resume.service ${DESTDIR}/${SYSTEMD_UNIT_DIR}/autorandr-resume.service
 
 uninstall_systemd:
+	$(if $(SYSTEMD_UNIT_DIR),,$(error SYSTEMD_UNIT_DIR is not defined))
 	rm -f ${DESTDIR}/${SYSTEMD_UNIT_DIR}/autorandr-resume.service
 
 # Rules for udev
-UDEV_RULES_DIR=/etc/udev/rules.d
-HAVE_UDEV=$(shell [ -d "${UDEV_RULES_DIR}" ] && echo "y")
-ifeq ($(HAVE_UDEV),y)
+UDEV_RULES_DIR:=$(shell pkg-config --variable=udevdir udev 2>/dev/null)
+ifneq (,$(UDEV_RULES_DIR),y)
 DEFAULT_TARGETS+=udev
 endif
 
 install_udev:
+	$(if $(UDEV_RULES_DIR),,$(error UDEV_RULES_DIR is not defined))
 	install -D -m 644 contrib/udev/40-monitor-hotplug.rules ${DESTDIR}/${UDEV_RULES_DIR}/40-monitor-hotplug.rules
 ifeq (${USER},root)
 	udevadm control --reload-rules
@@ -90,6 +102,7 @@ else
 endif
 
 uninstall_udev:
+	$(if $(UDEV_RULES_DIR),,$(error UDEV_RULES_DIR is not defined))
 	rm -f ${DESTDIR}/${UDEV_RULES_DIR}/40-monitor-hotplug.rules
 
 
