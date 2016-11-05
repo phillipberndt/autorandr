@@ -86,7 +86,7 @@ uninstall_systemd:
 	rm -f ${DESTDIR}/${SYSTEMD_UNIT_DIR}/autorandr-resume.service
 
 # Rules for udev
-UDEV_RULES_DIR:=$(shell pkg-config --variable=udevdir udev 2>/dev/null)
+UDEV_RULES_DIR:=$(shell pkg-config --variable=udevdir udev 2>/dev/null)/rules.d
 ifneq (,$(UDEV_RULES_DIR),y)
 DEFAULT_TARGETS+=udev
 endif
