@@ -77,12 +77,19 @@ ifneq (,$(SYSTEMD_UNIT_DIR))
 DEFAULT_TARGETS+=systemd
 endif
 
+# `systemctl preset` will enable the service is that is the default on the
+# installed system, and otherwise will try to disable the service, which won't
+# do anything
 install_systemd:
 	$(if $(SYSTEMD_UNIT_DIR),,$(error SYSTEMD_UNIT_DIR is not defined))
 	install -D -m 644 contrib/systemd/autorandr-resume.service ${DESTDIR}/${SYSTEMD_UNIT_DIR}/autorandr-resume.service
+	systemctl preset autorandr-resume.service
 
+# `systemctl disable` will clean up if the service was enabled, and otherwise do
+# nothing
 uninstall_systemd:
 	$(if $(SYSTEMD_UNIT_DIR),,$(error SYSTEMD_UNIT_DIR is not defined))
+	systemctl disable autorandr-resume.service
 	rm -f ${DESTDIR}/${SYSTEMD_UNIT_DIR}/autorandr-resume.service
 
 # Rules for udev
