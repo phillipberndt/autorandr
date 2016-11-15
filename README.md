@@ -117,6 +117,11 @@ about it. The same holds for `preswitch`, which is executed before the switch
 takes place, and `postsave`, which is executed after a profile was
 stored/altered.
 
+If you experience issues with xrandr being executed too early after connecting
+a new monitor, then you can create a script `predetect`, which will be executed
+before autorandr attempts to run xrandr. Place e.g. `sleep 1` into that file
+to make autorandr wait a second before running xrandr.
+
 All scripts can also be placed in any of the `$XDG_CONFIG_DIRS`. In addition to
 the script names themselves, any executables in subdirectories named
 `script_name.d` (e.g. `postswitch.d`) are executed as well. In scripts, some of
@@ -125,4 +130,5 @@ The most useful one is `$AUTORANDR_CURRENT_PROFILE`.
 
 ## Changelog
 
+* *2016-11-15* New script hook, `predetect`
 * *2016-10-03* Install a desktop file to `/etc/xdg/autostart` by default
