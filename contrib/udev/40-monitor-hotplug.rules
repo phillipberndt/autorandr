@@ -1,1 +1,1 @@
-ACTION=="change", SUBSYSTEM=="drm", RUN+="/usr/bin/autorandr --batch -c --default default"
+ACTION=="change", SUBSYSTEM=="drm", RUN+="/bin/systemctl start autorandr.service"

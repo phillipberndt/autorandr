@@ -1,9 +1,0 @@
-[Unit]
-Description=autorandr resume hook
-After=sleep.target
-
-[Service]
-ExecStart=/usr/bin/autorandr --batch -c --default default
-
-[Install]
-WantedBy=sleep.target
