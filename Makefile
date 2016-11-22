@@ -105,7 +105,8 @@ endif
 
 install_udev:
 	$(if $(UDEV_RULES_DIR),,$(error UDEV_RULES_DIR is not defined))
-	install -D -m 644 contrib/udev/40-monitor-hotplug.rules ${DESTDIR}/${UDEV_RULES_DIR}/40-monitor-hotplug.rules
+	mkdir -p ${DESTDIR}/${UDEV_RULES_DIR}/
+	echo 'ACTION=="change", SUBSYSTEM=="drm", RUN+="$(if $(findstring systemd, $(TARGETS)),/bin/systemctl start autorandr.service,${PREFIX}/bin/autorandr --batch --change --default default)"' > ${DESTDIR}/${UDEV_RULES_DIR}/40-monitor-hotplug.rules
 ifeq (${USER},root)
 	udevadm control --reload-rules
 else
