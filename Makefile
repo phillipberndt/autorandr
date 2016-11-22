@@ -53,6 +53,9 @@ DEFAULT_TARGETS+=autostart_config
 
 install_autostart_config:
 	install -D -m 644 contrib/etc/xdg/autostart/autorandr.desktop ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr.desktop
+ifneq ($(PREFIX),/usr/)
+	sed -i -re 's#/usr/bin/autorandr#$(subst #,\#,${PREFIX})/bin/autorandr#g' ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr.desktop
+endif
 
 uninstall_autostart_config:
 	rm -f ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr.desktop
@@ -66,6 +69,9 @@ endif
 install_systemd:
 	$(if $(SYSTEMD_UNIT_DIR),,$(error SYSTEMD_UNIT_DIR is not defined))
 	install -D -m 644 contrib/systemd/autorandr.service ${DESTDIR}/${SYSTEMD_UNIT_DIR}/autorandr.service
+ifneq ($(PREFIX),/usr/)
+	sed -i -re 's#/usr/bin/autorandr#$(subst #,\#,${PREFIX})/bin/autorandr#g' ${DESTDIR}/${SYSTEMD_UNIT_DIR}/autorandr.service
+endif
 
 uninstall_systemd:
 	$(if $(SYSTEMD_UNIT_DIR),,$(error SYSTEMD_UNIT_DIR is not defined))
@@ -82,6 +88,9 @@ endif
 install_pmutils:
 	$(if $(PM_SLEEPHOOKS_DIR),,$(error PM_SLEEPHOOKS_DIR is not defined))
 	install -D -m 755 contrib/pm-utils/40autorandr ${DESTDIR}/${PM_SLEEPHOOKS_DIR}/40autorandr
+ifneq ($(PREFIX),/usr/)
+	sed -i -re 's#/usr/bin/autorandr#$(subst #,\#,${PREFIX})/bin/autorandr#g' ${DESTDIR}/${PM_SLEEPHOOKS_DIR}/40autorandr
+endif
 
 uninstall_pmutils:
 	$(if $(PM_SLEEPHOOKS_DIR),,$(error PM_SLEEPHOOKS_DIR is not defined))

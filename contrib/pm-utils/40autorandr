@@ -5,6 +5,6 @@ exec > /var/log/autorandr.log 2>&1
 
 case "$1" in
 	thaw|resume)
-		autorandr --batch -c --default default
+		/usr/bin/autorandr --batch --change --default default
 		;;
 esac

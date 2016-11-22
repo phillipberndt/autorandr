@@ -3,7 +3,7 @@ Description=autorandr execution hook
 After=sleep.target
 
 [Service]
-ExecStart=/usr/local/bin/autorandr --batch --change --default default
+ExecStart=/usr/bin/autorandr --batch --change --default default
 Type=oneshot
 RemainAfterExit=false
 
