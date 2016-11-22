@@ -57,10 +57,26 @@ install_autostart_config:
 uninstall_autostart_config:
 	rm -f ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr.desktop
 
+# Rules for systemd
+SYSTEMD_UNIT_DIR:=$(shell pkg-config --variable=systemdsystemunitdir systemd 2>/dev/null)
+ifneq (,$(SYSTEMD_UNIT_DIR))
+DEFAULT_TARGETS+=systemd
+endif
+
+install_systemd:
+	$(if $(SYSTEMD_UNIT_DIR),,$(error SYSTEMD_UNIT_DIR is not defined))
+	install -D -m 644 contrib/systemd/autorandr.service ${DESTDIR}/${SYSTEMD_UNIT_DIR}/autorandr.service
+
+uninstall_systemd:
+	$(if $(SYSTEMD_UNIT_DIR),,$(error SYSTEMD_UNIT_DIR is not defined))
+	rm -f ${DESTDIR}/${SYSTEMD_UNIT_DIR}/autorandr.service
+
 # Rules for pmutils
 PM_SLEEPHOOKS_DIR:=$(shell pkg-config --variable=pm_sleephooks pm-utils 2>/dev/null)
 ifneq (,$(PM_SLEEPHOOKS_DIR))
+ifeq (,$(SYSTEMD_UNIT_DIR))
 DEFAULT_TARGETS+=pmutils
+endif
 endif
 
 install_pmutils:
@@ -71,19 +87,6 @@ uninstall_pmutils:
 	$(if $(PM_SLEEPHOOKS_DIR),,$(error PM_SLEEPHOOKS_DIR is not defined))
 	rm -f ${DESTDIR}/${PM_SLEEPHOOKS_DIR}/40autorandr
 
-# Rules for systemd
-SYSTEMD_UNIT_DIR:=$(shell pkg-config --variable=systemdsystemunitdir systemd 2>/dev/null)
-ifneq (,$(SYSTEMD_UNIT_DIR))
-DEFAULT_TARGETS+=systemd
-endif
-
-install_systemd:
-	$(if $(SYSTEMD_UNIT_DIR),,$(error SYSTEMD_UNIT_DIR is not defined))
-	install -D -m 644 contrib/systemd/autorandr-resume.service ${DESTDIR}/${SYSTEMD_UNIT_DIR}/autorandr-resume.service
-
-uninstall_systemd:
-	$(if $(SYSTEMD_UNIT_DIR),,$(error SYSTEMD_UNIT_DIR is not defined))
-	rm -f ${DESTDIR}/${SYSTEMD_UNIT_DIR}/autorandr-resume.service
 
 # Rules for udev
 UDEV_RULES_DIR:=$(shell pkg-config --variable=udevdir udev 2>/dev/null)/rules.d
