@@ -798,7 +798,14 @@ def dispatch_call_to_sessions(argv):
         if not os.path.isfile(environ_file):
             continue
         uid = os.stat(environ_file).st_uid
-        if uid == 0:
+
+        # The following line assumes that user accounts start at 1000 and that
+        # no one works using the root or another system account. This is rather
+        # restrictive, but de facto default. Alternatives would be to use the
+        # UID_MIN from /etc/login.defs or FIRST_UID from /etc/adduser.conf;
+        # but effectively, both values aren't binding in any way.
+        # If this breaks your use case, please file a bug on Github.
+        if uid < 1000:
             continue
 
         process_environ = {}
