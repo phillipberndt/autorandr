@@ -1,6 +1,8 @@
 [Unit]
 Description=autorandr execution hook
 After=sleep.target
+StartLimitInterval=5
+StartLimitBurst=1
 
 [Service]
 ExecStart=/usr/bin/autorandr --batch --change --default default
