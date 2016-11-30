@@ -70,6 +70,11 @@ list of what exactly will be installed.
 We appreciate packaging scripts for other distributions, please file a pull
 request if you write one.
 
+On any distribution with `pip` installed you can install it with:
+```
+sudo pip install -e git+http://github.com/phillipberndt/autorandr#egg=autorandr
+```
+
 ## How to use
 
 Save your current display configuration and setup with:
