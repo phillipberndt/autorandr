@@ -1040,7 +1040,7 @@ def main(argv):
 
     sys.exit(0)
 
-if __name__ == '__main__':
+def exception_handled_main(argv=sys.argv):
     try:
         main(sys.argv)
     except AutorandrException as e:
@@ -1053,3 +1053,6 @@ if __name__ == '__main__':
 
         print("Unhandled exception ({0}). Please report this as a bug at https://github.com/phillipberndt/autorandr/issues.".format(e), file=sys.stderr)
         raise
+
+if __name__ == '__main__':
+    exception_handled_main()
