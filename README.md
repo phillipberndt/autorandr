@@ -70,6 +70,11 @@ list of what exactly will be installed.
 We appreciate packaging scripts for other distributions, please file a pull
 request if you write one.
 
+If you prefer `pip` over your package manager, you can install autorandr with:
+
+    sudo pip install "git+http://github.com/phillipberndt/autorandr#egg=autorandr"
+
+
 ## How to use
 
 Save your current display configuration and setup with:
