@@ -130,4 +130,7 @@ The most useful one is `$AUTORANDR_CURRENT_PROFILE`.
 
 ## Changelog
 
+**autorandr 1.0**
+
+* *2016-12-07* Tag the current code as version 1.0.0; see github issue #54
 * *2016-10-03* Install a desktop file to `/etc/xdg/autostart` by default
