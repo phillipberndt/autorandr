@@ -557,12 +557,18 @@ def call_and_retry(*args, **kwargs):
     waits a second and then retries once. This mitigates #47,
     a timing issue with some drivers.
     """
-    kwargs_redirected = dict(kwargs)
-    if hasattr(subprocess, "DEVNULL"):
-        kwargs_redirected["stdout"] = getattr(subprocess, "DEVNULL")
+    if "dry_run" in kwargs:
+        dry_run = kwargs["dry_run"]
+        del kwargs["dry_run"]
     else:
-        kwargs_redirected["stdout"] = open(os.devnull, "w")
-    kwargs_redirected["stderr"] = kwargs_redirected["stdout"]
+        dry_run = False
+    kwargs_redirected = dict(kwargs)
+    if not dry_run:
+        if hasattr(subprocess, "DEVNULL"):
+            kwargs_redirected["stdout"] = getattr(subprocess, "DEVNULL")
+        else:
+            kwargs_redirected["stdout"] = open(os.devnull, "w")
+        kwargs_redirected["stderr"] = kwargs_redirected["stdout"]
     retval = subprocess.call(*args, **kwargs_redirected)
     if retval != 0:
         time.sleep(1)
@@ -622,13 +628,13 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
     # Perform pe-change auxiliary changes
     if auxiliary_changes_pre:
         argv = base_argv + list(chain.from_iterable(auxiliary_changes_pre))
-        if call_and_retry(argv) != 0:
+        if call_and_retry(argv, dry_run=dry_run) != 0:
             raise AutorandrException("Command failed: %s" % " ".join(argv))
 
     # Disable unused outputs, but make sure that there always is at least one active screen
     disable_keep = 0 if remain_active_count else 1
     if len(disable_outputs) > disable_keep:
-        if call_and_retry(base_argv + list(chain.from_iterable(disable_outputs[:-1] if disable_keep else disable_outputs))) != 0:
+        if call_and_retry(base_argv + list(chain.from_iterable(disable_outputs[:-1] if disable_keep else disable_outputs)), dry_run=dry_run) != 0:
             # Disabling the outputs failed. Retry with the next command:
             # Sometimes disabling of outputs fails due to an invalid RRSetScreenSize.
             # This does not occur if simultaneously the primary screen is reset.
@@ -647,7 +653,7 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
     operations = disable_outputs + enable_outputs
     for index in range(0, len(operations), 2):
         argv = base_argv + list(chain.from_iterable(operations[index:index+2]))
-        if call_and_retry(argv) != 0:
+        if call_and_retry(argv, dry_run=dry_run) != 0:
             raise AutorandrException("Command failed: %s" % " ".join(argv))
 
 def is_equal_configuration(source_configuration, target_configuration):
