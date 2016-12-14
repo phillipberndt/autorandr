@@ -99,18 +99,25 @@ class AutorandrException(Exception):
             while trace.tb_next:
                 trace = trace.tb_next
             self.line = trace.tb_lineno
+            self.file_name = trace.tb_frame.f_code.co_filename
         else:
             try:
                 import inspect
-                self.line = inspect.currentframe().f_back.f_lineno
+                frame = inspect.currentframe().f_back
+                self.line = frame.f_lineno
+                self.file_name = frame.f_code.co_filename
             except:
                 self.line = None
+                self.file_name = None
             self.original_exception = None
+
+        if os.path.abspath(self.file_name) == os.path.abspath(sys.argv[0]):
+            self.file_name = None
 
     def __str__(self):
         retval = [ self.message ]
         if self.line:
-            retval.append(" (line %d)" % self.line)
+            retval.append(" (line %d%s)" % (self.line, ("; %s" % self.file_name) if self.file_name else ""))
         if self.original_exception:
             retval.append(":\n  ")
             retval.append(str(self.original_exception).replace("\n", "\n  "))
