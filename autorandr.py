@@ -767,7 +767,10 @@ def exec_scripts(profile_path, script_name, meta_information=None):
         if script_name not in ran_scripts:
             script = os.path.join(folder, script_name)
             if os.access(script, os.X_OK | os.F_OK):
-                all_ok &= subprocess.call(script, env=env) != 0
+                try:
+                    all_ok &= subprocess.call(script, env=env) != 0
+                except:
+                    raise AutorandrException("Failed to execute user command: %s" % (script,))
                 ran_scripts.add(script_name)
 
         script_folder = os.path.join(folder, "%s.d" % script_name)
@@ -777,7 +780,10 @@ def exec_scripts(profile_path, script_name, meta_information=None):
                 if check_name not in ran_scripts:
                     script = os.path.join(script_folder, file_name)
                     if os.access(script, os.X_OK | os.F_OK):
-                        all_ok &= subprocess.call(script, env=env) != 0
+                        try:
+                            all_ok &= subprocess.call(script, env=env) != 0
+                        except:
+                            raise AutorandrException("Failed to execute user command: %s" % (script,))
                         ran_scripts.add(check_name)
 
     return all_ok
@@ -1042,6 +1048,8 @@ def main(argv):
                     apply_configuration(load_config, config, True)
                 apply_configuration(load_config, config, False)
                 exec_scripts(scripts_path, "postswitch", script_metadata)
+        except AutorandrException as e:
+            raise AutorandrException("Failed to apply profile '%s'" % load_profile, e, e.report_bug)
         except Exception as e:
             raise AutorandrException("Failed to apply profile '%s'" % load_profile, e, True)
 
