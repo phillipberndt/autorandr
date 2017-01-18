@@ -345,6 +345,8 @@ class XrandrOutput(object):
         for line in configuration.split("\n"):
             if line:
                 line = line.split(None, 1)
+                if line and line[0].startswith("#"):
+                    continue
                 options[line[0]] = line[1] if len(line) > 1 else None
 
         edid = None
@@ -464,7 +466,7 @@ def load_profiles(profile_path):
         if not os.path.isfile(config_name) or not os.path.isfile(setup_name):
             continue
 
-        edids = dict([ x.strip().split() for x in open(setup_name).readlines() if x.strip() ])
+        edids = dict([ x.split() for x in (y.strip() for y in open(setup_name).readlines()) if x and x[0] != "#" ])
 
         config = {}
         buffer = []

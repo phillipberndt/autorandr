@@ -130,6 +130,8 @@ The most useful one is `$AUTORANDR_CURRENT_PROFILE`.
 
 ## Changelog
 
+* *2017-01-18* Accept comments (lines starting with `#`) in config/setup files
+
 **autorandr 1.0**
 
 * *2016-12-07* Tag the current code as version 1.0.0; see github issue #54
