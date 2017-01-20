@@ -744,6 +744,8 @@ def exec_scripts(profile_path, script_name, meta_information=None):
     and system-wide configuration folders, named script_name or residing in
     subdirectories named script_name.d.
 
+    If profile_path is None, only global scripts will be invoked.
+
     meta_information is expected to be an dictionary. It will be passed to the block scripts
     in the environment, as variables called AUTORANDR_<CAPITALIZED_KEY_HERE>.
 
@@ -763,8 +765,11 @@ def exec_scripts(profile_path, script_name, meta_information=None):
     if not os.path.isdir(user_profile_path):
         user_profile_path = os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "autorandr")
 
-    for folder in chain((profile_path, os.path.dirname(profile_path), user_profile_path),
-                        (os.path.join(x, "autorandr") for x in os.environ.get("XDG_CONFIG_DIRS", "/etc/xdg").split(":"))):
+    candidate_directories = chain((user_profile_path,), (os.path.join(x, "autorandr") for x in os.environ.get("XDG_CONFIG_DIRS", "/etc/xdg").split(":")))
+    if profile_path:
+        candidate_directories = chain((profile_path,), candidate_directories)
+
+    for folder in candidate_directories:
 
         if script_name not in ran_scripts:
             script = os.path.join(folder, script_name)
@@ -838,6 +843,9 @@ def dispatch_call_to_sessions(argv):
                 process_environ[name] = value
         display = process_environ["DISPLAY"] if "DISPLAY" in process_environ else None
 
+        # To allow scripts to detect batch invocation (especially useful for predetect)
+        process_environ["AUTORANDR_BATCH_PID"] = os.getpid()
+
         if display and display not in X11_displays_done:
             try:
                 pwent = pwd.getpwuid(uid)
@@ -873,6 +881,9 @@ def main(argv):
               file=sys.stderr)
         sys.exit(posix.EX_USAGE)
 
+    if "-h" in options or "--help" in options:
+        exit_help()
+
     # Batch mode
     if "--batch" in options:
         if ("DISPLAY" not in os.environ or not os.environ["DISPLAY"]) and os.getuid() == 0:
@@ -907,6 +918,7 @@ def main(argv):
 
     profile_symlinks = { k: v for k, v in profile_symlinks.items() if v in (x[0] for x in virtual_profiles) or v in profiles }
 
+    exec_scripts(None, "predetect")
     config, modes = parse_xrandr_output()
 
     if "--fingerprint" in options:
@@ -965,9 +977,6 @@ def main(argv):
         except Exception as e:
             raise AutorandrException("Failed to remove profile '%s'" % (options["--remove"],), e)
         sys.exit(0)
-
-    if "-h" in options or "--help" in options:
-        exit_help()
 
     detected_profiles = find_profiles(config, profiles)
     load_profile = False

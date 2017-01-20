@@ -1,1 +1,0 @@
-ACTION=="change", SUBSYSTEM=="drm", RUN+="/usr/bin/autorandr --batch -c --default default"

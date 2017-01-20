@@ -34,7 +34,7 @@ mkdir $D
 # Debian(ish) specific part
 make -C "$P/../../../" \
 	DESTDIR="$D" \
-	TARGETS="autorandr bash_completion autostart_config pmutils systemd udev" \
+	TARGETS="autorandr bash_completion autostart_config systemd udev" \
 	BASH_COMPLETION_DIR=/usr/share/bash-completion/completions \
 	SYSTEMD_UNIT_DIR=/lib/systemd/system \
 	PM_UTILS_DIR=/usr/lib/pm-utils/sleep.d \

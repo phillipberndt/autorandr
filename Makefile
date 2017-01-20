@@ -53,23 +53,12 @@ DEFAULT_TARGETS+=autostart_config
 
 install_autostart_config:
 	install -D -m 644 contrib/etc/xdg/autostart/autorandr.desktop ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr.desktop
+ifneq ($(PREFIX),/usr/)
+	sed -i -re 's#/usr/bin/autorandr#$(subst #,\#,${PREFIX})/bin/autorandr#g' ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr.desktop
+endif
 
 uninstall_autostart_config:
 	rm -f ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr.desktop
-
-# Rules for pmutils
-PM_SLEEPHOOKS_DIR:=$(shell pkg-config --variable=pm_sleephooks pm-utils 2>/dev/null)
-ifneq (,$(PM_SLEEPHOOKS_DIR))
-DEFAULT_TARGETS+=pmutils
-endif
-
-install_pmutils:
-	$(if $(PM_SLEEPHOOKS_DIR),,$(error PM_SLEEPHOOKS_DIR is not defined))
-	install -D -m 755 contrib/pm-utils/40autorandr ${DESTDIR}/${PM_SLEEPHOOKS_DIR}/40autorandr
-
-uninstall_pmutils:
-	$(if $(PM_SLEEPHOOKS_DIR),,$(error PM_SLEEPHOOKS_DIR is not defined))
-	rm -f ${DESTDIR}/${PM_SLEEPHOOKS_DIR}/40autorandr
 
 # Rules for systemd
 SYSTEMD_UNIT_DIR:=$(shell pkg-config --variable=systemdsystemunitdir systemd 2>/dev/null)
@@ -79,11 +68,39 @@ endif
 
 install_systemd:
 	$(if $(SYSTEMD_UNIT_DIR),,$(error SYSTEMD_UNIT_DIR is not defined))
-	install -D -m 644 contrib/systemd/autorandr-resume.service ${DESTDIR}/${SYSTEMD_UNIT_DIR}/autorandr-resume.service
+	install -D -m 644 contrib/systemd/autorandr.service ${DESTDIR}/${SYSTEMD_UNIT_DIR}/autorandr.service
+ifneq ($(PREFIX),/usr/)
+	sed -i -re 's#/usr/bin/autorandr#$(subst #,\#,${PREFIX})/bin/autorandr#g' ${DESTDIR}/${SYSTEMD_UNIT_DIR}/autorandr.service
+endif
+	@echo
+	@echo "To activate the systemd unit, run this command as root:"
+	@echo "    systemctl daemon-reload"
+	@echo "    systemctl enable autorandr.service"
+	@echo
 
 uninstall_systemd:
 	$(if $(SYSTEMD_UNIT_DIR),,$(error SYSTEMD_UNIT_DIR is not defined))
-	rm -f ${DESTDIR}/${SYSTEMD_UNIT_DIR}/autorandr-resume.service
+	rm -f ${DESTDIR}/${SYSTEMD_UNIT_DIR}/autorandr.service
+
+# Rules for pmutils
+PM_SLEEPHOOKS_DIR:=$(shell pkg-config --variable=pm_sleephooks pm-utils 2>/dev/null)
+ifneq (,$(PM_SLEEPHOOKS_DIR))
+ifeq (,$(SYSTEMD_UNIT_DIR))
+DEFAULT_TARGETS+=pmutils
+endif
+endif
+
+install_pmutils:
+	$(if $(PM_SLEEPHOOKS_DIR),,$(error PM_SLEEPHOOKS_DIR is not defined))
+	install -D -m 755 contrib/pm-utils/40autorandr ${DESTDIR}/${PM_SLEEPHOOKS_DIR}/40autorandr
+ifneq ($(PREFIX),/usr/)
+	sed -i -re 's#/usr/bin/autorandr#$(subst #,\#,${PREFIX})/bin/autorandr#g' ${DESTDIR}/${PM_SLEEPHOOKS_DIR}/40autorandr
+endif
+
+uninstall_pmutils:
+	$(if $(PM_SLEEPHOOKS_DIR),,$(error PM_SLEEPHOOKS_DIR is not defined))
+	rm -f ${DESTDIR}/${PM_SLEEPHOOKS_DIR}/40autorandr
+
 
 # Rules for udev
 UDEV_RULES_DIR:=$(shell pkg-config --variable=udevdir udev 2>/dev/null)/rules.d
@@ -93,13 +110,12 @@ endif
 
 install_udev:
 	$(if $(UDEV_RULES_DIR),,$(error UDEV_RULES_DIR is not defined))
-	install -D -m 644 contrib/udev/40-monitor-hotplug.rules ${DESTDIR}/${UDEV_RULES_DIR}/40-monitor-hotplug.rules
-ifeq (${USER},root)
-	udevadm control --reload-rules
-else
-	@echo "Please run this command as root:"
+	mkdir -p ${DESTDIR}/${UDEV_RULES_DIR}/
+	echo 'ACTION=="change", SUBSYSTEM=="drm", RUN+="$(if $(findstring systemd, $(TARGETS)),/bin/systemctl start autorandr.service,${PREFIX}/bin/autorandr --batch --change --default default)"' > ${DESTDIR}/${UDEV_RULES_DIR}/40-monitor-hotplug.rules
+	@echo
+	@echo "To activate the udev rules, run this command as root:"
 	@echo "    udevadm control --reload-rules"
-endif
+	@echo
 
 uninstall_udev:
 	$(if $(UDEV_RULES_DIR),,$(error UDEV_RULES_DIR is not defined))
