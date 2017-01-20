@@ -72,6 +72,11 @@ install_systemd:
 ifneq ($(PREFIX),/usr/)
 	sed -i -re 's#/usr/bin/autorandr#$(subst #,\#,${PREFIX})/bin/autorandr#g' ${DESTDIR}/${SYSTEMD_UNIT_DIR}/autorandr.service
 endif
+	@echo
+	@echo "To activate the systemd unit, run this command as root:"
+	@echo "    systemctl daemon-reload"
+	@echo "    systemctl enable autorandr.service"
+	@echo
 
 uninstall_systemd:
 	$(if $(SYSTEMD_UNIT_DIR),,$(error SYSTEMD_UNIT_DIR is not defined))
@@ -107,12 +112,10 @@ install_udev:
 	$(if $(UDEV_RULES_DIR),,$(error UDEV_RULES_DIR is not defined))
 	mkdir -p ${DESTDIR}/${UDEV_RULES_DIR}/
 	echo 'ACTION=="change", SUBSYSTEM=="drm", RUN+="$(if $(findstring systemd, $(TARGETS)),/bin/systemctl start autorandr.service,${PREFIX}/bin/autorandr --batch --change --default default)"' > ${DESTDIR}/${UDEV_RULES_DIR}/40-monitor-hotplug.rules
-ifeq (${USER},root)
-	udevadm control --reload-rules
-else
-	@echo "Please run this command as root:"
+	@echo
+	@echo "To activate the udev rules, run this command as root:"
 	@echo "    udevadm control --reload-rules"
-endif
+	@echo
 
 uninstall_udev:
 	$(if $(UDEV_RULES_DIR),,$(error UDEV_RULES_DIR is not defined))
