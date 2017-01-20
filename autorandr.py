@@ -853,6 +853,9 @@ def main(argv):
               file=sys.stderr)
         sys.exit(posix.EX_USAGE)
 
+    if "-h" in options or "--help" in options:
+        exit_help()
+
     # Batch mode
     if "--batch" in options:
         if ("DISPLAY" not in os.environ or not os.environ["DISPLAY"]) and os.getuid() == 0:
@@ -946,9 +949,6 @@ def main(argv):
         except Exception as e:
             raise AutorandrException("Failed to remove profile '%s'" % (options["--remove"],), e)
         sys.exit(0)
-
-    if "-h" in options or "--help" in options:
-        exit_help()
 
     detected_profiles = find_profiles(config, profiles)
     load_profile = False
