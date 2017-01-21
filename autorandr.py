@@ -844,7 +844,7 @@ def dispatch_call_to_sessions(argv):
         display = process_environ["DISPLAY"] if "DISPLAY" in process_environ else None
 
         # To allow scripts to detect batch invocation (especially useful for predetect)
-        process_environ["AUTORANDR_BATCH_PID"] = os.getpid()
+        process_environ["AUTORANDR_BATCH_PID"] = str(os.getpid())
 
         if display and display not in X11_displays_done:
             try:
