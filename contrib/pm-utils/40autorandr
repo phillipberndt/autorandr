@@ -1,7 +1,6 @@
 #!/bin/sh
 #
 # 40autorandr: Change autorandr profile on thaw/resume
-exec > /var/log/autorandr.log 2>&1
 
 case "$1" in
 	thaw|resume)
