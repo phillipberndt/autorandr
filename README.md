@@ -74,6 +74,8 @@ If you prefer `pip` over your package manager, you can install autorandr with:
 
     sudo pip install "git+http://github.com/phillipberndt/autorandr#egg=autorandr"
 
+Automatically generated packages versions are available from the
+[openSUSE build service](https://build.opensuse.org/package/show/home:phillipberndt/autorandr).
 
 ## How to use
 
@@ -134,6 +136,8 @@ autorandr's state is exposed as environment variables prefixed with `AUTORANDR_`
 The most useful one is `$AUTORANDR_CURRENT_PROFILE`.
 
 ## Changelog
+
+**autorandr 1.1**
 
 * *2017-06-07* Call systemctl with `--no-block` from udev rule (See #61)
 * *2017-01-20* New script hook, `predetect`
