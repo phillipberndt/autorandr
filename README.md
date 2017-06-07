@@ -135,6 +135,7 @@ The most useful one is `$AUTORANDR_CURRENT_PROFILE`.
 
 ## Changelog
 
+* *2017-06-07* Call systemctl with `--no-block` from udev rule (See #61)
 * *2017-01-20* New script hook, `predetect`
 * *2017-01-18* Accept comments (lines starting with `#`) in config/setup files
 

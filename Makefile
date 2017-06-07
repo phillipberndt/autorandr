@@ -111,7 +111,7 @@ endif
 install_udev:
 	$(if $(UDEV_RULES_DIR),,$(error UDEV_RULES_DIR is not defined))
 	mkdir -p ${DESTDIR}/${UDEV_RULES_DIR}/
-	echo 'ACTION=="change", SUBSYSTEM=="drm", RUN+="$(if $(findstring systemd, $(TARGETS)),/bin/systemctl start autorandr.service,${PREFIX}/bin/autorandr --batch --change --default default)"' > ${DESTDIR}/${UDEV_RULES_DIR}/40-monitor-hotplug.rules
+	echo 'ACTION=="change", SUBSYSTEM=="drm", RUN+="$(if $(findstring systemd, $(TARGETS)),/bin/systemctl start --no-block autorandr.service,${PREFIX}/bin/autorandr --batch --change --default default)"' > ${DESTDIR}/${UDEV_RULES_DIR}/40-monitor-hotplug.rules
 	@echo
 	@echo "To activate the udev rules, run this command as root:"
 	@echo "    udevadm control --reload-rules"
