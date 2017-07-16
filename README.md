@@ -137,6 +137,8 @@ The most useful one is `$AUTORANDR_CURRENT_PROFILE`.
 
 ## Changelog
 
+* *2017-07-16* Skip `--panning` unless it is required (See #72)
+
 **autorandr 1.1**
 
 * *2017-06-07* Call systemctl with `--no-block` from udev rule (See #61)
