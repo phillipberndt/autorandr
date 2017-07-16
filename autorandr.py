@@ -601,6 +601,9 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
     #   at least.)
     # - Some implementations can not handle --transform at all, so avoid it unless
     #   necessary. (See https://github.com/phillipberndt/autorandr/issues/37)
+    # - Some implementations can not handle --panning without specifying --fb
+    #   explicitly, so avoid it unless necessary.
+    #   (See https://github.com/phillipberndt/autorandr/issues/72)
 
     auxiliary_changes_pre = []
     disable_outputs = []
@@ -615,15 +618,16 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
 
             option_vector = new_configuration[output].option_vector
             if xrandr_version() >= Version("1.3.0"):
-                if "transform" in current_configuration[output].options:
-                    auxiliary_changes_pre.append(["--output", output, "--transform", "none"])
-                else:
-                    try:
-                        transform_index = option_vector.index("--transform")
-                        if option_vector[transform_index+1] == XrandrOutput.XRANDR_DEFAULTS["transform"]:
-                            option_vector = option_vector[:transform_index] + option_vector[transform_index+2:]
-                    except ValueError:
-                        pass
+                for option in ("transform", "panning"):
+                    if option in current_configuration[output].options:
+                        auxiliary_changes_pre.append(["--output", output, "--%s" % option, "none"])
+                    else:
+                        try:
+                            option_index = option_vector.index("--%s" % option)
+                            if option_vector[option_index+1] == XrandrOutput.XRANDR_DEFAULTS[option]:
+                                option_vector = option_vector[:option_index] + option_vector[option_index+2:]
+                        except ValueError:
+                            pass
 
             enable_outputs.append(option_vector)
 
