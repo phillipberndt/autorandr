@@ -1,12 +1,15 @@
 from setuptools import setup
 
 
-long_description = open('README.md').read()
+try:
+    long_description = open('README.md').read()
+except:
+    long_description = 'Automatically select a display configuration based on connected devices'
 
 setup(
     name='autorandr',
 
-    #version='', # FIXME
+    version='1.1-4',
 
     description='Automatically select a display configuration based on connected devices',
     long_description=long_description,
@@ -14,6 +17,7 @@ setup(
     url='https://github.com/phillipberndt/autorandr',
 
     author='Phillip Berndt',
+    author_email='phillip.berndt@googlemail.com',
 
     license='GPLv3',
 

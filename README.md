@@ -74,6 +74,12 @@ If you prefer `pip` over your package manager, you can install autorandr with:
 
     sudo pip install "git+http://github.com/phillipberndt/autorandr#egg=autorandr"
 
+or simply
+
+	sudo pip install autorandr
+
+if you prefer to use a stable version.
+
 Automatically generated packages versions are available from the
 [openSUSE build service](https://build.opensuse.org/package/show/home:phillipberndt/autorandr).
 
