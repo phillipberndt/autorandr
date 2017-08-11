@@ -44,6 +44,7 @@ make -C "$P/../../../" \
 SIZE=$(du -s $D | awk '{print $1}')
 
 cp -r "$P/debian" "$D/DEBIAN"
+chmod 0755 "$D/DEBIAN"
 [ -d "$D/etc" ] && (cd $D; find etc -type f) > "$D/DEBIAN/conffiles"
 sed -i -re "s#Version:.+#Version: $V#" "$D/DEBIAN/control"
 echo "Installed-Size: $SIZE" >> "$D/DEBIAN/control"
