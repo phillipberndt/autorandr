@@ -11,6 +11,7 @@ all:
 	@echo " "$(DEFAULT_TARGETS)
 	@echo
 	@echo "The following locations have been detected (from pkg-config):"
+	@echo " - BASH_COMPLETIONS_DIR: $(BASH_COMPLETIONS_DIR)"
 	@echo " - SYSTEMD_UNIT_DIR: $(SYSTEMD_UNIT_DIR)"
 	@echo " - UDEV_RULES_DIR: $(UDEV_RULES_DIR)"
 	@echo " - PM_SLEEPHOOKS_DIR: $(PM_SLEEPHOOKS_DIR)"
@@ -34,17 +35,17 @@ install_autorandr:
 uninstall_autorandr:
 	rm -f ${DESTDIR}${PREFIX}/bin/autorandr
 
-# Rules for bash_completion
-BASH_COMPLETION_DIR:=$(shell pkg-config --variable=completionsdir bash-completion 2>/dev/null)
-ifneq (,$(BASH_COMPLETION_DIR))
+# Rules for bash-completion
+BASH_COMPLETIONS_DIR:=$(shell pkg-config --variable=completionsdir bash-completion 2>/dev/null)
+ifneq (,$(BASH_COMPLETIONS_DIR))
 DEFAULT_TARGETS+=bash_completion
 endif
 
 install_bash_completion:
-	install -D -m 644 contrib/bash_completion/autorandr ${DESTDIR}/${BASH_COMPLETION_DIR}/autorandr
+	install -D -m 644 contrib/bash_completion/autorandr ${DESTDIR}/${BASH_COMPLETIONS_DIR}/autorandr
 
 uninstall_bash_completion:
-	rm -f ${DESTDIR}/${BASH_COMPLETION_DIR}/autorandr
+	rm -f ${DESTDIR}/${BASH_COMPLETIONS_DIR}/autorandr
 
 # Rules for autostart config
 XDG_AUTOSTART_DIR=/etc/xdg/autostart
