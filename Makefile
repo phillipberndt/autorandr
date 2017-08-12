@@ -35,9 +35,8 @@ uninstall_autorandr:
 	rm -f ${DESTDIR}${PREFIX}/bin/autorandr
 
 # Rules for bash_completion
-BASH_COMPLETION_DIR=/etc/bash_completion.d
-HAVE_BASH_COMPLETION=$(shell [ -d /etc/bash_completion.d/ ] && echo "y")
-ifeq ($(HAVE_BASH_COMPLETION),y)
+BASH_COMPLETION_DIR:=$(shell pkg-config --variable=completionsdir bash-completion 2>/dev/null)
+ifneq (,$(BASH_COMPLETION_DIR))
 DEFAULT_TARGETS+=bash_completion
 endif
 
