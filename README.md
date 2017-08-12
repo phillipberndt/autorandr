@@ -4,7 +4,7 @@ Automatically select a display configuration based on connected devices
 ## Branch information
 
 This is a compatible Python rewrite of
-[wertarbyte/autorandr](https://github.com/wertarbyte/autorandr).
+[wertarbyte/autorandr](https://github.com/wertarbyte/autorandr). Contributions for bash-completion, fd.o/XDG autostart, Nitrogen, pm-utils, and systemd can be found under [contrib](contrib/).
 
 The original [wertarbyte/autorandr](https://github.com/wertarbyte/autorandr)
 tree is unmaintained, with lots of open pull requests and issues. I forked it
