@@ -717,7 +717,7 @@ def generate_virtual_profile(configuration, modes, profile_name):
             else:
                 configuration[output].options["off"] = None
     elif profile_name == "clone":
-        biggest_width_resolution = sorted([output_modes[0] for output, output_modes in modes.items()], key=lambda x: x["width"], reverse=True)[0]
+        biggest_resolution = sorted([output_modes[0] for output, output_modes in modes.items()], key=lambda x: int(x["width"])*int(x["height"]), reverse=True)[0]
         for output in configuration:
             configuration[output].options = {}
             if output in modes and configuration[output].edid:
@@ -725,8 +725,8 @@ def generate_virtual_profile(configuration, modes, profile_name):
                 configuration[output].options["mode"] = mode["name"]
                 configuration[output].options["rate"] = mode["rate"]
                 configuration[output].options["pos"] = "0x0"
-                x_scale = float(biggest_width_resolution["width"]) / float(mode["width"])
-                y_scale = float(biggest_width_resolution["height"]) / float(mode["height"])
+                x_scale = float(biggest_resolution["width"]) / float(mode["width"])
+                y_scale = float(biggest_resolution["height"]) / float(mode["height"])
                 configuration[output].options["scale"] = "{}x{}".format(x_scale, y_scale)
             else:
                 configuration[output].options["off"] = None
