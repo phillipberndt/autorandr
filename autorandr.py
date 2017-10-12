@@ -726,7 +726,9 @@ def generate_virtual_profile(configuration, modes, profile_name):
                 configuration[output].options["rate"] = mode["rate"]
                 configuration[output].options["pos"] = "0x0"
                 scale = max(float(biggest_resolution["width"]) / float(mode["width"]) ,float(biggest_resolution["height"]) / float(mode["height"]))
-                configuration[output].options["scale"] = "{}x{}".format(scale, scale)
+                mov_x = (float(mode["width"])*scale-float(biggest_resolution["width"]))/-2
+                mov_y = (float(mode["height"])*scale-float(biggest_resolution["height"]))/-2
+                configuration[output].options["transform"] = "{},0,{},0,{},{},0,0,1".format(scale, mov_x, scale, mov_y)
             else:
                 configuration[output].options["off"] = None
     return configuration
