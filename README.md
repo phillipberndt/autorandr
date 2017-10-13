@@ -32,6 +32,8 @@ autorandr is available under the terms of the GNU General Public License
 
 Contributors to this version of autorandr are:
 
+* Adrián López
+* andersonjacob
 * Alexander Wirt
 * Chris Dunder
 * Daniel Hahler
@@ -41,14 +43,13 @@ Contributors to this version of autorandr are:
 * Nazar Mokrynskyi
 * Phillip Berndt
 * Rasmus Wriedt Larsen
+* Simon Wydooghe
 * Stefan Tomanek
+* stormc
+* tachylatus
 * Timo Bingmann
 * Tomasz Bogdal
 * Victor Häggqvist
-* stormc
-* tachylatus
-* andersonjacob
-* Simon Wydooghe
 
 ## Installation/removal
 You can use the `autorandr.py` script as a stand-alone binary. If you'd like to
@@ -144,6 +145,7 @@ The most useful one is `$AUTORANDR_CURRENT_PROFILE`.
 ## Changelog
 
 * *2017-07-16* Skip `--panning` unless it is required (See #72)
+* *2017-10-13* Add `clone-largest` virtual profile
 
 **autorandr 1.1**
 
