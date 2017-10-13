@@ -50,7 +50,7 @@ except NameError:
 virtual_profiles = [
     # (name, description, callback)
     ("common", "Clone all connected outputs at the largest common resolution", None),
-    ("clone-largest", "Clone all connected outputs with the largest resolution and scaled down in the others", None),
+    ("clone-largest", "Clone all connected outputs with the largest resolution (scaled down if necessary)", None),
     ("horizontal", "Stack all connected outputs horizontally at their largest resolution", None),
     ("vertical", "Stack all connected outputs vertically at their largest resolution", None),
 ]
@@ -754,7 +754,15 @@ def exit_help():
     "Print help and exit"
     print(help_text)
     for profile in virtual_profiles:
-        print("  %-10s %s" % profile[:2])
+        name, description = profile[:2]
+        description = [ description ]
+        max_width = 78-18
+        while len(description[0]) > max_width + 1:
+            left_over = description[0][max_width:]
+            description[0] = description[0][:max_width] + "-"
+            description.insert(1, "  %-15s %s" % ("", left_over))
+        description = "\n".join(description)
+        print("  %-15s %s" % (name, description))
     sys.exit(0)
 
 def exec_scripts(profile_path, script_name, meta_information=None):
