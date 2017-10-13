@@ -144,6 +144,8 @@ The most useful one is `$AUTORANDR_CURRENT_PROFILE`.
 
 ## Changelog
 
+**autorandr 1.2**
+
 * *2017-07-16* Skip `--panning` unless it is required (See #72)
 * *2017-10-13* Add `clone-largest` virtual profile
 
