@@ -50,7 +50,7 @@ except NameError:
 virtual_profiles = [
     # (name, description, callback)
     ("common", "Clone all connected outputs at the largest common resolution", None),
-    ("clone", "Clone all connected outputs with the largest resolution and scaled down in the others", None),
+    ("clone-largest", "Clone all connected outputs with the largest resolution and scaled down in the others", None),
     ("horizontal", "Stack all connected outputs horizontally at their largest resolution", None),
     ("vertical", "Stack all connected outputs vertically at their largest resolution", None),
 ]
@@ -716,7 +716,7 @@ def generate_virtual_profile(configuration, modes, profile_name):
                 shift += int(mode[shift_index])
             else:
                 configuration[output].options["off"] = None
-    elif profile_name == "clone":
+    elif profile_name == "clone-largest":
         biggest_resolution = sorted([output_modes[0] for output, output_modes in modes.items()], key=lambda x: int(x["width"])*int(x["height"]), reverse=True)[0]
         for output in configuration:
             configuration[output].options = {}
