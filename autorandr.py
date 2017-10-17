@@ -827,11 +827,11 @@ def dispatch_call_to_sessions(argv):
     """Invoke autorandr for each open local X11 session with the given options.
 
     The function iterates over all processes not owned by root and checks
-    whether they have a DISPLAY variable set. It strips the screen from any
-    variable it finds (i.e. :0.0 becomes :0) and checks whether this display
-    has been handled already. If it has not, it forks, changes uid/gid to
-    the user owning the process, reuses the process's environment and runs
-    autorandr with the parameters from argv.
+    whether they have DISPLAY and XAUTHORITY variables set. It strips the
+    screen from any variable it finds (i.e. :0.0 becomes :0) and checks whether
+    this display has been handled already. If it has not, it forks, changes
+    uid/gid to the user owning the process, reuses the process's environment
+    and runs autorandr with the parameters from argv.
 
     This function requires root permissions. It only works for X11 servers that
     have at least one non-root process running. It is susceptible for attacks
@@ -840,9 +840,29 @@ def dispatch_call_to_sessions(argv):
     which won't work. Since no other harm than prevention of automated
     execution of autorandr can be done this way, the assumption is that in this
     situation, the local administrator will handle the situation."""
+
     X11_displays_done = set()
 
     autorandr_binary = os.path.abspath(argv[0])
+    backup_candidates = {}
+
+    def fork_child_autorandr(pwent, process_environ):
+        print("Running autorandr as %s for display %s" % (pwent.pw_name, process_environ["DISPLAY"]))
+        child_pid = os.fork()
+        if child_pid == 0:
+            # This will throw an exception if any of the privilege changes fails,
+            # so it should be safe. Also, note that since the environment
+            # is taken from a process owned by the user, reusing it should
+            # not leak any information.
+            os.setgroups([])
+            os.setresgid(pwent.pw_gid, pwent.pw_gid, pwent.pw_gid)
+            os.setresuid(pwent.pw_uid, pwent.pw_uid, pwent.pw_uid)
+            os.chdir(pwent.pw_dir)
+            os.environ.clear()
+            os.environ.update(process_environ)
+            os.execl(autorandr_binary, autorandr_binary, *argv[1:])
+            os.exit(1)
+        os.waitpid(child_pid, 0)
 
     for directory in os.listdir("/proc"):
         directory = os.path.join("/proc/", directory)
@@ -869,35 +889,44 @@ def dispatch_call_to_sessions(argv):
                 if name == "DISPLAY" and "." in value:
                     value = value[:value.find(".")]
                 process_environ[name] = value
-        display = process_environ["DISPLAY"] if "DISPLAY" in process_environ else None
+
+        if "DISPLAY" not in process_environ:
+            # Cannot work with this environment, skip.
+            continue
 
         # To allow scripts to detect batch invocation (especially useful for predetect)
         process_environ["AUTORANDR_BATCH_PID"] = str(os.getpid())
+        process_environ["UID"] = str(uid)
 
-        if display and display not in X11_displays_done:
+        display = process_environ["DISPLAY"]
+
+        if "XAUTHORITY" not in process_environ:
+            # It's very likely that we cannot work with this environment either,
+            # but keep it as a backup just in case we don't find anything else.
+            backup_candidates[display] = process_environ
+            continue
+
+        if display not in X11_displays_done:
             try:
                 pwent = pwd.getpwuid(uid)
             except KeyError:
                 # User has no pwd entry
                 continue
 
-            print("Running autorandr as %s for display %s" % (pwent.pw_name, display))
-            child_pid = os.fork()
-            if child_pid == 0:
-                # This will throw an exception if any of the privilege changes fails,
-                # so it should be safe. Also, note that since the environment
-                # is taken from a process owned by the user, reusing it should
-                # not leak any information.
-                os.setgroups([])
-                os.setresgid(pwent.pw_gid, pwent.pw_gid, pwent.pw_gid)
-                os.setresuid(pwent.pw_uid, pwent.pw_uid, pwent.pw_uid)
-                os.chdir(pwent.pw_dir)
-                os.environ.clear()
-                os.environ.update(process_environ)
-                os.execl(autorandr_binary, autorandr_binary, *argv[1:])
-                os.exit(1)
-            os.waitpid(child_pid, 0)
+            fork_child_autorandr(pwent, process_environ)
+            X11_displays_done.add(display)
 
+    # Run autorandr for any users/displays which didn't have a process with
+    # XAUTHORITY set.
+    for display, process_environ in backup_candidates.items():
+        if display not in X11_displays_done:
+            try:
+                pwent = pwd.getpwuid(int(process_environ["UID"]))
+            except KeyError:
+                # User has no pwd entry
+                continue
+
+            fork_child_autorandr(pwent, process_environ)
             X11_displays_done.add(display)
 
 def main(argv):
@@ -919,6 +948,10 @@ def main(argv):
         else:
             print("--batch mode can only be used by root and if $DISPLAY is unset")
         return
+    if "AUTORANDR_BATCH_PID" in os.environ:
+        user = pwd.getpwuid(os.getuid())
+        user = user.pw_name if user else "#%d" % os.getuid()
+        print("autorandr running as user %s (started from batch instance)" % user)
 
     profiles = {}
     profile_symlinks = {}
