@@ -48,6 +48,7 @@ Contributors to this version of autorandr are:
 * stormc
 * tachylatus
 * Timo Bingmann
+* Timo Kaufmann
 * Tomasz Bogdal
 * Victor Häggqvist
 
@@ -126,24 +127,54 @@ names in your configuration directory to have autorandr use any of them
 as the default configuration without you having to change the system-wide
 configuration.
 
-Another script called `postswitch` can be placed in the directory
-`~/.config/autorandr` (or `~/.autorandr` if you have an old installation) as
-well as in all profile directories: The scripts are executed after a mode
-switch has taken place and can notify window managers or other applications
-about it. The same holds for `preswitch`, which is executed before the switch
-takes place, and `postsave`, which is executed after a profile was
-stored/altered.
+## Hook scripts
+
+Three more scripts can be placed in the configuration directory (as 
+(as defined by the [XDG spec](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html),
+usually `~/.config/autorandr` or `~/.autorandr` if you have an old installation
+for user configuration and `/etc/xdg/autorandr` for system wide configuration):
+
+- `postswitch` is executed *after* a mode switch has taken place. This can be
+  used to notify window managers or other applications about the switch.
+- `preswitch` is executed *before* a mode switch takes place.
+- `postsave` is executed after a profile was stored or altered.
+- `predetect` is executed before autorandr attempts to run xrandr. 
+
+These scripts must be executable and can be placed directly in the configuration
+directory, where they will always be executed, or in the profile subdirectories,
+where they will only be executed on changes regarding that specific profile.
+
+Instead (or in addition) to these scripts, you can also place as many executable
+files as you like in subdirectories called `script_name.d` (e.g. `postswitch.d`).
+
+If a script with the same name occurs multiple times, user configuration
+takes precedence over system configuration (as specified by the
+[XDG spec](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html))
+and profile configuration over general configuration.
+
+As a concrete example, suppose you have the files
+
+- `/etc/xdg/autorandr/postswitch`
+- `~/.config/autorandr/postswitch`
+- `~/.config/autorandr/postswitch.d/notify-herbstluftwm`
+- `~/.config/autorandr/docked/postswitch`
+
+and switch from `mobile` to `docked`. Then
+`~/.config/autorandr/docked/postswitch` is executed, since the profile specific
+configuration takes precedence, and
+`~/.config/autorandr/postswitch.d/notify-herbstluftwm` is executed, since
+it has a unique name.
+
+If you switch back from `docked` to `mobile`, `~/.config/autorandr/postswitch`
+is executed instead of the `mobile` specific `postswitch`.
+
+In these scripts, some of autorandr's state is exposed as environment variables
+prefixed with `AUTORANDR_`. The most useful one is `$AUTORANDR_CURRENT_PROFILE`.
 
 If you experience issues with xrandr being executed too early after connecting
-a new monitor, then you can create a script `predetect`, which will be executed
-before autorandr attempts to run xrandr. Place e.g. `sleep 1` into that file
-to make autorandr wait a second before running xrandr.
-
-All scripts can also be placed in any of the `$XDG_CONFIG_DIRS`. In addition to
-the script names themselves, any executables in subdirectories named
-`script_name.d` (e.g. `postswitch.d`) are executed as well. In scripts, some of
-autorandr's state is exposed as environment variables prefixed with `AUTORANDR_`.
-The most useful one is `$AUTORANDR_CURRENT_PROFILE`.
+a new monitor, then you can use a `predetect` script to delay the execution.
+Write e.g. `sleep 1` into that file to make autorandr wait a second before
+running `xrandr`.
 
 ## Changelog
 
