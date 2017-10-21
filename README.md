@@ -64,6 +64,9 @@ For Debian-based distributions (including Ubuntu) it is recommended to call
 On Arch Linux, there is [an aur package
 available](https://aur.archlinux.org/packages/autorandr-git/).
 
+autorandr is also packaged in the [nix package manager](https://nixos.org/nix/)
+repositories.
+
 On other distributions you can install autorandr by calling `make install` and
 remove it by calling `make uninstall`. Run `make` without arguments to obtain a
 list of what exactly will be installed.
