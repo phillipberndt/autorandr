@@ -1,10 +1,13 @@
-# autorandr 
+# autorandr
+
 Automatically select a display configuration based on connected devices
 
 ## Branch information
 
 This is a compatible Python rewrite of
-[wertarbyte/autorandr](https://github.com/wertarbyte/autorandr). Contributions for bash-completion, fd.o/XDG autostart, Nitrogen, pm-utils, and systemd can be found under [contrib](contrib/).
+[wertarbyte/autorandr](https://github.com/wertarbyte/autorandr). Contributions
+for bash-completion, fd.o/XDG autostart, Nitrogen, pm-utils, and systemd can be
+found under [contrib](contrib/).
 
 The original [wertarbyte/autorandr](https://github.com/wertarbyte/autorandr)
 tree is unmaintained, with lots of open pull requests and issues. I forked it
@@ -22,7 +25,7 @@ If you are interested in why there are two versions around, see
 [#8](https://github.com/phillipberndt/autorandr/issues/8) and
 especially
 [#12](https://github.com/phillipberndt/autorandr/issues/12)
-if you are unhappy with this version and would like to contibute to the bash
+if you are unhappy with this version and would like to contribute to the bash
 version.
 
 ## License information and authors
@@ -53,6 +56,7 @@ Contributors to this version of autorandr are:
 * Victor Häggqvist
 
 ## Installation/removal
+
 You can use the `autorandr.py` script as a stand-alone binary. If you'd like to
 install it as a system-wide application, there is a Makefile included that also
 places some configuration files in appropriate directories such that autorandr
@@ -81,7 +85,7 @@ If you prefer `pip` over your package manager, you can install autorandr with:
 
 or simply
 
-	sudo pip install autorandr
+    sudo pip install autorandr
 
 if you prefer to use a stable version.
 
