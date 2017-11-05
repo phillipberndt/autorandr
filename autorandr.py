@@ -1072,6 +1072,8 @@ def main(argv):
         options["--load"] = options["-l"]
     if "--load" in options:
         load_profile = options["--load"]
+    elif len(args) == 1:
+        load_profile = args[0]
     else:
         # Find the active profile(s) first, for the block script (See #42)
         current_profiles = []
