@@ -90,6 +90,7 @@ Usage: autorandr [options]
  The following virtual configurations are available:
 """.strip()
 
+
 class AutorandrException(Exception):
     def __init__(self, message, original_exception=None, report_bug=False):
         self.message = message
@@ -116,7 +117,7 @@ class AutorandrException(Exception):
             self.file_name = None
 
     def __str__(self):
-        retval = [ self.message ]
+        retval = [self.message]
         if self.line:
             retval.append(" (line %d%s)" % (self.line, ("; %s" % self.file_name) if self.file_name else ""))
         if self.original_exception:
@@ -125,8 +126,9 @@ class AutorandrException(Exception):
         if self.report_bug:
             retval.append("\nThis appears to be a bug. Please help improving autorandr by reporting it upstream:"
                           "\nhttps://github.com/phillipberndt/autorandr/issues"
-                         "\nPlease attach the output of `xrandr --verbose` to your bug report if appropriate.")
+                          "\nPlease attach the output of `xrandr --verbose` to your bug report if appropriate.")
         return "".join(retval)
+
 
 class XrandrOutput(object):
     "Represents an XRandR output"
@@ -206,12 +208,12 @@ class XrandrOutput(object):
         if xrandr_version() >= Version("1.2"):
             options.update(self.XRANDR_12_DEFAULTS)
         options.update(self.options)
-        return { a: b for a, b in options.items() if a not in self.ignored_options }
+        return {a: b for a, b in options.items() if a not in self.ignored_options}
 
     @property
     def filtered_options(self):
         "Return a dictionary of options without ignored options"
-        return { a: b for a, b in self.options.items() if a not in self.ignored_options }
+        return {a: b for a, b in self.options.items() if a not in self.ignored_options}
 
     @property
     def option_vector(self):
@@ -221,7 +223,7 @@ class XrandrOutput(object):
     @property
     def option_string(self):
         "Return the command line parameters in the configuration file format"
-        return "\n".join([ " ".join(option) if option[1] else option[0] for option in chain((("output", self.output),), sorted(self.filtered_options.items()))])
+        return "\n".join([" ".join(option) if option[1] else option[0] for option in chain((("output", self.output),), sorted(self.filtered_options.items()))])
 
     @property
     def sort_key(self):
@@ -251,7 +253,7 @@ class XrandrOutput(object):
     def remove_default_option_values(self):
         "Remove values from the options dictionary that are superflous"
         if "off" in self.options and len(self.options.keys()) > 1:
-            self.options = { "off": None }
+            self.options = {"off": None}
             return
         for option, default_value in self.XRANDR_DEFAULTS.items():
             if option in self.options and self.options[option] == default_value:
@@ -267,20 +269,20 @@ class XrandrOutput(object):
             xrandr_output = xrandr_output.replace("\r\n", "\n")
             match_object = re.search(XrandrOutput.XRANDR_OUTPUT_REGEXP, xrandr_output)
         except:
-            raise AutorandrException("Parsing XRandR output failed, there is an error in the regular expression.", report_bug = True)
+            raise AutorandrException("Parsing XRandR output failed, there is an error in the regular expression.", report_bug=True)
         if not match_object:
             debug = debug_regexp(XrandrOutput.XRANDR_OUTPUT_REGEXP, xrandr_output)
-            raise AutorandrException("Parsing XRandR output failed, the regular expression did not match: %s" % debug, report_bug = True)
+            raise AutorandrException("Parsing XRandR output failed, the regular expression did not match: %s" % debug, report_bug=True)
         remainder = xrandr_output[len(match_object.group(0)):]
         if remainder:
             raise AutorandrException(("Parsing XRandR output failed, %d bytes left unmatched after regular expression, "
-                                "starting at byte %d with ..'%s'.") % (len(remainder), len(match_object.group(0)), remainder[:10]), report_bug=True)
+                                      "starting at byte %d with ..'%s'.") % (len(remainder), len(match_object.group(0)), remainder[:10]), report_bug=True)
 
         match = match_object.groupdict()
 
         modes = []
         if match["modes"]:
-            modes = [ x.groupdict() for x in re.finditer(XrandrOutput.XRANDR_OUTPUT_MODES_REGEXP, match["modes"]) if x.group("name") ]
+            modes = [x.groupdict() for x in re.finditer(XrandrOutput.XRANDR_OUTPUT_MODES_REGEXP, match["modes"]) if x.group("name")]
             if not modes:
                 raise AutorandrException("Parsing XRandR output failed, couldn't find any display modes", report_bug=True)
 
@@ -313,11 +315,11 @@ class XrandrOutput(object):
                 options["reflect"] = "xy"
             options["pos"] = "%sx%s" % (match["x"], match["y"])
             if match["panning"]:
-                panning = [ match["panning"] ]
+                panning = [match["panning"]]
                 if match["tracking"]:
-                    panning += [ "/", match["tracking"] ]
+                    panning += ["/", match["tracking"]]
                     if match["border"]:
-                        panning += [ "/", match["border"] ]
+                        panning += ["/", match["border"]]
                 options["panning"] = "".join(panning)
             if match["transform"]:
                 transformation = ",".join(match["transform"].strip().split())
@@ -332,7 +334,7 @@ class XrandrOutput(object):
                 # xrandr prints different values in --verbose than it accepts as a parameter value for --gamma
                 # Also, it is not able to work with non-standard gamma ramps. Finally, it auto-corrects 0 to 1,
                 # so we approximate by 1e-10.
-                gamma = ":".join([ str(max(1e-10, round(1./float(x), 3))) for x in gamma.split(":") ])
+                gamma = ":".join([str(max(1e-10, round(1. / float(x), 3))) for x in gamma.split(":")])
                 options["gamma"] = gamma
             if match["rate"]:
                 options["rate"] = match["rate"]
@@ -356,7 +358,7 @@ class XrandrOutput(object):
             edid = edid_map[options["output"]]
         else:
             # This fuzzy matching is for legacy autorandr that used sysfs output names
-            fuzzy_edid_map = [ re.sub("(card[0-9]+|-)", "", x) for x in edid_map.keys() ]
+            fuzzy_edid_map = [re.sub("(card[0-9]+|-)", "", x) for x in edid_map.keys()]
             fuzzy_output = re.sub("(card[0-9]+|-)", "", options["output"])
             if fuzzy_output in fuzzy_edid_map:
                 edid = edid_map[list(edid_map.keys())[fuzzy_edid_map.index(fuzzy_output)]]
@@ -403,6 +405,7 @@ class XrandrOutput(object):
                     diffs.append("Option --%s %sis `%s' in the new configuration" % (name, "(= `%s') " % self.options[name] if self.options[name] else "", other.options[name]))
         return diffs
 
+
 def xrandr_version():
     "Return the version of XRandR that this system uses"
     if getattr(xrandr_version, "version", False) is False:
@@ -415,11 +418,12 @@ def xrandr_version():
 
     return xrandr_version.version
 
+
 def debug_regexp(pattern, string):
     "Use the partial matching functionality of the regex module to display debug info on a non-matching regular expression"
     try:
         import regex
-        bounds = ( 0, len(string) )
+        bounds = (0, len(string))
         while bounds[0] != bounds[1]:
             half = int((bounds[0] + bounds[1]) / 2)
             if half == bounds[0]:
@@ -427,11 +431,12 @@ def debug_regexp(pattern, string):
             bounds = (half, bounds[1]) if regex.search(pattern, string[:half], partial=True) else (bounds[0], half - 1)
         partial_length = bounds[0]
         return ("Regular expression matched until position "
-              "%d, ..'%s', and did not match from '%s'.." % (partial_length, string[max(0, partial_length-20):partial_length],
-                                                             string[partial_length:partial_length+10]))
+                "%d, ..'%s', and did not match from '%s'.." % (partial_length, string[max(0, partial_length - 20):partial_length],
+                                                               string[partial_length:partial_length + 10]))
     except ImportError:
         pass
     return "Debug information would be available if the `regex' module was installed."
+
 
 def parse_xrandr_output():
     "Parse the output of `xrandr --verbose' into a list of outputs"
@@ -450,12 +455,13 @@ def parse_xrandr_output():
     modes = OrderedDict()
     for i in range(1, len(split_xrandr_output), 2):
         output_name = split_xrandr_output[i].split()[0]
-        output, output_modes = XrandrOutput.from_xrandr_output("".join(split_xrandr_output[i:i+2]))
+        output, output_modes = XrandrOutput.from_xrandr_output("".join(split_xrandr_output[i:i + 2]))
         outputs[output_name] = output
         if output_modes:
             modes[output_name] = output_modes
 
     return outputs, modes
+
 
 def load_profiles(profile_path):
     "Load the stored profiles"
@@ -463,18 +469,18 @@ def load_profiles(profile_path):
     profiles = {}
     for profile in os.listdir(profile_path):
         config_name = os.path.join(profile_path, profile, "config")
-        setup_name  = os.path.join(profile_path, profile, "setup")
+        setup_name = os.path.join(profile_path, profile, "setup")
         if not os.path.isfile(config_name) or not os.path.isfile(setup_name):
             continue
 
-        edids = dict([ x.split() for x in (y.strip() for y in open(setup_name).readlines()) if x and x[0] != "#" ])
+        edids = dict([x.split() for x in (y.strip() for y in open(setup_name).readlines()) if x and x[0] != "#"])
 
         config = {}
         buffer = []
         for line in chain(open(config_name).readlines(), ["output"]):
             if line[:6] == "output" and buffer:
                 config[buffer[0].strip().split()[-1]] = XrandrOutput.from_config_file(edids, "".join(buffer))
-                buffer = [ line ]
+                buffer = [line]
             else:
                 buffer.append(line)
 
@@ -482,9 +488,10 @@ def load_profiles(profile_path):
             if config[output_name].edid is None:
                 del config[output_name]
 
-        profiles[profile] = { "config": config, "path": os.path.join(profile_path, profile), "config-mtime": os.stat(config_name).st_mtime }
+        profiles[profile] = {"config": config, "path": os.path.join(profile_path, profile), "config-mtime": os.stat(config_name).st_mtime}
 
     return profiles
+
 
 def get_symlinks(profile_path):
     "Load all symlinks from a directory"
@@ -496,6 +503,7 @@ def get_symlinks(profile_path):
             symlinks[link] = os.readlink(file_name)
 
     return symlinks
+
 
 def find_profiles(current_config, profiles):
     "Find profiles matching the currently connected outputs"
@@ -509,11 +517,12 @@ def find_profiles(current_config, profiles):
             if name not in current_config or not output.edid_equals(current_config[name]):
                 matches = False
                 break
-        if not matches or any(( name not in config.keys() for name in current_config.keys() if current_config[name].edid )):
+        if not matches or any((name not in config.keys() for name in current_config.keys() if current_config[name].edid)):
             continue
         if matches:
             detected_profiles.append(profile_name)
     return detected_profiles
+
 
 def profile_blocked(profile_path, meta_information=None):
     """Check if a profile is blocked.
@@ -523,11 +532,13 @@ def profile_blocked(profile_path, meta_information=None):
     """
     return not exec_scripts(profile_path, "block", meta_information)
 
+
 def output_configuration(configuration, config):
     "Write a configuration file"
     outputs = sorted(configuration.keys(), key=lambda x: configuration[x].sort_key)
     for output in outputs:
         print(configuration[output].option_string, file=config)
+
 
 def output_setup(configuration, setup):
     "Write a setup (fingerprint) file"
@@ -535,6 +546,7 @@ def output_setup(configuration, setup):
     for output in outputs:
         if configuration[output].edid:
             print(output, configuration[output].edid, file=setup)
+
 
 def save_configuration(profile_path, configuration):
     "Save a configuration into a profile"
@@ -545,6 +557,7 @@ def save_configuration(profile_path, configuration):
     with open(os.path.join(profile_path, "setup"), "w") as setup:
         output_setup(configuration, setup)
 
+
 def update_mtime(filename):
     "Update a file's mtime"
     try:
@@ -552,6 +565,7 @@ def update_mtime(filename):
         return True
     except:
         return False
+
 
 def call_and_retry(*args, **kwargs):
     """Wrapper around subprocess.call that retries failed calls.
@@ -578,13 +592,14 @@ def call_and_retry(*args, **kwargs):
         retval = subprocess.call(*args, **kwargs)
     return retval
 
+
 def apply_configuration(new_configuration, current_configuration, dry_run=False):
     "Apply a configuration"
     outputs = sorted(new_configuration.keys(), key=lambda x: new_configuration[x].sort_key)
     if dry_run:
-        base_argv = [ "echo", "xrandr" ]
+        base_argv = ["echo", "xrandr"]
     else:
-        base_argv = [ "xrandr" ]
+        base_argv = ["xrandr"]
 
     # There are several xrandr / driver bugs we need to take care of here:
     # - We cannot enable more than two screens at the same time
@@ -625,8 +640,8 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
                     else:
                         try:
                             option_index = option_vector.index("--%s" % option)
-                            if option_vector[option_index+1] == XrandrOutput.XRANDR_DEFAULTS[option]:
-                                option_vector = option_vector[:option_index] + option_vector[option_index+2:]
+                            if option_vector[option_index + 1] == XrandrOutput.XRANDR_DEFAULTS[option]:
+                                option_vector = option_vector[:option_index] + option_vector[option_index + 2:]
                         except ValueError:
                             pass
 
@@ -659,9 +674,10 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
     # Enable the remaining outputs in pairs of two operations
     operations = disable_outputs + enable_outputs
     for index in range(0, len(operations), 2):
-        argv = base_argv + list(chain.from_iterable(operations[index:index+2]))
+        argv = base_argv + list(chain.from_iterable(operations[index:index + 2]))
         if call_and_retry(argv, dry_run=dry_run) != 0:
             raise AutorandrException("Command failed: %s" % " ".join(argv))
+
 
 def is_equal_configuration(source_configuration, target_configuration):
     "Check if all outputs from target are already configured correctly in source"
@@ -670,11 +686,13 @@ def is_equal_configuration(source_configuration, target_configuration):
             return False
     return True
 
+
 def add_unused_outputs(source_configuration, target_configuration):
     "Add outputs that are missing in target to target, in 'off' state"
     for output_name, output in source_configuration.items():
         if output_name not in target_configuration:
-            target_configuration[output_name] = XrandrOutput(output_name, output.edid, { "off": None })
+            target_configuration[output_name] = XrandrOutput(output_name, output.edid, {"off": None})
+
 
 def remove_irrelevant_outputs(source_configuration, target_configuration):
     "Remove outputs from target that ought to be 'off' and already are"
@@ -682,18 +700,19 @@ def remove_irrelevant_outputs(source_configuration, target_configuration):
         if "off" in output.options and output_name in target_configuration and "off" in target_configuration[output_name].options:
             del target_configuration[output_name]
 
+
 def generate_virtual_profile(configuration, modes, profile_name):
     "Generate one of the virtual profiles"
     configuration = copy.deepcopy(configuration)
     if profile_name == "common":
-        common_resolution = [ set(( ( mode["width"], mode["height"] ) for mode in output_modes )) for output, output_modes in modes.items() if configuration[output].edid ]
+        common_resolution = [set(((mode["width"], mode["height"]) for mode in output_modes)) for output, output_modes in modes.items() if configuration[output].edid]
         common_resolution = reduce(lambda a, b: a & b, common_resolution[1:], common_resolution[0])
-        common_resolution = sorted(common_resolution, key=lambda a: int(a[0])*int(a[1]))
+        common_resolution = sorted(common_resolution, key=lambda a: int(a[0]) * int(a[1]))
         if common_resolution:
             for output in configuration:
                 configuration[output].options = {}
                 if output in modes and configuration[output].edid:
-                    configuration[output].options["mode"] = [ x["name"] for x in sorted(modes[output], key=lambda x: 0 if x["preferred"] else 1) if x["width"] == common_resolution[-1][0] and x["height"] == common_resolution[-1][1] ][0]
+                    configuration[output].options["mode"] = [x["name"] for x in sorted(modes[output], key=lambda x: 0 if x["preferred"] else 1) if x["width"] == common_resolution[-1][0] and x["height"] == common_resolution[-1][1]][0]
                     configuration[output].options["pos"] = "0x0"
                 else:
                     configuration[output].options["off"] = None
@@ -709,7 +728,7 @@ def generate_virtual_profile(configuration, modes, profile_name):
         for output in configuration:
             configuration[output].options = {}
             if output in modes and configuration[output].edid:
-                mode = sorted(modes[output], key=lambda a: int(a["width"])*int(a["height"]) + (10**6 if a["preferred"] else 0))[-1]
+                mode = sorted(modes[output], key=lambda a: int(a["width"]) * int(a["height"]) + (10**6 if a["preferred"] else 0))[-1]
                 configuration[output].options["mode"] = mode["name"]
                 configuration[output].options["rate"] = mode["rate"]
                 configuration[output].options["pos"] = pos_specifier % shift
@@ -717,21 +736,22 @@ def generate_virtual_profile(configuration, modes, profile_name):
             else:
                 configuration[output].options["off"] = None
     elif profile_name == "clone-largest":
-        biggest_resolution = sorted([output_modes[0] for output, output_modes in modes.items()], key=lambda x: int(x["width"])*int(x["height"]), reverse=True)[0]
+        biggest_resolution = sorted([output_modes[0] for output, output_modes in modes.items()], key=lambda x: int(x["width"]) * int(x["height"]), reverse=True)[0]
         for output in configuration:
             configuration[output].options = {}
             if output in modes and configuration[output].edid:
-                mode = sorted(modes[output], key=lambda a: int(a["width"])*int(a["height"]) + (10**6 if a["preferred"] else 0))[-1]
+                mode = sorted(modes[output], key=lambda a: int(a["width"]) * int(a["height"]) + (10**6 if a["preferred"] else 0))[-1]
                 configuration[output].options["mode"] = mode["name"]
                 configuration[output].options["rate"] = mode["rate"]
                 configuration[output].options["pos"] = "0x0"
-                scale = max(float(biggest_resolution["width"]) / float(mode["width"]) ,float(biggest_resolution["height"]) / float(mode["height"]))
-                mov_x = (float(mode["width"])*scale-float(biggest_resolution["width"]))/-2
-                mov_y = (float(mode["height"])*scale-float(biggest_resolution["height"]))/-2
+                scale = max(float(biggest_resolution["width"]) / float(mode["width"]), float(biggest_resolution["height"]) / float(mode["height"]))
+                mov_x = (float(mode["width"]) * scale - float(biggest_resolution["width"])) / -2
+                mov_y = (float(mode["height"]) * scale - float(biggest_resolution["height"])) / -2
                 configuration[output].options["transform"] = "{},0,{},0,{},{},0,0,1".format(scale, mov_x, scale, mov_y)
             else:
                 configuration[output].options["off"] = None
     return configuration
+
 
 def print_profile_differences(one, another):
     "Print the differences between two profiles for debugging"
@@ -748,15 +768,16 @@ def print_profile_differences(one, another):
         else:
             for line in one[output].verbose_diff(another[output]):
                 print("| [Output %s] %s" % (output, line), file=sys.stderr)
-    print ("\\-", file=sys.stderr)
+    print("\\-", file=sys.stderr)
+
 
 def exit_help():
     "Print help and exit"
     print(help_text)
     for profile in virtual_profiles:
         name, description = profile[:2]
-        description = [ description ]
-        max_width = 78-18
+        description = [description]
+        max_width = 78 - 18
         while len(description[0]) > max_width + 1:
             left_over = description[0][max_width:]
             description[0] = description[0][:max_width] + "-"
@@ -764,6 +785,7 @@ def exit_help():
         description = "\n".join(description)
         print("  %-15s %s" % (name, description))
     sys.exit(0)
+
 
 def exec_scripts(profile_path, script_name, meta_information=None):
     """"Run userscripts
@@ -782,7 +804,7 @@ def exec_scripts(profile_path, script_name, meta_information=None):
     all_ok = True
     if meta_information:
         env = os.environ.copy()
-        env.update({ "AUTORANDR_%s" % str(key).upper(): str(value) for (key, value) in meta_information.items() })
+        env.update({"AUTORANDR_%s" % str(key).upper(): str(value) for (key, value) in meta_information.items()})
     else:
         env = os.environ.copy()
 
@@ -822,6 +844,7 @@ def exec_scripts(profile_path, script_name, meta_information=None):
                         ran_scripts.add(check_name)
 
     return all_ok
+
 
 def dispatch_call_to_sessions(argv):
     """Invoke autorandr for each open local X11 session with the given options.
@@ -929,9 +952,10 @@ def dispatch_call_to_sessions(argv):
             fork_child_autorandr(pwent, process_environ)
             X11_displays_done.add(display)
 
+
 def main(argv):
     try:
-        options = dict(getopt.getopt(argv[1:], "s:r:l:d:cfh", [ "batch", "dry-run", "change", "default=", "save=", "remove=", "load=", "force", "fingerprint", "config", "debug", "skip-options=", "help" ])[0])
+        options = dict(getopt.getopt(argv[1:], "s:r:l:d:cfh", ["batch", "dry-run", "change", "default=", "save=", "remove=", "load=", "force", "fingerprint", "config", "debug", "skip-options=", "help"])[0])
     except getopt.GetoptError as e:
         print("Failed to parse options: {0}.\n"
               "Use --help to get usage information.".format(str(e)),
@@ -944,7 +968,7 @@ def main(argv):
     # Batch mode
     if "--batch" in options:
         if ("DISPLAY" not in os.environ or not os.environ["DISPLAY"]) and os.getuid() == 0:
-            dispatch_call_to_sessions([ x for x in argv if x != "--batch" ])
+            dispatch_call_to_sessions([x for x in argv if x != "--batch"])
         else:
             print("--batch mode can only be used by root and if $DISPLAY is unset")
         return
@@ -977,7 +1001,7 @@ def main(argv):
     except Exception as e:
         raise AutorandrException("Failed to load profiles", e)
 
-    profile_symlinks = { k: v for k, v in profile_symlinks.items() if v in (x[0] for x in virtual_profiles) or v in profiles }
+    profile_symlinks = {k: v for k, v in profile_symlinks.items() if v in (x[0] for x in virtual_profiles) or v in profiles}
 
     exec_scripts(None, "predetect")
     config, modes = parse_xrandr_output()
@@ -991,7 +1015,7 @@ def main(argv):
         sys.exit(0)
 
     if "--skip-options" in options:
-        skip_options = [ y[2:] if y[:2] == "--" else y for y in ( x.strip() for x in options["--skip-options"].split(",") ) ]
+        skip_options = [y[2:] if y[:2] == "--" else y for y in (x.strip() for x in options["--skip-options"].split(","))]
         for profile in profiles.values():
             for output in profile["config"].values():
                 output.set_ignored_options(skip_options)
@@ -1001,7 +1025,7 @@ def main(argv):
     if "-s" in options:
         options["--save"] = options["-s"]
     if "--save" in options:
-        if options["--save"] in ( x[0] for x in virtual_profiles ):
+        if options["--save"] in (x[0] for x in virtual_profiles):
             raise AutorandrException("Cannot save current configuration as profile '%s':\nThis configuration name is a reserved virtual configuration." % options["--save"])
         try:
             profile_folder = os.path.join(profile_path, options["--save"])
@@ -1015,7 +1039,7 @@ def main(argv):
     if "-r" in options:
         options["--remove"] = options["-r"]
     if "--remove" in options:
-        if options["--remove"] in ( x[0] for x in virtual_profiles ):
+        if options["--remove"] in (x[0] for x in virtual_profiles):
             raise AutorandrException("Cannot remove profile '%s':\nThis configuration name is a reserved virtual configuration." % options["--remove"])
         if options["--remove"] not in profiles.keys():
             raise AutorandrException("Cannot remove profile '%s':\nThis profile does not exist." % options["--remove"])
@@ -1054,7 +1078,7 @@ def main(argv):
             if configs_are_equal:
                 current_profiles.append(profile_name)
         block_script_metadata = {
-            "CURRENT_PROFILE":  "".join(current_profiles[:1]),
+            "CURRENT_PROFILE": "".join(current_profiles[:1]),
             "CURRENT_PROFILES": ":".join(current_profiles)
         }
 
@@ -1084,7 +1108,7 @@ def main(argv):
                 print("'%s' symlinked to '%s'" % (load_profile, profile_symlinks[load_profile]))
             load_profile = profile_symlinks[load_profile]
 
-        if load_profile in ( x[0] for x in virtual_profiles ):
+        if load_profile in (x[0] for x in virtual_profiles):
             load_config = generate_virtual_profile(config, modes, load_profile)
             scripts_path = os.path.join(profile_path, load_profile)
         else:
@@ -1097,7 +1121,7 @@ def main(argv):
             if load_profile in detected_profiles and detected_profiles[0] != load_profile:
                 update_mtime(os.path.join(scripts_path, "config"))
         add_unused_outputs(config, load_config)
-        if load_config == dict(config) and not "-f" in options and not "--force" in options:
+        if load_config == dict(config) and "-f" not in options and "--force" not in options:
             print("Config already loaded", file=sys.stderr)
             sys.exit(0)
         if "--debug" in options and load_config != dict(config):
@@ -1133,6 +1157,7 @@ def main(argv):
 
     sys.exit(0)
 
+
 def exception_handled_main(argv=sys.argv):
     try:
         main(sys.argv)
@@ -1146,6 +1171,7 @@ def exception_handled_main(argv=sys.argv):
 
         print("Unhandled exception ({0}). Please report this as a bug at https://github.com/phillipberndt/autorandr/issues.".format(e), file=sys.stderr)
         raise
+
 
 if __name__ == '__main__':
     exception_handled_main()
