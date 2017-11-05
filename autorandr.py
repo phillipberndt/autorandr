@@ -955,12 +955,14 @@ def dispatch_call_to_sessions(argv):
 
 def main(argv):
     try:
-        options = dict(getopt.getopt(argv[1:], "s:r:l:d:cfh", ["batch", "dry-run", "change", "default=", "save=", "remove=", "load=", "force", "fingerprint", "config", "debug", "skip-options=", "help"])[0])
+        opts, args = getopt.getopt(argv[1:], "s:r:l:d:cfh", ["batch", "dry-run", "change", "default=", "save=", "remove=", "load=", "force", "fingerprint", "config", "debug", "skip-options=", "help"])
     except getopt.GetoptError as e:
         print("Failed to parse options: {0}.\n"
               "Use --help to get usage information.".format(str(e)),
               file=sys.stderr)
         sys.exit(posix.EX_USAGE)
+
+    options = dict(opts)
 
     if "-h" in options or "--help" in options:
         exit_help()
