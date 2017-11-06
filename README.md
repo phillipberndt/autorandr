@@ -108,12 +108,18 @@ Now autorandr can detect which hardware setup is active:
       mobile
       docked (detected)
 
-To automatically reload your setup, just append `--change` to the command line
+To automatically reload your setup:
 
-To manually load a profile, you can use the `--load <profile>` option.
+    $ autorandr --change
+
+To manually load a profile:
+
+    $ autorandr --load <profile>
 
 autorandr tries to avoid reloading an identical configuration. To force the
-(re)configuration, apply `--force`.
+(re)configuration:
+
+    $ autorandr --load <profile> --force
 
 To prevent a profile from being loaded, place a script call _block_ in its
 directory. The script is evaluated before the screen setup is inspected, and
