@@ -39,6 +39,7 @@ Contributors to this version of autorandr are:
 * andersonjacob
 * Alexander Wirt
 * Chris Dunder
+* Christoph Gysin
 * Daniel Hahler
 * Maciej Sitarz
 * Mathias Svensson
@@ -115,6 +116,10 @@ To automatically reload your setup:
 To manually load a profile:
 
     $ autorandr --load <profile>
+
+or simply:
+
+    $ autorandr <profile>
 
 autorandr tries to avoid reloading an identical configuration. To force the
 (re)configuration:
