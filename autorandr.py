@@ -802,11 +802,9 @@ def exec_scripts(profile_path, script_name, meta_information=None):
     Returns True unless any of the scripts exited with non-zero exit status.
     """
     all_ok = True
+    env = os.environ.copy()
     if meta_information:
-        env = os.environ.copy()
         env.update({"AUTORANDR_%s" % str(key).upper(): str(value) for (key, value) in meta_information.items()})
-    else:
-        env = os.environ.copy()
 
     # If there are multiple candidates, the XDG spec tells to only use the first one.
     ran_scripts = set()
