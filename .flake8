@@ -1,3 +1,3 @@
 [flake8]
 ignore = E722
-max-line-length = 233
+max-line-length = 130
