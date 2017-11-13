@@ -218,12 +218,23 @@ class XrandrOutput(object):
     @property
     def option_vector(self):
         "Return the command line parameters for XRandR for this instance"
-        return sum([["--%s" % option[0], option[1]] if option[1] else ["--%s" % option[0]] for option in chain((("output", self.output),), sorted(self.options_with_defaults.items()))], [])
+        args = ["--output", self.output]
+        for option, arg in sorted(self.options_with_defaults.items()):
+            args.append("--%s" % option)
+            if arg:
+                args.append(arg)
+        return args
 
     @property
     def option_string(self):
         "Return the command line parameters in the configuration file format"
-        return "\n".join([" ".join(option) if option[1] else option[0] for option in chain((("output", self.output),), sorted(self.filtered_options.items()))])
+        options = ["output %s" % self.output]
+        for option, arg in sorted(self.filtered_options.items()):
+            if arg:
+                options.append("%s %s" % (option, arg))
+            else:
+                options.append(option)
+        return "\n".join(options)
 
     @property
     def sort_key(self):
@@ -286,15 +297,20 @@ class XrandrOutput(object):
 
         modes = []
         if match["modes"]:
-            modes = [x.groupdict() for x in re.finditer(XrandrOutput.XRANDR_OUTPUT_MODES_REGEXP, match["modes"]) if x.group("name")]
+            modes = []
+            for mode_match in re.finditer(XrandrOutput.XRANDR_OUTPUT_MODES_REGEXP, match["modes"]):
+                if mode_match.group("name"):
+                    modes.append(mode_match.groupdict())
             if not modes:
                 raise AutorandrException("Parsing XRandR output failed, couldn't find any display modes", report_bug=True)
 
         options = {}
         if not match["connected"]:
             edid = None
+        elif match["edid"]:
+            edid = "".join(match["edid"].strip().split())
         else:
-            edid = "".join(match["edid"].strip().split()) if match["edid"] else "%s-%s" % (XrandrOutput.EDID_UNAVAILABLE, match["output"])
+            edid = "%s-%s" % (XrandrOutput.EDID_UNAVAILABLE, match["output"])
 
         if not match["width"]:
             options["off"] = None
@@ -497,7 +513,11 @@ def load_profiles(profile_path):
             if config[output_name].edid is None:
                 del config[output_name]
 
-        profiles[profile] = {"config": config, "path": os.path.join(profile_path, profile), "config-mtime": os.stat(config_name).st_mtime}
+        profiles[profile] = {
+            "config": config,
+            "path": os.path.join(profile_path, profile),
+            "config-mtime": os.stat(config_name).st_mtime,
+        }
 
     return profiles
 
@@ -717,14 +737,23 @@ def generate_virtual_profile(configuration, modes, profile_name):
     "Generate one of the virtual profiles"
     configuration = copy.deepcopy(configuration)
     if profile_name == "common":
-        common_resolution = [set(((mode["width"], mode["height"]) for mode in output_modes)) for output, output_modes in modes.items() if configuration[output].edid]
-        common_resolution = reduce(lambda a, b: a & b, common_resolution[1:], common_resolution[0])
+        mode_sets = []
+        for output, output_modes in modes.items():
+            mode_set = set()
+            if configuration[output].edid:
+                for mode in output_modes:
+                    mode_set.add((mode["width"], mode["height"]))
+            mode_sets.append(mode_set)
+        common_resolution = reduce(lambda a, b: a & b, mode_sets[1:], mode_sets[0])
         common_resolution = sorted(common_resolution, key=lambda a: int(a[0]) * int(a[1]))
         if common_resolution:
             for output in configuration:
                 configuration[output].options = {}
                 if output in modes and configuration[output].edid:
-                    configuration[output].options["mode"] = [x["name"] for x in sorted(modes[output], key=lambda x: 0 if x["preferred"] else 1) if x["width"] == common_resolution[-1][0] and x["height"] == common_resolution[-1][1]][0]
+                    modes_sorted = sorted(modes[output], key=lambda x: 0 if x["preferred"] else 1)
+                    modes_filtered = [x for x in modes_sorted if (x["width"], x["height"]) == common_resolution[-1]]
+                    mode = modes_filtered[0]
+                    configuration[output].options["mode"] = mode['name']
                     configuration[output].options["pos"] = "0x0"
                 else:
                     configuration[output].options["off"] = None
@@ -740,7 +769,13 @@ def generate_virtual_profile(configuration, modes, profile_name):
         for output in configuration:
             configuration[output].options = {}
             if output in modes and configuration[output].edid:
-                mode = sorted(modes[output], key=lambda a: int(a["width"]) * int(a["height"]) + (10**6 if a["preferred"] else 0))[-1]
+                def key(a, b):
+                    score = int(a["width"]) * int(a["height"])
+                    if a["preferred"]:
+                        score += 10**6
+                    return score
+                modes = sorted(modes[output], key=key)
+                mode = modes[-1]
                 configuration[output].options["mode"] = mode["name"]
                 configuration[output].options["rate"] = mode["rate"]
                 configuration[output].options["pos"] = pos_specifier % shift
@@ -748,11 +783,19 @@ def generate_virtual_profile(configuration, modes, profile_name):
             else:
                 configuration[output].options["off"] = None
     elif profile_name == "clone-largest":
-        biggest_resolution = sorted([output_modes[0] for output, output_modes in modes.items()], key=lambda x: int(x["width"]) * int(x["height"]), reverse=True)[0]
+        modes_unsorted = [output_modes[0] for output, output_modes in modes.items()]
+        modes_sorted = sorted(modes_unsorted, key=lambda x: int(x["width"]) * int(x["height"]), reverse=True)
+        biggest_resolution = modes_sorted[0]
         for output in configuration:
             configuration[output].options = {}
             if output in modes and configuration[output].edid:
-                mode = sorted(modes[output], key=lambda a: int(a["width"]) * int(a["height"]) + (10**6 if a["preferred"] else 0))[-1]
+                def key(a, b):
+                    score = int(a["width"]) * int(a["height"])
+                    if a["preferred"]:
+                        score += 10**6
+                    return score
+                modes = sorted(modes[output], key=key)
+                mode = modes[-1]
                 configuration[output].options["mode"] = mode["name"]
                 configuration[output].options["rate"] = mode["rate"]
                 configuration[output].options["pos"] = "0x0"
@@ -817,7 +860,8 @@ def exec_scripts(profile_path, script_name, meta_information=None):
     all_ok = True
     env = os.environ.copy()
     if meta_information:
-        env.update({"AUTORANDR_%s" % str(key).upper(): str(value) for (key, value) in meta_information.items()})
+        for key, value in meta_information.items():
+            env["AUTORANDR_{}".format(key.upper())] = str(value)
 
     # If there are multiple candidates, the XDG spec tells to only use the first one.
     ran_scripts = set()
@@ -826,9 +870,11 @@ def exec_scripts(profile_path, script_name, meta_information=None):
     if not os.path.isdir(user_profile_path):
         user_profile_path = os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "autorandr")
 
-    candidate_directories = chain((user_profile_path,), (os.path.join(x, "autorandr") for x in os.environ.get("XDG_CONFIG_DIRS", "/etc/xdg").split(":")))
+    candidate_directories = [user_profile_path]
+    for config_dir in os.environ.get("XDG_CONFIG_DIRS", "/etc/xdg").split(":"):
+        candidate_directories += os.path.join(config_dir, "autorandr")
     if profile_path:
-        candidate_directories = chain((profile_path,), candidate_directories)
+        candidate_directories += profile_path
 
     for folder in candidate_directories:
 
