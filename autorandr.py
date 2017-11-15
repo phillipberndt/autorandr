@@ -656,9 +656,9 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
 
             option_vector = new_configuration[output].option_vector
             if xrandr_version() >= Version("1.3.0"):
-                for option in ("transform", "panning"):
+                for option, off_value in (("transform", "none"), ("panning", "0x0")):
                     if option in current_configuration[output].options:
-                        auxiliary_changes_pre.append(["--output", output, "--%s" % option, "none"])
+                        auxiliary_changes_pre.append(["--output", output, "--%s" % option, off_value])
                     else:
                         try:
                             option_index = option_vector.index("--%s" % option)
