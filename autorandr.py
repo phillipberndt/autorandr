@@ -60,32 +60,25 @@ Usage: autorandr [options]
 
 -h, --help              get this small help
 -c, --change            reload current setup
+-d, --default <profile> make profile <profile> the default profile
+-l, --load <profile>    load profile <profile>
 -s, --save <profile>    save your current setup to profile <profile>
 -r, --remove <profile>  remove profile <profile>
--l, --load <profile>    load profile <profile>
--d, --default <profile> make profile <profile> the default profile
+--batch                 run autorandr for all users with active X11 sessions
+--config                dump your current xrandr setup
+--debug                 enable verbose output
+--dry-run               don't change anything, only print the xrandr commands
+--fingerprint           fingerprint your current hardware setup
+--force                 force (re)loading of a profile
 --skip-options <option> comma separated list of xrandr arguments (e.g. "gamma")
                         to skip both in detecting changes and applying a profile
---force                 force (re)loading of a profile
---fingerprint           fingerprint your current hardware setup
---config                dump your current xrandr setup
---dry-run               don't change anything, only print the xrandr commands
---debug                 enable verbose output
---batch                 run autorandr for all users with active X11 sessions
-
- To prevent a profile from being loaded, place a script called "block" in its
- directory. The script is evaluated before the screen setup is inspected, and
- in case of it returning a value of 0 the profile is skipped. This can be used
- to query the status of a docking station you are about to leave.
 
  If no suitable profile can be identified, the current configuration is kept.
  To change this behaviour and switch to a fallback configuration, specify
  --default <profile>.
 
- Another script called "postswitch" can be placed in the directory
- ~/.config/autorandr (or ~/.autorandr if you have an old installation) as well
- as in any profile directories: The scripts are executed after a mode switch
- has taken place and can notify window managers.
+ autorandr supports a set of per-profile and global hooks. See the documentation
+ for details.
 
  The following virtual configurations are available:
 """.strip()
