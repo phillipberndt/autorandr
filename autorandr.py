@@ -70,6 +70,8 @@ Usage: autorandr [options]
 --dry-run               don't change anything, only print the xrandr commands
 --fingerprint           fingerprint your current hardware setup
 --force                 force (re)loading of a profile
+--single-xrandr-pass    do not use multiple xrandr calls, make all changes in
+                        one go (unsupported by many drivers!)
 --skip-options <option> comma separated list of xrandr arguments (e.g. "gamma")
                         to skip both in detecting changes and applying a profile
 
@@ -615,7 +617,7 @@ def call_and_retry(*args, **kwargs):
     return retval
 
 
-def apply_configuration(new_configuration, current_configuration, dry_run=False):
+def apply_configuration(new_configuration, current_configuration, dry_run=False, single_pass=False):
     "Apply a configuration"
     outputs = sorted(new_configuration.keys(), key=lambda x: new_configuration[x].sort_key)
     if dry_run:
@@ -669,7 +671,19 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
 
             enable_outputs.append(option_vector)
 
-    # Perform pe-change auxiliary changes
+    # In single pass mode, perform all changes in one go
+    if single_pass:
+        # Pre-change auxiliary changes
+        argv = base_argv + list(chain.from_iterable(auxiliary_changes_pre))
+        # Disable *all* unused outputs
+        argv += list(chain.from_iterable(disable_outputs))
+        # Enable *all* used outputs
+        argv += list(chain.from_iterable(enable_outputs))
+        if call_and_retry(argv, dry_run=dry_run) != 0:
+            raise AutorandrException("Command failed: %s" % " ".join(argv))
+        return
+
+    # Perform pre-change auxiliary changes
     if auxiliary_changes_pre:
         argv = base_argv + list(chain.from_iterable(auxiliary_changes_pre))
         if call_and_retry(argv, dry_run=dry_run) != 0:
@@ -1007,7 +1021,8 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv[1:], "s:r:l:d:cfh",
                                    ["batch", "dry-run", "change", "default=", "save=", "remove=", "load=",
-                                    "force", "fingerprint", "config", "debug", "skip-options=", "help"])
+                                    "force", "fingerprint", "config", "debug", "skip-options=", "help",
+                                    "single-xrandr-pass",])
     except getopt.GetoptError as e:
         print("Failed to parse options: {0}.\n"
               "Use --help to get usage information.".format(str(e)),
@@ -1191,8 +1206,9 @@ def main(argv):
         remove_irrelevant_outputs(config, load_config)
 
         try:
+            single_pass = "--single-xrandr-pass" in options
             if "--dry-run" in options:
-                apply_configuration(load_config, config, True)
+                apply_configuration(load_config, config, dry_run=True, single_pass=single_pass)
             else:
                 script_metadata = {
                     "CURRENT_PROFILE": load_profile,
@@ -1201,8 +1217,8 @@ def main(argv):
                 exec_scripts(scripts_path, "preswitch", script_metadata)
                 if "--debug" in options:
                     print("Going to run:")
-                    apply_configuration(load_config, config, True)
-                apply_configuration(load_config, config, False)
+                    apply_configuration(load_config, config, dry_run=True, single_pass=single_pass)
+                apply_configuration(load_config, config, dry_run=False, single_pass=single_pass)
                 exec_scripts(scripts_path, "postswitch", script_metadata)
         except AutorandrException as e:
             raise AutorandrException("Failed to apply profile '%s'" % load_profile, e, e.report_bug)

@@ -193,6 +193,7 @@ running `xrandr`.
 
 ## Changelog
 
+* *2017-11-15* Add an option to make all xrandr changes in one go (See #88)
 * *2017-11-13* Add a short form for `--load`
 
 **autorandr 1.2**
