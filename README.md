@@ -193,6 +193,8 @@ running `xrandr`.
 
 ## Changelog
 
+* *2017-11-13* Add a short form for `--load`
+
 **autorandr 1.2**
 
 * *2017-07-16* Skip `--panning` unless it is required (See #72)
