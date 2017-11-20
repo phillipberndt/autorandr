@@ -865,12 +865,11 @@ def exec_scripts(profile_path, script_name, meta_information=None):
 
     candidate_directories = [user_profile_path]
     for config_dir in os.environ.get("XDG_CONFIG_DIRS", "/etc/xdg").split(":"):
-        candidate_directories += os.path.join(config_dir, "autorandr")
+        candidate_directories.append(os.path.join(config_dir, "autorandr"))
     if profile_path:
-        candidate_directories += profile_path
+        candidate_directories.append(profile_path)
 
     for folder in candidate_directories:
-
         if script_name not in ran_scripts:
             script = os.path.join(folder, script_name)
             if os.access(script, os.X_OK | os.F_OK):
