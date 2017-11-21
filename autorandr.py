@@ -956,8 +956,8 @@ def dispatch_call_to_sessions(argv):
 
         process_environ = {}
         for environ_entry in open(environ_file).read().split("\0"):
-            if "=" in environ_entry:
-                name, value = environ_entry.split("=", 1)
+            name, sep, value = environ_entry.partition("=")
+            if name and sep:
                 if name == "DISPLAY" and "." in value:
                     value = value[:value.find(".")]
                 process_environ[name] = value
