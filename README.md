@@ -193,7 +193,10 @@ running `xrandr`.
 
 ## Changelog
 
+**autorandr 1.3**
+
 * *2017-11-13* Add a short form for `--load`
+* *2017-11-21* Fix environment stealing in `--batch` mode (See #87)
 
 **autorandr 1.2**
 
