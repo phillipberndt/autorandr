@@ -42,6 +42,11 @@ from distutils.version import LooseVersion as Version
 from functools import reduce
 from itertools import chain
 
+if sys.version_info.major == 2:
+    import ConfigParser as configparser
+else:
+    import configparser
+
 try:
     input = raw_input
 except NameError:
@@ -1008,6 +1013,14 @@ def dispatch_call_to_sessions(argv):
             X11_displays_done.add(display)
 
 
+def read_config(options, directory):
+    """Parse a configuration config.ini from directory and merge it into
+    the options dictionary"""
+    config = configparser.ConfigParser()
+    config.read(os.path.join(directory, "settings.ini"))
+    for key, value in config.items("config"):
+        options.setdefault("--%s" % key, value)
+
 def main(argv):
     try:
         opts, args = getopt.getopt(argv[1:], "s:r:l:d:cfh",
@@ -1046,6 +1059,7 @@ def main(argv):
             if os.path.isdir(system_profile_path):
                 profiles.update(load_profiles(system_profile_path))
                 profile_symlinks.update(get_symlinks(system_profile_path))
+                read_config(options, system_profile_path)
         # For the user's profiles, prefer the legacy ~/.autorandr if it already exists
         # profile_path is also used later on to store configurations
         profile_path = os.path.expanduser("~/.autorandr")
@@ -1055,6 +1069,7 @@ def main(argv):
         if os.path.isdir(profile_path):
             profiles.update(load_profiles(profile_path))
             profile_symlinks.update(get_symlinks(profile_path))
+            read_config(options, profile_path)
         # Sort by descending mtime
         profiles = OrderedDict(sorted(profiles.items(), key=lambda x: -x[1]["config-mtime"]))
     except Exception as e:

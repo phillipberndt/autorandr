@@ -142,6 +142,10 @@ names in your configuration directory to have autorandr use any of them
 as the default configuration without you having to change the system-wide
 configuration.
 
+You can store default values for any option in an INI-file in
+`~/config/autorandr/settings.ini` in a section `config`. The most useful
+candidate for doing that is `skip-options`, if you need it.
+
 ## Hook scripts
 
 Three more scripts can be placed in the configuration directory (as 
