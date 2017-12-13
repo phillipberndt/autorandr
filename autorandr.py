@@ -49,6 +49,7 @@ except NameError:
 
 virtual_profiles = [
     # (name, description, callback)
+    ("off", "Disable all outputs", None),
     ("common", "Clone all connected outputs at the largest common resolution", None),
     ("clone-largest", "Clone all connected outputs with the largest resolution (scaled down if necessary)", None),
     ("horizontal", "Stack all connected outputs horizontally at their largest resolution", None),
@@ -799,6 +800,11 @@ def generate_virtual_profile(configuration, modes, profile_name):
                 configuration[output].options["transform"] = "{},0,{},0,{},{},0,0,1".format(scale, mov_x, scale, mov_y)
             else:
                 configuration[output].options["off"] = None
+    elif profile_name == "off":
+        for output in configuration:
+            for key in list(configuration[output].options.keys()):
+                del configuration[output].options[key]
+            configuration[output].options["off"] = None
     return configuration
 
 
