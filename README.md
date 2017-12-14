@@ -143,7 +143,7 @@ as the default configuration without you having to change the system-wide
 configuration.
 
 You can store default values for any option in an INI-file in
-`~/config/autorandr/settings.ini` in a section `config`. The most useful
+`~/.config/autorandr/settings.ini` in a section `config`. The most useful
 candidate for doing that is `skip-options`, if you need it.
 
 ## Hook scripts
@@ -196,6 +196,9 @@ Write e.g. `sleep 1` into that file to make autorandr wait a second before
 running `xrandr`.
 
 ## Changelog
+
+* *2017-12-14* Added support for a settings file
+* *2017-12-14* Added a virtual profile `off`, which disables all screens
 
 **autorandr 1.3**
 
