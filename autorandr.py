@@ -1018,8 +1018,9 @@ def read_config(options, directory):
     the options dictionary"""
     config = configparser.ConfigParser()
     config.read(os.path.join(directory, "settings.ini"))
-    for key, value in config.items("config"):
-        options.setdefault("--%s" % key, value)
+    if config.has_section("config"):
+        for key, value in config.items("config"):
+            options.setdefault("--%s" % key, value)
 
 def main(argv):
     try:
