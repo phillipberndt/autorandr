@@ -197,6 +197,9 @@ running `xrandr`.
 
 ## Changelog
 
+**autorandr 1.4**
+
+* *2017-12-22* Fixed broken virtual profile support
 * *2017-12-14* Added support for a settings file
 * *2017-12-14* Added a virtual profile `off`, which disables all screens
 
