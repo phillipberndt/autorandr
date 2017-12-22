@@ -768,7 +768,7 @@ def generate_virtual_profile(configuration, modes, profile_name):
         for output in configuration:
             configuration[output].options = {}
             if output in modes and configuration[output].edid:
-                def key(a, b):
+                def key(a):
                     score = int(a["width"]) * int(a["height"])
                     if a["preferred"]:
                         score += 10**6
@@ -788,7 +788,7 @@ def generate_virtual_profile(configuration, modes, profile_name):
         for output in configuration:
             configuration[output].options = {}
             if output in modes and configuration[output].edid:
-                def key(a, b):
+                def key(a):
                     score = int(a["width"]) * int(a["height"])
                     if a["preferred"]:
                         score += 10**6
