@@ -773,8 +773,8 @@ def generate_virtual_profile(configuration, modes, profile_name):
                     if a["preferred"]:
                         score += 10**6
                     return score
-                modes = sorted(modes[output], key=key)
-                mode = modes[-1]
+                output_modes = sorted(modes[output], key=key)
+                mode = output_modes[-1]
                 configuration[output].options["mode"] = mode["name"]
                 configuration[output].options["rate"] = mode["rate"]
                 configuration[output].options["pos"] = pos_specifier % shift
@@ -793,8 +793,8 @@ def generate_virtual_profile(configuration, modes, profile_name):
                     if a["preferred"]:
                         score += 10**6
                     return score
-                modes = sorted(modes[output], key=key)
-                mode = modes[-1]
+                output_modes = sorted(modes[output], key=key)
+                mode = output_modes[-1]
                 configuration[output].options["mode"] = mode["name"]
                 configuration[output].options["rate"] = mode["rate"]
                 configuration[output].options["pos"] = "0x0"

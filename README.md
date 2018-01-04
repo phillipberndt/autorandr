@@ -196,6 +196,8 @@ running `xrandr`.
 
 ## Changelog
 
+* *2018-01-04* Fixed vertical/horizontal/clone-largest virtual profiles
+
 **autorandr 1.4**
 
 * *2017-12-22* Fixed broken virtual profile support
