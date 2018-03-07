@@ -197,6 +197,7 @@ running `xrandr`.
 ## Changelog
 
 * *2018-01-04* Fixed vertical/horizontal/clone-largest virtual profiles
+* *2018-03-07* Output all non-error messages to stdout instead of stderr
 
 **autorandr 1.4**
 

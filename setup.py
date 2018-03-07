@@ -2,14 +2,14 @@ from setuptools import setup
 
 
 try:
-    long_description = open('README.md').read()
+    long_description = open('README.rst').read()
 except:
     long_description = 'Automatically select a display configuration based on connected devices'
 
 setup(
     name='autorandr',
 
-    version='1.4-1',
+    version='1.4-2',
 
     description='Automatically select a display configuration based on connected devices',
     long_description=long_description,

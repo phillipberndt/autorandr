@@ -817,18 +817,18 @@ def print_profile_differences(one, another):
     "Print the differences between two profiles for debugging"
     if one == another:
         return
-    print("| Differences between the two profiles:", file=sys.stderr)
+    print("| Differences between the two profiles:")
     for output in set(chain.from_iterable((one.keys(), another.keys()))):
         if output not in one:
             if "off" not in another[output].options:
-                print("| Output `%s' is missing from the active configuration" % output, file=sys.stderr)
+                print("| Output `%s' is missing from the active configuration" % output)
         elif output not in another:
             if "off" not in one[output].options:
-                print("| Output `%s' is missing from the new configuration" % output, file=sys.stderr)
+                print("| Output `%s' is missing from the new configuration" % output)
         else:
             for line in one[output].verbose_diff(another[output]):
-                print("| [Output %s] %s" % (output, line), file=sys.stderr)
-    print("\\-", file=sys.stderr)
+                print("| [Output %s] %s" % (output, line))
+    print("\\-")
 
 
 def exit_help():
@@ -1165,7 +1165,7 @@ def main(argv):
 
         for profile_name in profiles.keys():
             if profile_blocked(os.path.join(profile_path, profile_name), block_script_metadata):
-                print("%s (blocked)" % profile_name, file=sys.stderr)
+                print("%s (blocked)" % profile_name)
                 continue
             props = []
             if profile_name in detected_profiles:
@@ -1174,7 +1174,7 @@ def main(argv):
                     load_profile = profile_name
             if profile_name in current_profiles:
                 props.append("(current)")
-            print("%s%s%s" % (profile_name, " " if props else "", " ".join(props)), file=sys.stderr)
+            print("%s%s%s" % (profile_name, " " if props else "", " ".join(props)))
             if not configs_are_equal and "--debug" in options and profile_name in detected_profiles:
                 print_profile_differences(config, profiles[profile_name]["config"])
 
