@@ -26,6 +26,7 @@ from __future__ import print_function
 
 import binascii
 import copy
+import fnmatch
 import getopt
 import hashlib
 import os
@@ -399,6 +400,10 @@ class XrandrOutput(object):
                 return hashlib.md5(binascii.unhexlify(other.edid)).hexdigest() == self.edid
             if len(self.edid) != 32 and len(other.edid) == 32 and not self.edid.startswith(XrandrOutput.EDID_UNAVAILABLE):
                 return hashlib.md5(binascii.unhexlify(self.edid)).hexdigest() == other.edid
+            if "*" in self.edid:
+                return fnmatch.fnmatch(other.edid, self.edid)
+            elif "*" in other.edid:
+                return fnmatch.fnmatch(self.edid, other.edid)
         return self.edid == other.edid
 
     def __ne__(self, other):

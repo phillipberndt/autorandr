@@ -199,6 +199,7 @@ running `xrandr`.
 * *2018-01-04* Fixed vertical/horizontal/clone-largest virtual profiles
 * *2018-03-07* Output all non-error messages to stdout instead of stderr
 * *2018-03-25* Add --detected and --current to filter the profile list output
+* *2018-03-25* Allow wildcard matching in EDIDs
 
 **autorandr 1.4**
 
