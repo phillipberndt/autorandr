@@ -71,8 +71,10 @@ Usage: autorandr [options]
 -s, --save <profile>    save your current setup to profile <profile>
 -r, --remove <profile>  remove profile <profile>
 --batch                 run autorandr for all users with active X11 sessions
+--current               only list current (active) configuration(s)
 --config                dump your current xrandr setup
 --debug                 enable verbose output
+--detected              only list detected (available) configuration(s)
 --dry-run               don't change anything, only print the xrandr commands
 --fingerprint           fingerprint your current hardware setup
 --force                 force (re)loading of a profile
@@ -1026,7 +1028,8 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv[1:], "s:r:l:d:cfh",
                                    ["batch", "dry-run", "change", "default=", "save=", "remove=", "load=",
-                                    "force", "fingerprint", "config", "debug", "skip-options=", "help"])
+                                    "force", "fingerprint", "config", "debug", "skip-options=", "help",
+                                    "current", "detected"])
     except getopt.GetoptError as e:
         print("Failed to parse options: {0}.\n"
               "Use --help to get usage information.".format(str(e)),
@@ -1037,6 +1040,10 @@ def main(argv):
 
     if "-h" in options or "--help" in options:
         exit_help()
+
+    if "--current" in options and "--detected" in options:
+        print("--current and --detected are mutually exclusive.", file=sys.stderr)
+        sys.exit(posix.EX_USAGE)
 
     # Batch mode
     if "--batch" in options:
@@ -1165,16 +1172,24 @@ def main(argv):
 
         for profile_name in profiles.keys():
             if profile_blocked(os.path.join(profile_path, profile_name), block_script_metadata):
-                print("%s (blocked)" % profile_name)
+                if "--current" not in options and "--detected" not in options:
+                    print("%s (blocked)" % profile_name)
                 continue
             props = []
             if profile_name in detected_profiles:
                 props.append("(detected)")
                 if ("-c" in options or "--change" in options) and not load_profile:
                     load_profile = profile_name
+            elif "--detected" in options:
+                continue
             if profile_name in current_profiles:
                 props.append("(current)")
-            print("%s%s%s" % (profile_name, " " if props else "", " ".join(props)))
+            elif "--current" in options:
+                continue
+            if "--current" in options or "--detected" in options:
+                print("%s" % (profile_name, ))
+            else:
+                print("%s%s%s" % (profile_name, " " if props else "", " ".join(props)))
             if not configs_are_equal and "--debug" in options and profile_name in detected_profiles:
                 print_profile_differences(config, profiles[profile_name]["config"])
 
