@@ -145,7 +145,9 @@ You can store default values for any option in an INI-file in
 `~/.config/autorandr/settings.ini` in a section `config`. The most useful
 candidate for doing that is `skip-options`, if you need it.
 
-## Hook scripts
+## Advanced usage
+
+### Hook scripts
 
 Three more scripts can be placed in the configuration directory (as 
 (as defined by the [XDG spec](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html),
@@ -193,6 +195,13 @@ If you experience issues with xrandr being executed too early after connecting
 a new monitor, then you can use a `predetect` script to delay the execution.
 Write e.g. `sleep 1` into that file to make autorandr wait a second before
 running `xrandr`.
+
+### Wildcard EDID matching
+
+The EDID strings in the `~/.config/autorandr/*/setup` files may contain an
+asterisk to enable wildcard matching: Such EDIDs are matched against connected
+monitors using the usual file name globbing rules. This can be used to create
+profiles matching multiple (or any) monitors.
 
 ## Changelog
 
