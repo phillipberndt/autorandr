@@ -48,6 +48,8 @@ if sys.version_info.major == 2:
 else:
     import configparser
 
+__version__ = "1.5"
+
 try:
     input = raw_input
 except NameError:
@@ -81,6 +83,7 @@ Usage: autorandr [options]
 --force                 force (re)loading of a profile
 --skip-options <option> comma separated list of xrandr arguments (e.g. "gamma")
                         to skip both in detecting changes and applying a profile
+--version               show version information and exit
 
  If no suitable profile can be identified, the current configuration is kept.
  To change this behaviour and switch to a fallback configuration, specify
@@ -1034,7 +1037,7 @@ def main(argv):
         opts, args = getopt.getopt(argv[1:], "s:r:l:d:cfh",
                                    ["batch", "dry-run", "change", "default=", "save=", "remove=", "load=",
                                     "force", "fingerprint", "config", "debug", "skip-options=", "help",
-                                    "current", "detected"])
+                                    "current", "detected", "version"])
     except getopt.GetoptError as e:
         print("Failed to parse options: {0}.\n"
               "Use --help to get usage information.".format(str(e)),
@@ -1045,6 +1048,10 @@ def main(argv):
 
     if "-h" in options or "--help" in options:
         exit_help()
+
+    if "--version" in options:
+        print("autorandr " + __version__)
+        sys.exit(0)
 
     if "--current" in options and "--detected" in options:
         print("--current and --detected are mutually exclusive.", file=sys.stderr)
