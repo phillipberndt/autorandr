@@ -631,6 +631,29 @@ def call_and_retry(*args, **kwargs):
     return retval
 
 
+def get_fb_dimensions(configuration):
+    width = 0
+    height = 0
+    for output in configuration.values():
+        if "off" in output.options or not output.edid:
+            continue
+        # This won't work with all modes -- but it's a best effort.
+        o_width, o_height = map(int, output.options["mode"].split("x"))
+        if "transform" in output.options:
+            a, b, c, d, e, f, g, h, i = map(float, output.options["transform"].split(","))
+            w = (g * o_width + h * o_height + i)
+            x = (a * o_width + b * o_height + c) / w
+            y = (d * o_width + e * o_height + f) / w
+            o_width, o_height = x, y
+        if "pos" in output.options:
+            o_left, o_top = map(int, output.options["pos"].split("x"))
+            o_width += o_left
+            o_height += o_top
+        width = max(width, o_width)
+        height = max(height, o_height)
+    return int(width), int(height)
+
+
 def apply_configuration(new_configuration, current_configuration, dry_run=False):
     "Apply a configuration"
     outputs = sorted(new_configuration.keys(), key=lambda x: new_configuration[x].sort_key)
@@ -658,6 +681,13 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
     # - Some implementations can not handle --panning without specifying --fb
     #   explicitly, so avoid it unless necessary.
     #   (See https://github.com/phillipberndt/autorandr/issues/72)
+
+    fb_dimensions = get_fb_dimensions(new_configuration)
+    try:
+        base_argv += ["--fb", "%dx%d" % fb_dimensions]
+    except:
+        # Failed to obtain frame-buffer size. Doesn't matter, xrandr will choose for the user.
+        pass
 
     auxiliary_changes_pre = []
     disable_outputs = []
