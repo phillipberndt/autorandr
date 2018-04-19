@@ -1243,7 +1243,7 @@ def main(argv):
 
     if "-d" in options:
         options["--default"] = options["-d"]
-    if not load_profile and "--default" in options and "--change" in options:
+    if not load_profile and "--default" in options and ("-c" in options or "--change" in options):
         load_profile = options["--default"]
 
     if load_profile:
