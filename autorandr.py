@@ -68,7 +68,7 @@ help_text = """
 Usage: autorandr [options]
 
 -h, --help              get this small help
--c, --change            reload current setup
+-c, --change            automatically load the first detected profile
 -d, --default <profile> make profile <profile> the default profile
 -l, --load <profile>    load profile <profile>
 -s, --save <profile>    save your current setup to profile <profile>
@@ -1243,7 +1243,7 @@ def main(argv):
 
     if "-d" in options:
         options["--default"] = options["-d"]
-    if not load_profile and "--default" in options:
+    if not load_profile and "--default" in options and "--change" in options:
         load_profile = options["--default"]
 
     if load_profile:

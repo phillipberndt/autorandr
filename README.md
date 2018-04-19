@@ -205,6 +205,8 @@ profiles matching multiple (or any) monitors.
 
 ## Changelog
 
+* *2018-04-19* Bugfix: Do not load default profile unless --change is set
+
 **autorandr 1.5**
 
 * *2018-01-03* Add --version
