@@ -1161,7 +1161,11 @@ def main(argv):
         try:
             profile_folder = os.path.join(profile_path, options["--save"])
             save_configuration(profile_folder, config)
-            exec_scripts(profile_folder, "postsave", {"CURRENT_PROFILE": options["--save"], "PROFILE_FOLDER": profile_folder})
+            exec_scripts(profile_folder, "postsave", {
+                "CURRENT_PROFILE": options["--save"],
+                "PROFILE_FOLDER": profile_folder,
+                "MONITORS": ":".join(load_config.keys()),
+            })
         except Exception as e:
             raise AutorandrException("Failed to save current configuration as profile '%s'" % (options["--save"],), e)
         print("Saved current configuration as profile '%s'" % options["--save"])
@@ -1281,6 +1285,7 @@ def main(argv):
                 script_metadata = {
                     "CURRENT_PROFILE": load_profile,
                     "PROFILE_FOLDER": scripts_path,
+                    "MONITORS": ":".join(load_config.keys()),
                 }
                 exec_scripts(scripts_path, "preswitch", script_metadata)
                 if "--debug" in options:

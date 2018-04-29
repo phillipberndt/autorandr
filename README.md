@@ -38,6 +38,7 @@ Contributors to this version of autorandr are:
 * Adrián López
 * andersonjacob
 * Alexander Wirt
+* Brice Waegeneire
 * Chris Dunder
 * Christoph Gysin
 * Daniel Hahler
@@ -189,7 +190,11 @@ If you switch back from `docked` to `mobile`, `~/.config/autorandr/postswitch`
 is executed instead of the `mobile` specific `postswitch`.
 
 In these scripts, some of autorandr's state is exposed as environment variables
-prefixed with `AUTORANDR_`. The most useful one is `$AUTORANDR_CURRENT_PROFILE`.
+prefixed with `AUTORANDR_`, such as:
+- `AUTORANDR_CURRENT_PROFILE`
+- `AUTORANDR_CURRENT_PROFILES`
+- `AUTORANDR_PROFILE_FOLDER`
+- `AUTORANDR_MONITORS`
 
 If you experience issues with xrandr being executed too early after connecting
 a new monitor, then you can use a `predetect` script to delay the execution.
