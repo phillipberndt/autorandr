@@ -1164,7 +1164,7 @@ def main(argv):
             exec_scripts(profile_folder, "postsave", {
                 "CURRENT_PROFILE": options["--save"],
                 "PROFILE_FOLDER": profile_folder,
-                "MONITORS": ":".join(load_config.keys()),
+                "MONITORS": ":".join(config.keys()),
             })
         except Exception as e:
             raise AutorandrException("Failed to save current configuration as profile '%s'" % (options["--save"],), e)

@@ -211,6 +211,7 @@ profiles matching multiple (or any) monitors.
 ## Changelog
 
 * *2018-04-19* Bugfix: Do not load default profile unless --change is set
+* *2018-04-30* Added a `AUTORANDR_MONITORS` variable to hooks (by @bricewge, #106)
 
 **autorandr 1.5**
 
