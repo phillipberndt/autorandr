@@ -1,8 +1,9 @@
 # autorandr/auto-disper completion by Maciej 'macieks' Sitarz <macieks@freesco.pl>
+# XDG additions and service dir filtering by Vladimir-csp
 
 _autorandr ()
 {
-	local cur prev opts lopts prfls
+	local cur prev opts lopts prfls AR_DIRS OIFS
 
 	COMPREPLY=()
 	cur="${COMP_WORDS[COMP_CWORD]}"
@@ -10,10 +11,27 @@ _autorandr ()
 
 	opts="-h -c -s -r -l -d"
 	lopts="--help --change --save --remove --load --default --force --fingerprint --config --dry-run"
-	if [ -d ~/.autorandr ]; then
-		prfls="`find ~/.autorandr/* -maxdepth 1 -type d -printf '%f\n'`"
-	elif [ -d ~/.config/autorandr ]; then
-		prfls="`find ~/.config/autorandr/* -maxdepth 1 -type d -printf '%f\n'`"
+
+	# find system-level autorandr dirs
+	OIFS="$IFS"
+	IFS=':'
+		for DIR in ${XDG_CONFIG_DIRS:-/etc/xdg}
+		do
+			IFS="$OIFS"
+			[ -d "$DIR/autorandr" ] && AR_DIRS=( "${AR_DIRS[@]}" "$DIR/autorandr" )
+		done
+	IFS="$OIFS"
+
+	# find user-level autorandr dir
+	if [ -d "$HOME/.autorandr" ]; then
+	        AR_DIRS=( "${AR_DIRS[@]}" "$HOME/.autorandr" )
+	elif [ -d "${XDG_CONFIG_HOME:-$HOME/.config}/autorandr/" ]; then
+	        AR_DIRS=( "${AR_DIRS[@]}" "${XDG_CONFIG_HOME:-$HOME/.config}/autorandr/" )
+	fi
+
+	if [ -n "${AR_DIRS}" ]
+	then
+		prfls="$(find "${AR_DIRS[@]}" -mindepth 1 -maxdepth 1 -type d ! -name "*.d" -printf '%f\n' | sort -u)"
 	else
 		prfls=""
 	fi
