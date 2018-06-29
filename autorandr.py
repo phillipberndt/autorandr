@@ -755,10 +755,24 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
 
 
 def is_equal_configuration(source_configuration, target_configuration):
-    "Check if all outputs from target are already configured correctly in source"
+    """
+        Check if all outputs from target are already configured correctly in source and
+        that no other outputs are active.
+    """
     for output in target_configuration.keys():
-        if (output not in source_configuration) or (source_configuration[output] != target_configuration[output]):
-            return False
+        if "off" in target_configuration[output].options:
+            if (output in source_configuration or "off" not in source_configuration[output].options):
+                return False
+        else:
+            if (output not in source_configuration) or (source_configuration[output] != target_configuration[output]):
+                return False
+    for output in source_configuration.keys():
+        if "off" in source_configuration[output].options:
+            if output in target_configuration and "off" not in target_configuration.options:
+                return False
+        else:
+            if output not in target_configuration:
+                return False
     return True
 
 
