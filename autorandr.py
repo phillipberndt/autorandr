@@ -1073,6 +1073,15 @@ def dispatch_call_to_sessions(argv):
             X11_displays_done.add(display)
 
 
+def enabled_monitors(config):
+    monitors = []
+    for monitor in config:
+        if "--off" in config[monitor].option_vector:
+            continue
+        monitors.append(monitor)
+    return monitors
+
+
 def read_config(options, directory):
     """Parse a configuration config.ini from directory and merge it into
     the options dictionary"""
@@ -1178,7 +1187,7 @@ def main(argv):
             exec_scripts(profile_folder, "postsave", {
                 "CURRENT_PROFILE": options["--save"],
                 "PROFILE_FOLDER": profile_folder,
-                "MONITORS": ":".join(config.keys()),
+                "MONITORS": ":".join(enabled_monitors(config)),
             })
         except Exception as e:
             raise AutorandrException("Failed to save current configuration as profile '%s'" % (options["--save"],), e)
@@ -1299,7 +1308,7 @@ def main(argv):
                 script_metadata = {
                     "CURRENT_PROFILE": load_profile,
                     "PROFILE_FOLDER": scripts_path,
-                    "MONITORS": ":".join(load_config.keys()),
+                    "MONITORS": ":".join(enabled_monitors(load_config)),
                 }
                 exec_scripts(scripts_path, "preswitch", script_metadata)
                 if "--debug" in options:
