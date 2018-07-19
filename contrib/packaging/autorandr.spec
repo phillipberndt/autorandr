@@ -7,7 +7,7 @@
 %endif
 
 Name:           autorandr
-Version:        1.5
+Version:        1.5.1
 Release:        1%{?dist}
 Summary:        Automatically select a display configuration based on connected devices
 
