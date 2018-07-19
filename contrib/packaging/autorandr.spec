@@ -7,13 +7,15 @@
 %endif
 
 Name:           autorandr
-Version:        1.1
-Release:        2%{?dist}
+Version:        1.5
+Release:        1%{?dist}
 Summary:        Automatically select a display configuration based on connected devices
 
 License:        GPL
-URL:            https://github.com/phillipberndt/autorandr
-Source0:        https://github.com/phillipberndt/%{name}/archive/%{version}/%{name}-%{version}.tar.gz
+#URL:            https://github.com/phillipberndt/autorandr
+#Source0:        https://github.com/phillipberndt/%{name}/archive/%{version}/%{name}-%{version}.tar.gz
+URL:            https://github.com/maciex/autorandr
+Source0:        https://github.com/maciex/%{name}/archive/%{version}/%{name}-%{version}.tar.gz
 
 BuildArch:	noarch
 Requires:       systemd
@@ -36,12 +38,13 @@ install -D -m 644 contrib/bash_completion/autorandr %{buildroot}%{_datarootdir}/
 install -d -m 755 %{buildroot}%{_datarootdir}/bash-completion/completions
 ln -s ../../autorandr/completions/autorandr %{buildroot}%{_datarootdir}/bash-completion/completions/autorandr
 install -D -m 755 contrib/pm-utils/40autorandr %{buildroot}%{_sysconfdir}/pm/sleep.d/40autorandr
-install -D -m 644 contrib/systemd/autorandr.service %{buildroot}%{_sysconfdir}/systemd/system/autorandr.service
+install -D -m 644 contrib/systemd/autorandr.service %{buildroot}%{_unitdir}/autorandr.service
 #install -D -m 644 contrib/udev/40-monitor-hotplug.rules %{buildroot}%{_sysconfdir}/udev/rules.d/40-monitor-hotplug.rules
 install -D -m 644 contrib/etc/xdg/autostart/autorandr.desktop %{buildroot}%{_sysconfdir}/etc/xdg/autostart/autorandr.desktop
 
 %files
 %defattr(-,root,root,-)
+%attr(0644,root,root) %{_unitdir}/autorandr.service
 
 %license gpl-3.0.txt 
 %doc README.md
@@ -55,6 +58,9 @@ install -D -m 644 contrib/etc/xdg/autostart/autorandr.desktop %{buildroot}%{_sys
 
 
 %changelog
+* Thu Jul 19 2018 Maciej Sitarz <macieksitarz@wp.pl> - 1.5-1
+- Updated to stable 1.5
+- Changed dest path for systemd service file
 * Sun Oct 01 2017 Jerzy Drozdz <rpmbuilder@jdsieci.pl> - 1.1-2
 - Added conditionals for pm-utils, compability with Fedora26+
 - Removed bash-completion from requisites
