@@ -7,7 +7,7 @@
 %endif
 
 Name:           autorandr
-Version:        1.5
+Version:        1.5.1
 Release:        1%{?dist}
 Summary:        Automatically select a display configuration based on connected devices
 
@@ -44,7 +44,7 @@ install -D -m 644 contrib/etc/xdg/autostart/autorandr.desktop %{buildroot}%{_sys
 
 %files
 %defattr(-,root,root,-)
-%attr(0644,root,root) %{_unitdir}/autorandr.service
+%attr(0644,root,root) /%{_unitdir}/autorandr.service
 
 %license gpl-3.0.txt 
 %doc README.md
