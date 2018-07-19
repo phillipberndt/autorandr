@@ -18,10 +18,12 @@ URL:            https://github.com/maciex/autorandr
 Source0:        https://github.com/maciex/%{name}/archive/%{version}/%{name}-%{version}.tar.gz
 
 BuildArch:	noarch
-Requires:       systemd
+Requires:       python2
 %if 0%{?use_pm_utils}
 Requires:	pm-utils
 %endif
+%{?systemd_ordering}
+BuildRequires: systemd
 
 %description
 
@@ -44,7 +46,7 @@ install -D -m 644 contrib/etc/xdg/autostart/autorandr.desktop %{buildroot}%{_sys
 
 %files
 %defattr(-,root,root,-)
-%attr(0644,root,root) /%{_unitdir}/autorandr.service
+%attr(0644,root,root) %{_unitdir}/autorandr.service
 
 %license gpl-3.0.txt 
 %doc README.md
