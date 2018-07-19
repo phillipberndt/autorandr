@@ -768,7 +768,7 @@ def is_equal_configuration(source_configuration, target_configuration):
                 return False
     for output in source_configuration.keys():
         if "off" in source_configuration[output].options:
-            if output in target_configuration and "off" not in target_configuration.options:
+            if output in target_configuration and "off" not in target_configuration[output].options:
                 return False
         else:
             if output not in target_configuration:
