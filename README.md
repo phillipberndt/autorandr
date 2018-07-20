@@ -215,6 +215,7 @@ profiles matching multiple (or any) monitors.
 * *2018-06-29* Fix detection of current configuration if extra monitors are active
 * *2018-07-11* Bugfix in the latest change: Correctly handle "off" minitors when comparing
 * *2018-07-19* Do not kill spawned user processes from systemd unit
+* *2018-07-20* Correctly handle "off" minitors when comparing -- fixup for another bug.
 
 **autorandr 1.5**
 
