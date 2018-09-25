@@ -211,6 +211,10 @@ profiles matching multiple (or any) monitors.
 
 ## Changelog
 
+**autorandr 1.7**
+
+* *2018-09-25* Fix FB size computation with rotated screens (by @Janno, #117)
+
 **autorandr 1.6**
 
 * *2018-04-19* Bugfix: Do not load default profile unless --change is set
