@@ -7,15 +7,13 @@
 %endif
 
 Name:           autorandr
-Version:        1.5.1
+Version:        1.5
 Release:        1%{?dist}
 Summary:        Automatically select a display configuration based on connected devices
 
 License:        GPL
-#URL:            https://github.com/phillipberndt/autorandr
-#Source0:        https://github.com/phillipberndt/%{name}/archive/%{version}/%{name}-%{version}.tar.gz
-URL:            https://github.com/maciex/autorandr
-Source0:        https://github.com/maciex/%{name}/archive/%{version}/%{name}-%{version}.tar.gz
+URL:            https://github.com/phillipberndt/autorandr
+Source0:        https://github.com/phillipberndt/%{name}/archive/%{version}/%{name}-%{version}.tar.gz
 
 BuildArch:	noarch
 Requires:       python2

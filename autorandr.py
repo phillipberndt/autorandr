@@ -48,7 +48,7 @@ if sys.version_info.major == 2:
 else:
     import configparser
 
-__version__ = "1.5"
+__version__ = "1.7"
 
 try:
     input = raw_input
@@ -645,6 +645,9 @@ def get_fb_dimensions(configuration):
             x = (a * o_width + b * o_height + c) / w
             y = (d * o_width + e * o_height + f) / w
             o_width, o_height = x, y
+        if "rotate" in output.options:
+            if output.options["rotate"] in ("left", "right"):
+                o_width, o_height = o_height, o_width
         if "pos" in output.options:
             o_left, o_top = map(int, output.options["pos"].split("x"))
             o_width += o_left
@@ -768,7 +771,7 @@ def is_equal_configuration(source_configuration, target_configuration):
                 return False
     for output in source_configuration.keys():
         if "off" in source_configuration[output].options:
-            if output in target_configuration and "off" not in target_configuration.options:
+            if output in target_configuration and "off" not in target_configuration[output].options:
                 return False
         else:
             if output not in target_configuration:
@@ -1073,6 +1076,15 @@ def dispatch_call_to_sessions(argv):
             X11_displays_done.add(display)
 
 
+def enabled_monitors(config):
+    monitors = []
+    for monitor in config:
+        if "--off" in config[monitor].option_vector:
+            continue
+        monitors.append(monitor)
+    return monitors
+
+
 def read_config(options, directory):
     """Parse a configuration config.ini from directory and merge it into
     the options dictionary"""
@@ -1178,7 +1190,7 @@ def main(argv):
             exec_scripts(profile_folder, "postsave", {
                 "CURRENT_PROFILE": options["--save"],
                 "PROFILE_FOLDER": profile_folder,
-                "MONITORS": ":".join(config.keys()),
+                "MONITORS": ":".join(enabled_monitors(config)),
             })
         except Exception as e:
             raise AutorandrException("Failed to save current configuration as profile '%s'" % (options["--save"],), e)
@@ -1299,7 +1311,7 @@ def main(argv):
                 script_metadata = {
                     "CURRENT_PROFILE": load_profile,
                     "PROFILE_FOLDER": scripts_path,
-                    "MONITORS": ":".join(load_config.keys()),
+                    "MONITORS": ":".join(enabled_monitors(load_config)),
                 }
                 exec_scripts(scripts_path, "preswitch", script_metadata)
                 if "--debug" in options:
