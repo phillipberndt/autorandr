@@ -7,7 +7,7 @@
 %endif
 
 Name:           autorandr
-Version:        1.5
+Version:        1.7
 Release:        1%{?dist}
 Summary:        Automatically select a display configuration based on connected devices
 
@@ -58,6 +58,8 @@ install -D -m 644 contrib/etc/xdg/autostart/autorandr.desktop %{buildroot}%{_sys
 
 
 %changelog
+* Fri Sep 28 2018 Maciej Sitarz <macieksitarz@wp.pl> - 1.7-1
+- Updated to stable 1.7
 * Thu Jul 19 2018 Maciej Sitarz <macieksitarz@wp.pl> - 1.5-1
 - Updated to stable 1.5
 - Changed dest path for systemd service file
