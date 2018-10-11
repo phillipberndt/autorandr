@@ -638,7 +638,8 @@ def get_fb_dimensions(configuration):
         if "off" in output.options or not output.edid:
             continue
         # This won't work with all modes -- but it's a best effort.
-        o_width, o_height = map(int, output.options["mode"].split("x"))
+        o_mode = re.search("^[0-9]+x[0-9]+", output.options["mode"]).group(0)
+        o_width, o_height = map(int, o_mode.split("x"))
         if "transform" in output.options:
             a, b, c, d, e, f, g, h, i = map(float, output.options["transform"].split(","))
             w = (g * o_width + h * o_height + i)
