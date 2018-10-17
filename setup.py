@@ -2,7 +2,7 @@ from setuptools import setup
 
 
 try:
-    long_description = open('README.rst').read()
+    long_description = open('README.md').read()
 except:
     long_description = 'Automatically select a display configuration based on connected devices'
 
