@@ -62,7 +62,7 @@ int main(int argc, char **argv)
 	static const char *short_options = "hd";
 
 	const char *help_str =
-	    "Usage: xorg_launcher [OPTION]\n"
+	    "Usage: autorandr_launcher [OPTION]\n"
 	    "\n"
 	    "Listens to X server screen change events and launches autorandr after an event occurs.\n"
 	    "\n"
