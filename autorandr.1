@@ -1,3 +1,70 @@
 .TH AUTORANDR 1
 .SH NAME
-Automatically select a display configuration based on connected devices
+autorandr \- automatically select a display configuration based on connected devices
+.SH SYNOPSIS
+.B autorandr
+[\fIOPTION\fR] [\fIPROFILE\fR] 
+.SH DESCRIPTION
+.PP
+This program automatically detects connected display hardware and then loads an appropriate X11 setup using xrandr. It also supports the use of display profiles for different hardware setups.
+.PP
+Autorandr also includes several virtual configurations including \fBoff\fR, \fBcommon\fR, \fBclone-largest\fR, \fBhorizontal\fR, and \fBvertical\fR. See the documentation for explanation of each.
+.SH OPTIONS
+.TP
+\fB\-h\fR, \fB\-\-help
+\fRDisplay help text and exit
+.TP
+\fB\-c\fR, \fB\-\-change
+\fRAutomatically load the first detected profile
+.TP
+\fB\-d\fR, \fB\-\-default \fIPROFILE
+\fRMake profile \fIPROFILE\fR the default profile. The default profile is used if no suitable profile can be identified. Else, the current configuration is kept.
+.TP
+\fB\-l\fR, \fB\-\-load \fIPROFILE
+\fRLoad profile \fIPROFILE
+.TP
+\fB\-s\fR, \fB\-\-save \fIPROFILE
+\fRSave the current setup to profile \fIPROFILE
+.TP
+\fB\-r\fR, \fB\-\-remove \fIPROFILE
+\fRRemove profile \fIPROFILE
+.TP
+.BR \-\-batch
+\fRRun autorandr for all users with active X11 sessions
+.TP
+.BR \-\-current
+List only the current (active) configuration(s)
+.TP
+.BR \-\-config
+Dump the variable values of your current xrandr setup
+.TP
+.BR \-\-debug
+Enable verbose output
+.TP
+.BR \-\-detected
+List only the detected (i.e. available) configuration(s)
+.TP
+.BR \-\-dry\-run
+Don't change anything, only print the xrandr commands
+.TP
+.BR \-\-fingerprint
+Fingerprint the current hardware setup
+.TP
+.BR \-\-force
+Force loading or reloading of a profile
+.TP
+\fB\-\-skip\-options [\fIOPTION\fR] ...
+\fRSet a comma\-separated list of xrandr arguments to skip both in change detection and profile application. See \fBxrandr(1)\fR for xrandr arguments.
+.TP
+.BR \-\-version
+Show version information and exit
+.SH AUTHOR
+\fRPhillip Berndt <phillip.berndt@googlemail.com>
+.br
+See https://github.com/phillipberndt/autorandr for a full list of contributors. 
+.SH REPORTING BUGS
+\fRReport issues upstream on GitHub:  https://githb.com/phillipberndt/autorandr/issues
+.br
+\fRPlease attach the output of \fBxrandr --verbose\fR to your bug report if appropriate.
+.SH SEE ALSO
+\fRFor examples, advanced usage (including predefined per-profile & global hooks and wildcard EDID matching), and full documentation, see https://github.com/phillipberndt/autorandr.
