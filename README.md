@@ -70,7 +70,7 @@ as root to install it.
 If you prefer to have a system wide install managed by your package manager,
 you can
 
-* Use the [aur package](https://aur.archlinux.org/packages/autorandr-git/) on Arch
+* Use the [official Arch package](https://www.archlinux.org/packages/community/any/autorandr/).
 * Use the [official Debian package](https://packages.debian.org/sid/x11/autorandr) on sid
 * Use the [ebuild from zugaina](https://gpo.zugaina.org/x11-misc/autorandr) on Gentoo.
 * Use the
