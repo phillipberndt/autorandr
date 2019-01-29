@@ -122,16 +122,16 @@ uninstall_udev:
 	rm -f ${DESTDIR}/${UDEV_RULES_DIR}/40-monitor-hotplug.rules
 
 # Rules for manpage
-MANPAGES_DIR:=/usr/share/man/man1
+MANDIR:=${PREFIX}/share/man/man1
 DEFAULT_TARGETS+=manpage
 
 install_manpage:
-	mkdir -p ${MANPAGES_DIR}
-	cp autorandr.1 ${MANPAGES_DIR}
+	mkdir -p ${DESTDIR}/${MANDIR}
+	cp autorandr.1 ${DESTDIR}/${MANDIR}
 	mandb -qp
 
 uninstall_manpage:
-	rm -f ${MANPAGES_DIR}/autorandr.1
+	rm -f ${DESTDIR}/${MANDIR}/autorandr.1
 	mandb -q
 
 TARGETS=$(DEFAULT_TARGETS)
