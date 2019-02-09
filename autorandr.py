@@ -317,7 +317,7 @@ class XrandrOutput(object):
         else:
             edid = "%s-%s" % (XrandrOutput.EDID_UNAVAILABLE, match["output"])
 
-        if not match["width"]:
+        if not match["connected"]:
             options["off"] = None
         else:
             if match["mode_name"]:
