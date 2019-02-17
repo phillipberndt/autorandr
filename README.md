@@ -212,6 +212,12 @@ profiles matching multiple (or any) monitors.
 
 ## Changelog
 
+**autorandr 1.8 (dev)**
+* *2019-02-17* Add an X11 daemon that runs autorandr when a display connects (by @rliou92, #127)
+* *2019-02-17* Replace width=0 check with disconnected to detect disconnected monitors (by @joseph-jones, #139)
+* *2019-02-17* Fix handling of empty padding (by @jschwab, #138)
+* *2019-02-17* Add a man page (by @somers-all-the-time, #133)
+
 **autorandr 1.7**
 
 * *2018-09-25* Fix FB size computation with rotated screens (by @Janno, #117)
