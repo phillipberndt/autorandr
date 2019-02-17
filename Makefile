@@ -22,6 +22,11 @@ all:
 	@echo
 	@echo 'E.g. "make install TARGETS='autorandr pmutils' PM_UTILS_DIR=/etc/pm/sleep.d".'
 	@echo
+	@echo "An additional TARGETS variable \"launcher\" is available. This"
+	@echo "installs a launcher called \"autorandr_launcher\". The launcher"
+	@echo "is able to be run by the user and calls autorandr automatically"
+	@echo "without using udev rules."
+	@echo
 	@echo "The following additional targets are available:"
 	@echo
 	@echo "    make deb        creates a Debian package"
@@ -133,6 +138,14 @@ install_manpage:
 uninstall_manpage:
 	rm -f ${DESTDIR}/${MANDIR}/autorandr.1
 	mandb -q
+
+# Rules for launcher
+install_launcher:
+	gcc -Wall contrib/autorandr_launcher/autorandr_launcher.c -o contrib/autorandr_launcher/autorandr_launcher -lxcb -lxcb-randr
+	install -D -m 755 contrib/autorandr_launcher/autorandr_launcher ${DESTDIR}${PREFIX}/bin/autorandr_launcher
+
+uninstall_launcher:
+	rm -f ${DESTDIR}${PREFIX}/bin/autorandr_launcher
 
 TARGETS=$(DEFAULT_TARGETS)
 install: $(patsubst %,install_%,$(TARGETS))
