@@ -140,7 +140,7 @@ class XrandrOutput(object):
 
     # This regular expression is used to parse an output in `xrandr --verbose'
     XRANDR_OUTPUT_REGEXP = """(?x)
-        ^(?P<output>[^ ]+)\s+                                                           # Line starts with output name
+        ^\s*(?P<output>\S[^ ]*)\s+                                                      # Line starts with output name
         (?:                                                                             # Differentiate disconnected and connected
             disconnected |                                                              # in first line
             unknown\ connection |
@@ -317,7 +317,7 @@ class XrandrOutput(object):
         else:
             edid = "%s-%s" % (XrandrOutput.EDID_UNAVAILABLE, match["output"])
 
-        if not match["connected"]:
+        if not match["connected"] or not match["width"]:
             options["off"] = None
         else:
             if match["mode_name"]:
@@ -338,7 +338,8 @@ class XrandrOutput(object):
                 options["reflect"] = "y"
             elif match["reflect"] == "X and Y":
                 options["reflect"] = "xy"
-            options["pos"] = "%sx%s" % (match["x"], match["y"])
+            if match["x"] or match["y"]:
+                options["pos"] = "%sx%s" % (match["x"] or "0", match["y"] or "0")
             if match["panning"]:
                 panning = [match["panning"]]
                 if match["tracking"]:
