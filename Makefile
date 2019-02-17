@@ -126,6 +126,20 @@ uninstall_udev:
 	$(if $(UDEV_RULES_DIR),,$(error UDEV_RULES_DIR is not defined))
 	rm -f ${DESTDIR}/${UDEV_RULES_DIR}/40-monitor-hotplug.rules
 
+# Rules for manpage
+MANDIR:=${PREFIX}/share/man/man1
+DEFAULT_TARGETS+=manpage
+
+install_manpage:
+	mkdir -p ${DESTDIR}/${MANDIR}
+	cp autorandr.1 ${DESTDIR}/${MANDIR}
+	mandb -qp
+
+uninstall_manpage:
+	rm -f ${DESTDIR}/${MANDIR}/autorandr.1
+	mandb -q
+
+# Rules for launcher
 install_launcher:
 	gcc -Wall contrib/autorandr_launcher/autorandr_launcher.c -o contrib/autorandr_launcher/autorandr_launcher -lxcb -lxcb-randr
 	install -D -m 755 contrib/autorandr_launcher/autorandr_launcher ${DESTDIR}${PREFIX}/bin/autorandr_launcher
