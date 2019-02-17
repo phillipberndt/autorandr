@@ -656,9 +656,9 @@ def get_fb_dimensions(configuration):
         if "panning" in output.options:
             match = re.match("(?P<w>[0-9]+)x(?P<h>[0-9]+)(?:\+(?P<x>[0-9]+))?(?:\+(?P<y>[0-9]+))?.*", output.options["panning"])
             if match:
-                detail = match.groupdict()
-                o_width = int(detail.get("w")) + int(detail.get("x", "0"))
-                o_height = int(detail.get("h")) + int(detail.get("y", "0"))
+                detail = match.groupdict(default="0")
+                o_width = int(detail.get("w")) + int(detail.get("x"))
+                o_height = int(detail.get("h")) + int(detail.get("y"))
         width = max(width, o_width)
         height = max(height, o_height)
     return int(width), int(height)
