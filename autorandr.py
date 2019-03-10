@@ -708,6 +708,9 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
         if not new_configuration[output].edid or "off" in new_configuration[output].options:
             disable_outputs.append(new_configuration[output].option_vector)
         else:
+            if output not in current_configuration:
+                raise AutorandrException("New profile configures output %s which does not exist in current xrandr --verbose output. "
+                                         "Don't know how to proceed." % output)
             if "off" not in current_configuration[output].options:
                 remain_active_count += 1
 
