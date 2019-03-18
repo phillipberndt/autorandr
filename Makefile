@@ -133,11 +133,9 @@ DEFAULT_TARGETS+=manpage
 install_manpage:
 	mkdir -p ${DESTDIR}/${MANDIR}
 	cp autorandr.1 ${DESTDIR}/${MANDIR}
-	mandb -qp
 
 uninstall_manpage:
 	rm -f ${DESTDIR}/${MANDIR}/autorandr.1
-	mandb -q
 
 # Rules for launcher
 install_launcher:
