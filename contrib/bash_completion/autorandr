@@ -29,9 +29,9 @@ _autorandr ()
 	        AR_DIRS=( "${AR_DIRS[@]}" "${XDG_CONFIG_HOME:-$HOME/.config}/autorandr/" )
 	fi
 
-	if [ -n "${AR_DIRS}" ]
+	if [ "${#AR_DIRS[@]}" -gt 0 ]
 	then
-		prfls="$(find "${AR_DIRS[@]}" -mindepth 1 -maxdepth 1 -type d ! -name "*.d" -printf '%f\n' | sort -u)"
+		prfls="$(find "${AR_DIRS[@]}" -mindepth 1 -maxdepth 1 -type d ! -name "*.d" -printf '%f\n' 2>/dev/null | sort -u)"
 	else
 		prfls=""
 	fi
