@@ -317,7 +317,13 @@ class XrandrOutput(object):
         else:
             edid = "%s-%s" % (XrandrOutput.EDID_UNAVAILABLE, match["output"])
 
-        if not match["connected"] or not match["width"]:
+        # An output can be disconnected but still have a mode configured. This can only happen
+        # as a residual situation after a disconnect, you cannot associate a mode with an disconnected
+        # output.
+        #
+        # This code needs to be careful not to mix the two. An output should only be configured to
+        # "off" if it doesn't have a mode associated with it, which is modelled as "not a width" here.
+        if not match["width"]:
             options["off"] = None
         else:
             if match["mode_name"]:
