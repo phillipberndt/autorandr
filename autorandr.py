@@ -579,6 +579,17 @@ def profile_blocked(profile_path, meta_information=None):
     return not exec_scripts(profile_path, "block", meta_information)
 
 
+def check_configuration_pre_save(configuration):
+    "Check that a configuration is safe for saving."
+    outputs = sorted(configuration.keys(), key=lambda x: configuration[x].sort_key)
+    for output in outputs:
+        if "off" not in configuration[output].options and not configuration[output].edid:
+            return ("`%(o)s' is not off (has a mode configured) but is disconnected (does not have an EDID).\n"
+                    "This typically means that it has been recently unplugged and then not properly disabled\n"
+                    "by the user. Please disable it (e.g. using `xrandr --output %(o)s --off`) and then rerun\n"
+                    "this command.") % {"o": output}
+
+
 def output_configuration(configuration, config):
     "Write a configuration file"
     outputs = sorted(configuration.keys(), key=lambda x: configuration[x].sort_key)
@@ -1196,6 +1207,11 @@ def main(argv):
         if options["--save"] in (x[0] for x in virtual_profiles):
             raise AutorandrException("Cannot save current configuration as profile '%s':\n"
                                      "This configuration name is a reserved virtual configuration." % options["--save"])
+        error = check_configuration_pre_save(config)
+        if error:
+            print("Cannot save current configuration as profile '%s':" % options["--save"])
+            print(error)
+            sys.exit(1)
         try:
             profile_folder = os.path.join(profile_path, options["--save"])
             save_configuration(profile_folder, config)
