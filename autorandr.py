@@ -332,10 +332,11 @@ class XrandrOutput(object):
                 options["mode"] = "%sx%s" % (match["mode_width"], match["mode_height"])
             else:
                 if match["rotate"] not in ("left", "right"):
-                    options["mode"] = "%sx%s" % (match["width"], match["height"])
+                    options["mode"] = "%sx%s" % (match["width"] or 0, match["height"] or 0)
                 else:
-                    options["mode"] = "%sx%s" % (match["height"], match["width"])
-            options["rotate"] = match["rotate"]
+                    options["mode"] = "%sx%s" % (match["height"] or 0, match["width"] or 0)
+            if match["rotate"]:
+                options["rotate"] = match["rotate"]
             if match["primary"]:
                 options["primary"] = None
             if match["reflect"] == "X":
