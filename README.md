@@ -212,6 +212,10 @@ profiles matching multiple (or any) monitors.
 
 ## Changelog
 
+**autorandr 1.9 (dev)**
+
+* *2019-03-24* Fix handling of recently disconnected outputs (See #128 and #143)
+
 **autorandr 1.8.1**
 
 * *2019-03-18* Removed mandb call from Makefile
