@@ -161,6 +161,7 @@ class XrandrOutput(object):
         (?:[\ \t]*border\ (?P<border>(?:[0-9]+/){3}[0-9]+))?                            # Border information
         (?:\s*(?:                                                                       # Properties of the output
             Gamma: (?P<gamma>(?:inf|[0-9\.: e])+) |                                     # Gamma value
+            CRTC:\s*(?P<crtc>[0-9]) |                                                   # CRTC value
             Transform: (?P<transform>(?:[\-0-9\. ]+\s+){3}) |                           # Transformation matrix
             EDID: (?P<edid>\s*?(?:\\n\\t\\t[0-9a-f]+)+) |                               # EDID of the output
             (?![0-9])[^:\s][^:\n]+:.*(?:\s\\t[\\t ].+)*                                 # Other properties
@@ -370,6 +371,8 @@ class XrandrOutput(object):
                 # so we approximate by 1e-10.
                 gamma = ":".join([str(max(1e-10, round(1. / float(x), 3))) for x in gamma.split(":")])
                 options["gamma"] = gamma
+            if match["crtc"]:
+                options["crtc"] = match["crtc"]
             if match["rate"]:
                 options["rate"] = match["rate"]
 
