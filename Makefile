@@ -22,6 +22,11 @@ all:
 	@echo
 	@echo 'E.g. "make install TARGETS='autorandr pmutils' PM_UTILS_DIR=/etc/pm/sleep.d".'
 	@echo
+	@echo "An additional TARGETS variable \"launcher\" is available. This"
+	@echo "installs a launcher called \"autorandr_launcher\". The launcher"
+	@echo "is able to be run by the user and calls autorandr automatically"
+	@echo "without using udev rules."
+	@echo
 	@echo "The following additional targets are available:"
 	@echo
 	@echo "    make deb        creates a Debian package"
@@ -121,6 +126,24 @@ uninstall_udev:
 	$(if $(UDEV_RULES_DIR),,$(error UDEV_RULES_DIR is not defined))
 	rm -f ${DESTDIR}/${UDEV_RULES_DIR}/40-monitor-hotplug.rules
 
+# Rules for manpage
+MANDIR:=${PREFIX}/share/man/man1
+DEFAULT_TARGETS+=manpage
+
+install_manpage:
+	mkdir -p ${DESTDIR}/${MANDIR}
+	cp autorandr.1 ${DESTDIR}/${MANDIR}
+
+uninstall_manpage:
+	rm -f ${DESTDIR}/${MANDIR}/autorandr.1
+
+# Rules for launcher
+install_launcher:
+	gcc -Wall contrib/autorandr_launcher/autorandr_launcher.c -o contrib/autorandr_launcher/autorandr_launcher -lxcb -lxcb-randr
+	install -D -m 755 contrib/autorandr_launcher/autorandr_launcher ${DESTDIR}${PREFIX}/bin/autorandr_launcher
+
+uninstall_launcher:
+	rm -f ${DESTDIR}${PREFIX}/bin/autorandr_launcher
 
 TARGETS=$(DEFAULT_TARGETS)
 install: $(patsubst %,install_%,$(TARGETS))
