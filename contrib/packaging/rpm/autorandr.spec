@@ -1,3 +1,45 @@
+%define name autorandr
+%define version 1.8.1
+%define release 1
+
+# pmutils
+%define use_pm_utils 1
+%if 0%{?fedora} > 22
+%define use_pm_utils 0
+%endif
+%if 0%{?rhel} > 7
+%define use_pm_utils 0
+%endif
+
+# python 2 or 3
+%define py_ver 3
+%if 0%{?rhel}
+%define py_ver 2
+%endif
+
+Summary: Automatically select a display configuration based on connected devices
+Name: %{name}
+Version: %{version}
+Release: %{release}%{?dist}
+Source0: https://github.com/phillipberndt/%{name}/archive/%{version}/%{name}-%{version}.tar.gz
+License: GPLv3
+Group: Development/Libraries
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
+Prefix: %{_prefix}
+BuildArch: noarch
+Vendor: Phillip Berndt <phillip.berndt@googlemail.com>
+Url: https://github.com/phillipberndt/autorandr
+Requires: python%{py_ver}
+%if 0%{?use_pm_utils}
+Requires:	pm-utils
+%endif
+%{?systemd_ordering}
+BuildRequires: bash-completion
+BuildRequires: python%{py_ver}-devel
+BuildRequires: systemd
+BuildRequires: udev
+
+%description
 # autorandr
 
 Automatically select a display configuration based on connected devices
@@ -81,7 +123,6 @@ you can
   for various distributions (RPM and DEB based).
 * Use the [X binary package system](https://wiki.voidlinux.eu/XBPS)' on Void Linux 
 * Build a .deb-file from the source tree using `make deb`.
-* Build a .rpm-file from the source tree using `make rpm`.
 
 We appreciate packaging scripts for other distributions, please file a pull
 request if you write one.
@@ -213,10 +254,6 @@ profiles matching multiple (or any) monitors.
 
 ## Changelog
 
-**autorandr 1.9 (dev)**
-
-* *2019-03-24* Fix handling of recently disconnected outputs (See #128 and #143)
-
 **autorandr 1.8.1**
 
 * *2019-03-18* Removed mandb call from Makefile
@@ -275,3 +312,49 @@ profiles matching multiple (or any) monitors.
 
 * *2016-12-07* Tag the current code as version 1.0.0; see github issue #54
 * *2016-10-03* Install a desktop file to `/etc/xdg/autostart` by default
+
+
+%prep
+%setup -n %{name}-%{version} -n %{name}-%{version}
+%if %{py_ver} == 3
+pathfix.py -pni "%{__python3} %{py3_shbang_opts}" ./autorandr.py
+%else
+pathfix.py -pni "%{__python2} %{py2_shbang_opts}" ./autorandr.py
+%endif
+
+%install
+make DESTDIR="%{buildroot}" PREFIX=/usr install
+install -vDm 644 README.md -t "%{buildroot}/usr/share/doc/%{name}/"
+
+%files
+%defattr(-,root,root,-)
+%attr(0644,root,root) %{_unitdir}/autorandr.service
+%license gpl-3.0.txt 
+%doc README.md
+%config(noreplace) %{_sysconfdir}/*
+%{_bindir}/*
+%{_mandir}
+%{_datarootdir}/bash-completion/completions/autorandr
+%{_udevrulesdir}/40-monitor-hotplug.rules
+%changelog
+* Wed May 22 2019 Maciej Sitarz <macieksitarz@wp.pl> - 1.8.1-1
+- Updated to stable 1.8.1
+* Fri Sep 28 2018 Maciej Sitarz <macieksitarz@wp.pl> - 1.7-1
+- Updated to stable 1.7
+* Thu Jul 19 2018 Maciej Sitarz <macieksitarz@wp.pl> - 1.5-1
+- Updated to stable 1.5
+- Changed dest path for systemd service file
+* Sun Oct 01 2017 Jerzy Drozdz <rpmbuilder@jdsieci.pl> - 1.1-2
+- Added conditionals for pm-utils, compability with Fedora26+
+- Removed bash-completion from requisites
+- Removed udev from requisites
+* Sun Sep 03 2017 Jerzy Drozdz <rpmbuilder@jdsieci.pl> - 1.1-1
+- Update to stable 1.1
+* Fri Feb 17 2017 Jerzy Drozdz <rpmbuilder@jdsieci.pl> - 20170217git-1
+- Update to master
+* Wed Jul 6 2016 Jerzy Drozdz <rpmbuilder@jdsieci.pl> - 20160706git-1
+- Set default value of $XDG_CONFIG_DIRS to fulfill the standard
+* Fri Jul 1 2016 Jerzy Drozdz <rpmbuilder@jdsieci.pl> - 20160701git-1.1
+- fixed running udevadm in post
+* Fri Jul 1 2016 Jerzy Drozdz <rpmbuilder@jdsieci.pl> - 20160701git-1
+- initial build
