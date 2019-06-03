@@ -688,7 +688,9 @@ def get_fb_dimensions(configuration):
 
 def apply_configuration(new_configuration, current_configuration, dry_run=False):
     "Apply a configuration"
-    require_xrandr_fix = True
+    found_candidate = False
+    found_left_monitor = False
+    found_top_monitor = False
     outputs = sorted(new_configuration.keys(), key=lambda x: new_configuration[x].sort_key)
     if dry_run:
         base_argv = ["echo", "xrandr"]
@@ -748,10 +750,19 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
                                 option_vector = option_vector[:option_index] + option_vector[option_index + 2:]
                         except ValueError:
                             pass
-
-            if new_configuration[output].options.get("pos", "0x0") == "0x0":
-                enable_outputs.insert(0, option_vector)
-                require_xrandr_fix = False
+            if not found_candidate:
+                position = new_configuration[output].options.get("pos", "0x0")
+                if position == "0x0":
+                    found_candidate = True
+                    enable_outputs.insert(0, option_vector)
+                elif not found_left_monitor and position.startswith("0x"):
+                    found_left_monitor = True
+                    enable_outputs.insert(0, option_vector)
+                elif not found_top_monitor and position.endswith("x0"):
+                    found_top_monitor = True
+                    enable_outputs.insert(0, option_vector)
+                else:
+                    enable_outputs.append(option_vector)
             else:
                 enable_outputs.append(option_vector)
 
@@ -780,16 +791,17 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
         # In the context of a xrandr call that changes the display state, `--query' should do nothing
         disable_outputs.insert(0, ['--query'])
 
+    # If we did not find a candidate, we might need to inject a call
+    # If there is no output to disable, we will enable 0x and x0 at the same time
+    if not found_candidate and len(disable_outputs) > 0:
+        # If the call to 0x and x0 is splitted, inject one of them
+        if found_top_monitor and found_left_monitor:
+            enable_outputs.insert(0, enable_outputs[0])
+
     # Enable the remaining outputs in pairs of two operations
     operations = disable_outputs + enable_outputs
     for index in range(0, len(operations), 2):
         argv = base_argv + list(chain.from_iterable(operations[index:index + 2]))
-        if call_and_retry(argv, dry_run=dry_run) != 0:
-            raise AutorandrException("Command failed: %s" % " ".join(argv))
-
-    # Fix all outputs if no 0x0 output has been found as xrandr will shift them
-    if require_xrandr_fix:
-        argv = base_argv + list(chain.from_iterable(enable_outputs))
         if call_and_retry(argv, dry_run=dry_run) != 0:
             raise AutorandrException("Command failed: %s" % " ".join(argv))
 
