@@ -688,7 +688,7 @@ def get_fb_dimensions(configuration):
 
 def apply_configuration(new_configuration, current_configuration, dry_run=False):
     "Apply a configuration"
-    found_candidate = False
+    found_top_left_monitor = False
     found_left_monitor = False
     found_top_monitor = False
     outputs = sorted(new_configuration.keys(), key=lambda x: new_configuration[x].sort_key)
@@ -750,10 +750,10 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
                                 option_vector = option_vector[:option_index] + option_vector[option_index + 2:]
                         except ValueError:
                             pass
-            if not found_candidate:
+            if not found_top_left_monitor:
                 position = new_configuration[output].options.get("pos", "0x0")
                 if position == "0x0":
-                    found_candidate = True
+                    found_top_left_monitor = True
                     enable_outputs.insert(0, option_vector)
                 elif not found_left_monitor and position.startswith("0x"):
                     found_left_monitor = True
@@ -793,7 +793,7 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
 
     # If we did not find a candidate, we might need to inject a call
     # If there is no output to disable, we will enable 0x and x0 at the same time
-    if not found_candidate and len(disable_outputs) > 0:
+    if not found_top_left_monitor and len(disable_outputs) > 0:
         # If the call to 0x and x0 is splitted, inject one of them
         if found_top_monitor and found_left_monitor:
             enable_outputs.insert(0, enable_outputs[0])
