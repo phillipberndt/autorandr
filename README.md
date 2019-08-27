@@ -153,7 +153,7 @@ candidate for doing that is `skip-options`, if you need it.
 
 ### Hook scripts
 
-Three more scripts can be placed in the configuration directory (as 
+Three more scripts can be placed in the configuration directory
 (as defined by the [XDG spec](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html),
 usually `~/.config/autorandr` or `~/.autorandr` if you have an old installation
 for user configuration and `/etc/xdg/autorandr` for system wide configuration):
