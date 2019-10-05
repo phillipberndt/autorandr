@@ -619,9 +619,9 @@ def save_configuration(profile_path, profile_name, configuration, forced=False):
     if os.path.isfile(setup_path) and not forced:
         raise AutorandrException('Refusing to overwrite config "{}" without passing "--force"!'.format(profile_name))
 
-    with open(os.path.join(profile_path, "config"), "w") as config:
+    with open(config_path, "w") as config:
         output_configuration(configuration, config)
-    with open(os.path.join(profile_path, "setup"), "w") as setup:
+    with open(setup_path, "w") as setup:
         output_setup(configuration, setup)
 
 
@@ -1233,11 +1233,10 @@ def main(argv):
                 "PROFILE_FOLDER": profile_folder,
                 "MONITORS": ":".join(enabled_monitors(config)),
             })
+        except AutorandrException as e:
+            raise e
         except Exception as e:
-            if isinstance(e, AutorandrException):
-                raise e
-            else:
-                raise AutorandrException("Failed to save current configuration as profile '%s'" % (options["--save"],), e)
+            raise AutorandrException("Failed to save current configuration as profile '%s'" % (options["--save"],), e)
         print("Saved current configuration as profile '%s'" % options["--save"])
         sys.exit(0)
 
