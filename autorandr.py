@@ -80,7 +80,7 @@ Usage: autorandr [options]
 --detected              only list detected (available) configuration(s)
 --dry-run               don't change anything, only print the xrandr commands
 --fingerprint           fingerprint your current hardware setup
---force                 force (re)loading of a profile
+--force                 force (re)loading of a profile / overwrite exiting files
 --skip-options <option> comma separated list of xrandr arguments (e.g. "gamma")
                         to skip both in detecting changes and applying a profile
 --version               show version information and exit
@@ -608,10 +608,17 @@ def output_setup(configuration, setup):
             print(output, configuration[output].edid, file=setup)
 
 
-def save_configuration(profile_path, configuration):
+def save_configuration(profile_path, profile_name, configuration, forced=False):
     "Save a configuration into a profile"
     if not os.path.isdir(profile_path):
         os.makedirs(profile_path)
+    config_path = os.path.join(profile_path, "config")
+    setup_path = os.path.join(profile_path, "setup")
+    if os.path.isfile(config_path) and not forced:
+        raise AutorandrException('Refusing to overwrite config "{}" without passing "--force"!'.format(profile_name))
+    if os.path.isfile(setup_path) and not forced:
+        raise AutorandrException('Refusing to overwrite config "{}" without passing "--force"!'.format(profile_name))
+
     with open(os.path.join(profile_path, "config"), "w") as config:
         output_configuration(configuration, config)
     with open(os.path.join(profile_path, "setup"), "w") as setup:
@@ -1220,14 +1227,17 @@ def main(argv):
             sys.exit(1)
         try:
             profile_folder = os.path.join(profile_path, options["--save"])
-            save_configuration(profile_folder, config)
+            save_configuration(profile_folder, options['--save'], config, forced="--force" in options)
             exec_scripts(profile_folder, "postsave", {
                 "CURRENT_PROFILE": options["--save"],
                 "PROFILE_FOLDER": profile_folder,
                 "MONITORS": ":".join(enabled_monitors(config)),
             })
         except Exception as e:
-            raise AutorandrException("Failed to save current configuration as profile '%s'" % (options["--save"],), e)
+            if isinstance(e, AutorandrException):
+                raise e
+            else:
+                raise AutorandrException("Failed to save current configuration as profile '%s'" % (options["--save"],), e)
         print("Saved current configuration as profile '%s'" % options["--save"])
         sys.exit(0)
 
