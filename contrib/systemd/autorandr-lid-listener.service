@@ -1,0 +1,12 @@
+[Unit]
+Description=Runs autorandr whenever the lid state changes
+
+[Service]
+Type=simple
+ExecStart=bash -c "stdbuf -oL libinput debug-events | grep --line-buffered SWITCH_TOGGLE | while read line; do autorandr --batch --change --default default; done"
+Restart=always
+RestartSec=30
+SyslogIdentifier=autorandr
+
+[Install]
+WantedBy=multi-user.target
