@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Autorandr Lid Listener
+Comment=Trigger autorandr whenever the lid state changes
+Type=Application
+Exec=bash -c "stdbuf -oL libinput debug-events | grep --line-buffered SWITCH_TOGGLE | while read line; do autorandr --change --default default; done"
+X-GNOME-Autostart-Phase=Initialization
