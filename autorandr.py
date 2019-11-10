@@ -324,7 +324,7 @@ class XrandrOutput(object):
                 raise AutorandrException("Parsing XRandR output failed, couldn't find any display modes", report_bug=True)
 
         options = {}
-        if not match["connected"] or is_closed_lid(match["output"]):
+        if not match["connected"]:
             edid = None
         elif match["edid"]:
             edid = "".join(match["edid"].strip().split())
@@ -517,6 +517,12 @@ def parse_xrandr_output():
         outputs[output_name] = output
         if output_modes:
             modes[output_name] = output_modes
+
+    # consider a closed lid as disconnected if other outputs are connected
+    if sum(o.edid != None for o in outputs.values()) > 1:
+        for output_name in outputs.keys():
+            if is_closed_lid(output_name):
+                outputs[output_name].edid = None
 
     return outputs, modes
 
