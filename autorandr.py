@@ -37,6 +37,7 @@ import subprocess
 import sys
 import shutil
 import time
+import glob
 
 from collections import OrderedDict
 from distutils.version import LooseVersion as Version
@@ -94,6 +95,18 @@ Usage: autorandr [options]
 
  The following virtual configurations are available:
 """.strip()
+
+
+def is_closed_lid(output):
+    if not re.match(r'(eDP(-?[0-9]\+)*|LVDS(-?[0-9]\+)*)', output):
+        return False
+    lids = glob.glob("/proc/acpi/button/lid/*/state")
+    if len(lids) == 1:
+        state_file = lids[0]
+        with open(state_file) as f:
+            content = f.read()
+            return "close" in content
+    return False
 
 
 class AutorandrException(Exception):
@@ -504,6 +517,12 @@ def parse_xrandr_output():
         outputs[output_name] = output
         if output_modes:
             modes[output_name] = output_modes
+
+    # consider a closed lid as disconnected if other outputs are connected
+    if sum(o.edid != None for o in outputs.values()) > 1:
+        for output_name in outputs.keys():
+            if is_closed_lid(output_name):
+                outputs[output_name].edid = None
 
     return outputs, modes
 

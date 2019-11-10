@@ -41,6 +41,7 @@ Contributors to this version of autorandr are:
 * Brice Waegeneire
 * Chris Dunder
 * Christoph Gysin
+* Christophe-Marie Duquesne
 * Daniel Hahler
 * Maciej Sitarz
 * Mathias Svensson
