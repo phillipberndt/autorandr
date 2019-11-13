@@ -4,7 +4,7 @@
 # sudo gpasswd -a $USER input
 
 stdbuf -oL libinput debug-events | \
-    egrep --line-buffered '^[[:space:]-]+event[0-9]+\s+SWITCH_TOGGLE\s' | \
+    grep -E --line-buffered '^[[:space:]-]+event[0-9]+[[:space:]]+SWITCH_TOGGLE[[:space:]]' | \
     while read line; do
     autorandr --change --default default
 done
