@@ -214,8 +214,13 @@ profiles matching multiple (or any) monitors.
 
 ## Changelog
 
-**autorandr 1.9 (dev)**
+**autorandr 1.9**
 
+* *2019-11-10* Count closed lids as disconnected outputs
+* *2019-10-05* Do not overwrite existing configurations without `--force`
+* *2019-08-16* Accept modes that don't match the WWWxHHH pattern
+* *2019-03-22* Improve bash autocompletion
+* *2019-03-21* Store CRTC values in configurations
 * *2019-03-24* Fix handling of recently disconnected outputs (See #128 and #143)
 
 **autorandr 1.8.1**
