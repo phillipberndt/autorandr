@@ -31,6 +31,7 @@ all:
 	@echo "The following additional targets are available:"
 	@echo
 	@echo "    make deb        creates a Debian package"
+	@echo "    make rpm        creates a RPM package"
 
 # Rules for autorandr itself
 DEFAULT_TARGETS=autorandr
@@ -110,7 +111,7 @@ uninstall_pmutils:
 
 # Rules for udev
 UDEV_RULES_DIR:=$(shell pkg-config --variable=udevdir udev 2>/dev/null)/rules.d
-ifneq (,$(UDEV_RULES_DIR),y)
+ifneq (/rules.d,$(UDEV_RULES_DIR))
 DEFAULT_TARGETS+=udev
 endif
 
