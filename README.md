@@ -217,6 +217,7 @@ profiles matching multiple (or any) monitors.
 **autorandr 1.10 (dev)**
 * *2019-12-31* Fix output positioning if the top-left output is not the first
 * *2019-12-31* Accept negative gamma values (and interpret them as 0)
+* *2019-12-31* Prefer the X11 launcher over systemd/udev configuration
 
 **autorandr 1.9**
 

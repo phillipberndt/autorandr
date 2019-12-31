@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Autorandr Launcher
+Comment=Automatically run autorandr whenever the configuration changes
+Type=Application
+Exec=/usr/bin/autorandr-launcher
+X-GNOME-Autostart-Phase=Initialization
