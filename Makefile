@@ -148,7 +148,7 @@ endif
 
 install_launcher:
 	gcc -Wall $(CFLAGS) contrib/autorandr_launcher/autorandr_launcher.c -o contrib/autorandr_launcher/autorandr-launcher $(LAUNCHER_FLAGS)
-	install -D -m 755 contrib/autorandr_launcher/autorandr_launcher ${DESTDIR}${PREFIX}/bin/autorandr-launcher
+	install -D -m 755 contrib/autorandr_launcher/autorandr-launcher ${DESTDIR}${PREFIX}/bin/autorandr-launcher
 
 	install -D -m 644 contrib/etc/xdg/autostart/autorandr-launcher.desktop ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr-launcher.desktop
 ifneq ($(PREFIX),/usr/)
