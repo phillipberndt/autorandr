@@ -745,6 +745,16 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
     # - Some implementations can not handle --panning without specifying --fb
     #   explicitly, so avoid it unless necessary.
     #   (See https://github.com/phillipberndt/autorandr/issues/72)
+    # - In some configurations, xrandr cannot find a crtc for outputs, thus
+    #   causing autorandr to fail
+    #   (See https://github.com/phillipberndt/autorandr/issues/149), which seems to
+    #   be addressed by a simple call to `xrandr --auto` before anything else, so let's
+    #   do that first, and not using `auxiliary_changes_pre`, because we don't want
+    #   any other options (such as `--fb` to be passed, cf. modifications to `base_argv`
+    #   further down.
+    init_argv = base_argv + ['--auto']
+    if call_and_retry(init_argv, dry_run=dry_run) != 0:
+        raise AutorandrException("Command failed: %s" % " ".join(init_argv))
 
     fb_dimensions = get_fb_dimensions(new_configuration)
     try:
