@@ -795,7 +795,7 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
             else:
                 enable_outputs.append(option_vector)
 
-    # Perform pe-change auxiliary changes
+    # Perform pre-change auxiliary changes
     if auxiliary_changes_pre:
         argv = base_argv + list(chain.from_iterable(auxiliary_changes_pre))
         if call_and_retry(argv, dry_run=dry_run) != 0:
