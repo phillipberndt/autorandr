@@ -191,7 +191,7 @@ configuration takes precedence, and
 it has a unique name.
 
 If you switch back from `docked` to `mobile`, `~/.config/autorandr/postswitch`
-is executed instead of the `mobile` specific `postswitch`.
+is executed instead of the `docked` specific `postswitch`.
 
 In these scripts, some of autorandr's state is exposed as environment variables
 prefixed with `AUTORANDR_`, such as:
