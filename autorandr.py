@@ -1107,7 +1107,11 @@ def dispatch_call_to_sessions(argv):
             continue
 
         process_environ = {}
-        for environ_entry in open(environ_file).read().split("\0"):
+        for environ_entry in open(environ_file, 'rb').read().split(b"\0"):
+            try:
+                environ_entry = environ_entry.decode("ascii")
+            except UnicodeDecodeError:
+                continue
             name, sep, value = environ_entry.partition("=")
             if name and sep:
                 if name == "DISPLAY" and "." in value:
