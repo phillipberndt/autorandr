@@ -26,7 +26,6 @@ from __future__ import print_function
 
 import binascii
 import copy
-import fnmatch
 import getopt
 import hashlib
 import os
@@ -428,9 +427,9 @@ class XrandrOutput(object):
             if len(self.edid) != 32 and len(other.edid) == 32 and not self.edid.startswith(XrandrOutput.EDID_UNAVAILABLE):
                 return hashlib.md5(binascii.unhexlify(self.edid)).hexdigest() == other.edid
             if "*" in self.edid:
-                return fnmatch.fnmatch(other.edid, self.edid)
+                return match_asterisk(self.edid, other.edid) > 0
             elif "*" in other.edid:
-                return fnmatch.fnmatch(self.edid, other.edid)
+                return match_asterisk(other.edid, self.edid) > 0
         return self.edid == other.edid
 
     def __ne__(self, other):
@@ -573,8 +572,29 @@ def get_symlinks(profile_path):
     return symlinks
 
 
+def match_asterisk(pattern, data):
+    """Match data against a pattern
+
+    The difference to fnmatch is that this function only accepts patterns with a single
+    asterisk and that it returns a "closeness" number, which is larger the better the match.
+    Zero indicates no match at all.
+    """
+    if "*" not in pattern:
+        return 1 if pattern == data else 0
+    parts = pattern.split("*")
+    if len(parts) > 2:
+        raise ValueError("Only patterns with a single asterisk are supported, %s is invalid" % pattern)
+    if not data.startswith(parts[0]):
+        return 0
+    if not data.endswith(parts[1]):
+        return 0
+    matched = len(pattern)
+    total = len(data) + 1
+    return matched * 1. / total
+
+
 def find_profiles(current_config, profiles):
-    "Find profiles matching the currently connected outputs"
+    "Find profiles matching the currently connected outputs, sorting asterisk matches to the back"
     detected_profiles = []
     for profile_name, profile in profiles.items():
         config = profile["config"]
@@ -588,7 +608,9 @@ def find_profiles(current_config, profiles):
         if not matches or any((name not in config.keys() for name in current_config.keys() if current_config[name].edid)):
             continue
         if matches:
-            detected_profiles.append(profile_name)
+            closeness = max(match_asterisk(output.edid, current_config[name].edid), match_asterisk(current_config[name].edid, output.edid))
+            detected_profiles.append((closeness, profile_name))
+    detected_profiles = [o[1] for o in sorted(detected_profiles, key=lambda x: -x[0])]
     return detected_profiles
 
 
@@ -1337,6 +1359,7 @@ def main(argv):
             "CURRENT_PROFILES": ":".join(current_profiles)
         }
 
+        best_index = 9999
         for profile_name in profiles.keys():
             if profile_blocked(os.path.join(profile_path, profile_name), block_script_metadata):
                 if "--current" not in options and "--detected" not in options:
@@ -1344,9 +1367,14 @@ def main(argv):
                 continue
             props = []
             if profile_name in detected_profiles:
-                props.append("(detected)")
-                if ("-c" in options or "--change" in options) and not load_profile:
+                if len(detected_profiles) == 1:
+                    props.append("(detected)")
+                else:
+                    index = detected_profiles.index(profile_name) + 1
+                    props.append("(detected) (%d%s match)" % (index, ["st", "nd", "rd"][index - 1] if index < 4 else "th"))
+                if ("-c" in options or "--change" in options) and index < best_index:
                     load_profile = profile_name
+                    best_index = index
             elif "--detected" in options:
                 continue
             if profile_name in current_profiles:
