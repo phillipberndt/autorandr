@@ -172,7 +172,7 @@ class XrandrOutput(object):
         (?:[\ \t]*tracking\ (?P<tracking>[0-9]+x[0-9]+\+[0-9]+\+[0-9]+))?               # Tracking information
         (?:[\ \t]*border\ (?P<border>(?:[0-9]+/){3}[0-9]+))?                            # Border information
         (?:\s*(?:                                                                       # Properties of the output
-            Gamma: (?P<gamma>(?:inf|[0-9\.\-: e])+) |                                   # Gamma value
+            Gamma: (?P<gamma>(?:inf|-?[0-9\.\-: e])+) |                                 # Gamma value
             CRTC:\s*(?P<crtc>[0-9]) |                                                   # CRTC value
             Transform: (?P<transform>(?:[\-0-9\. ]+\s+){3}) |                           # Transformation matrix
             EDID: (?P<edid>\s*?(?:\\n\\t\\t[0-9a-f]+)+) |                               # EDID of the output
