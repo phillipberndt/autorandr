@@ -1368,6 +1368,7 @@ def main(argv):
             props = []
             if profile_name in detected_profiles:
                 if len(detected_profiles) == 1:
+                    index = 1
                     props.append("(detected)")
                 else:
                     index = detected_profiles.index(profile_name) + 1
