@@ -1037,11 +1037,12 @@ def exec_scripts(profile_path, script_name, meta_information=None):
     if not os.path.isdir(user_profile_path):
         user_profile_path = os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "autorandr")
 
-    candidate_directories = [user_profile_path]
-    for config_dir in os.environ.get("XDG_CONFIG_DIRS", "/etc/xdg").split(":"):
-        candidate_directories.append(os.path.join(config_dir, "autorandr"))
+    candidate_directories = []
     if profile_path:
         candidate_directories.append(profile_path)
+    candidate_directories.append(user_profile_path)
+    for config_dir in os.environ.get("XDG_CONFIG_DIRS", "/etc/xdg").split(":"):
+        candidate_directories.append(os.path.join(config_dir, "autorandr"))
 
     for folder in candidate_directories:
         if script_name not in ran_scripts:
