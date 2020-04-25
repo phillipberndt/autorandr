@@ -214,7 +214,7 @@ profiles matching multiple (or any) monitors.
 
 ## Changelog
 
-**autorandr 1.10 (dev)**
+**autorandr 1.10**
 * *2020-04-23* Fix hook script execution order to match description from readme
 * *2020-04-11* Handle negative gamma values (fixes #188)
 * *2020-04-11* Sort approximate matches in detected profiles by quality of match

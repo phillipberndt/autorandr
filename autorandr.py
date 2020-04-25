@@ -48,7 +48,7 @@ if sys.version_info.major == 2:
 else:
     import configparser
 
-__version__ = "1.9"
+__version__ = "1.10"
 
 try:
     input = raw_input
