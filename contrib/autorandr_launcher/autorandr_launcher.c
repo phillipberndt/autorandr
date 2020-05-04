@@ -140,6 +140,10 @@ int main(int argc, char **argv)
 
 		ar_log("Waiting for event\n");
 		xcb_generic_event_t *evt = xcb_wait_for_event(c);
+		if (!evt) {
+			break;
+		}
+
 		// ar_log("Event type: %" PRIu8 "\n", evt->response_type);
 		// ar_log("screen change masked: %" PRIu8 "\n",
 		//       evt->response_type &
