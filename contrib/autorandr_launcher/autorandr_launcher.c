@@ -108,7 +108,10 @@ int main(int argc, char **argv)
 		sigaction(SIGTERM, &sa, NULL);
 		sigaction(SIGQUIT, &sa, NULL);
 		signal(SIGHUP, SIG_IGN);
-		daemon(0, 0);
+		if (daemon(0, 0)) {
+			fprintf(stderr, "Failed to daemonize!\n");
+			exit(1);
+		}
 	}
 
 	int screenNum;
