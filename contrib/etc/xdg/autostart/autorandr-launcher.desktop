@@ -2,5 +2,5 @@
 Name=Autorandr Launcher
 Comment=Automatically run autorandr whenever the configuration changes
 Type=Application
-Exec=/usr/bin/autorandr-launcher
+Exec=/usr/bin/autorandr-launcher --daemonize
 X-GNOME-Autostart-Phase=Initialization
