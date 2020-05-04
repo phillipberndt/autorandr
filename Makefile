@@ -24,9 +24,11 @@ all:
 	@echo
 	@echo 'E.g. "make install TARGETS='autorandr pmutils' PM_UTILS_DIR=/etc/pm/sleep.d".'
 	@echo
-	@echo "By default, if xcb libraries are available, autorandr prefers to"
-	@echo "install a launcher that listens for X11 randr events and runs"
-	@echo "autorandr whenever something changes, over udev/systemd rules."
+	@echo "An additional TARGETS variable \"launcher\" is available. This"
+	@echo "installs a launcher called \"autorandr_launcher\". The launcher"
+	@echo "is able to be run by the user and calls autorandr automatically"
+	@echo "without using udev rules. The launcher is an alternative to the"
+	@echo "udev/systemd setup that is more stable for some users."
 	@echo
 	@echo "The following additional targets are available:"
 	@echo
@@ -141,11 +143,6 @@ uninstall_manpage:
 
 # Rules for launcher
 LAUNCHER_FLAGS=$(shell pkg-config --libs --cflags pkg-config xcb xcb-randr 2>/dev/null)
-ifneq (,$(LAUNCHER_FLAGS))
-DEFAULT_TARGETS+=launcher
-DEFAULT_TARGETS:=$(filter-out systemd udev,$(DEFAULT_TARGETS))
-endif
-
 install_launcher:
 	gcc -Wall $(CFLAGS) contrib/autorandr_launcher/autorandr_launcher.c -o contrib/autorandr_launcher/autorandr-launcher $(LAUNCHER_FLAGS)
 	install -D -m 755 contrib/autorandr_launcher/autorandr-launcher ${DESTDIR}${PREFIX}/bin/autorandr-launcher
