@@ -214,6 +214,9 @@ profiles matching multiple (or any) monitors.
 
 ## Changelog
 
+**autorandr 1.10.1**
+* *2020-05-04* Revert making the launcher the default (fixes #195)
+
 **autorandr 1.10**
 * *2020-04-23* Fix hook script execution order to match description from readme
 * *2020-04-11* Handle negative gamma values (fixes #188)
