@@ -64,6 +64,15 @@ virtual_profiles = [
     ("vertical", "Stack all connected outputs vertically at their largest resolution", None),
 ]
 
+properties = [
+    "Colorspace",
+    "max bpc",
+    "aspect ratio",
+    "Broadcast RGB",
+    "audio",
+    "non-desktop",
+]
+
 help_text = """
 Usage: autorandr [options]
 
@@ -176,6 +185,7 @@ class XrandrOutput(object):
             CRTC:\s*(?P<crtc>[0-9]) |                                                   # CRTC value
             Transform: (?P<transform>(?:[\-0-9\. ]+\s+){3}) |                           # Transformation matrix
             EDID: (?P<edid>\s*?(?:\\n\\t\\t[0-9a-f]+)+) |                               # EDID of the output
+            %s |                                                                        # Properties to include in the profile
             (?![0-9])[^:\s][^:\n]+:.*(?:\s\\t[\\t ].+)*                                 # Other properties
         ))+
         \s*
@@ -185,7 +195,9 @@ class XrandrOutput(object):
              v:\s+height\s+(?P<mode_height>[0-9]+).+clock\s+(?P<rate>[0-9\.]+)Hz\s* |
             \S+(?:(?!\*current).)+\s+h:.+\s+v:.+\s*                                     # Other resolutions
         )*)
-    """
+    """ % ("|".join([r"{}:\s*(?P<{}>[\S ]*\S+)"
+                     .format(re.sub(r"(\s)", r"\\\1", p),
+                             re.sub(r"\W+", "_", p.lower())) for p in properties]))
 
     XRANDR_OUTPUT_MODES_REGEXP = """(?x)
         (?P<name>\S+).+?(?P<preferred>\+preferred)?\s+
@@ -238,7 +250,19 @@ class XrandrOutput(object):
         "Return the command line parameters for XRandR for this instance"
         args = ["--output", self.output]
         for option, arg in sorted(self.options_with_defaults.items()):
-            args.append("--%s" % option)
+            if option[:5] == "prop-":
+                prop_found = False
+                for prop, xrandr_prop in [(re.sub(r"\W+", "_", p.lower()), p) for p in properties]:
+                    if prop == option[5:]:
+                        args.append("--set")
+                        args.append(xrandr_prop)
+                        prop_found = True
+                        break
+                if not prop_found:
+                    print("Warning: Unknown property `%s' in config file. Skipping." % option[5:], file=sys.stderr)
+                    continue
+            else:
+                args.append("--%s" % option)
             if arg:
                 args.append(arg)
         return args
@@ -387,6 +411,9 @@ class XrandrOutput(object):
                 options["crtc"] = match["crtc"]
             if match["rate"]:
                 options["rate"] = match["rate"]
+            for prop in [re.sub(r"\W+", "_", p.lower()) for p in properties]:
+                if match[prop]:
+                    options["prop-" + prop] = match[prop]
 
         return XrandrOutput(match["output"], edid, options), modes
 
@@ -608,7 +635,8 @@ def find_profiles(current_config, profiles):
         if not matches or any((name not in config.keys() for name in current_config.keys() if current_config[name].edid)):
             continue
         if matches:
-            closeness = max(match_asterisk(output.edid, current_config[name].edid), match_asterisk(current_config[name].edid, output.edid))
+            closeness = max(match_asterisk(output.edid, current_config[name].edid), match_asterisk(
+                current_config[name].edid, output.edid))
             detected_profiles.append((closeness, profile_name))
     detected_profiles = [o[1] for o in sorted(detected_profiles, key=lambda x: -x[0])]
     return detected_profiles
@@ -1205,6 +1233,7 @@ def read_config(options, directory):
     if config.has_section("config"):
         for key, value in config.items("config"):
             options.setdefault("--%s" % key, value)
+
 
 def main(argv):
     try:
