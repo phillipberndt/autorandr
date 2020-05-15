@@ -597,8 +597,14 @@ def find_profiles(current_config, profiles):
     "Find profiles matching the currently connected outputs, sorting asterisk matches to the back"
     detected_profiles = []
     for profile_name, profile in profiles.items():
-        config = profile["config"]
+        config = {}
         matches = True
+
+        # Only evaluate config items which has EDID info (LID open / switched on)
+        for name, output in profile['config'].items():
+            if name in current_config and current_config[name].edid is not None:
+                config[name] = output
+
         for name, output in config.items():
             if not output.edid:
                 continue
