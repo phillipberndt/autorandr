@@ -1,5 +1,5 @@
 %define name autorandr
-%define version 1.8.1
+%define version 1.10.1
 %define release 1
 
 # pmutils
@@ -83,6 +83,7 @@ Contributors to this version of autorandr are:
 * Brice Waegeneire
 * Chris Dunder
 * Christoph Gysin
+* Christophe-Marie Duquesne
 * Daniel Hahler
 * Maciej Sitarz
 * Mathias Svensson
@@ -123,6 +124,7 @@ you can
   for various distributions (RPM and DEB based).
 * Use the [X binary package system](https://wiki.voidlinux.eu/XBPS)' on Void Linux 
 * Build a .deb-file from the source tree using `make deb`.
+* Build a .rpm-file from the source tree using `make rpm`.
 
 We appreciate packaging scripts for other distributions, please file a pull
 request if you write one.
@@ -194,7 +196,7 @@ candidate for doing that is `skip-options`, if you need it.
 
 ### Hook scripts
 
-Three more scripts can be placed in the configuration directory (as 
+Three more scripts can be placed in the configuration directory
 (as defined by the [XDG spec](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html),
 usually `~/.config/autorandr` or `~/.autorandr` if you have an old installation
 for user configuration and `/etc/xdg/autorandr` for system wide configuration):
@@ -231,7 +233,7 @@ configuration takes precedence, and
 it has a unique name.
 
 If you switch back from `docked` to `mobile`, `~/.config/autorandr/postswitch`
-is executed instead of the `mobile` specific `postswitch`.
+is executed instead of the `docked` specific `postswitch`.
 
 In these scripts, some of autorandr's state is exposed as environment variables
 prefixed with `AUTORANDR_`, such as:
@@ -253,6 +255,27 @@ monitors using the usual file name globbing rules. This can be used to create
 profiles matching multiple (or any) monitors.
 
 ## Changelog
+
+**autorandr 1.10.1**
+* *2020-05-04* Revert making the launcher the default (fixes #195)
+
+**autorandr 1.10**
+* *2020-04-23* Fix hook script execution order to match description from readme
+* *2020-04-11* Handle negative gamma values (fixes #188)
+* *2020-04-11* Sort approximate matches in detected profiles by quality of match
+* *2020-01-31* Handle non-ASCII environment variables (fixes #180)
+* *2019-12-31* Fix output positioning if the top-left output is not the first
+* *2019-12-31* Accept negative gamma values (and interpret them as 0)
+* *2019-12-31* Prefer the X11 launcher over systemd/udev configuration
+
+**autorandr 1.9**
+
+* *2019-11-10* Count closed lids as disconnected outputs
+* *2019-10-05* Do not overwrite existing configurations without `--force`
+* *2019-08-16* Accept modes that don't match the WWWxHHH pattern
+* *2019-03-22* Improve bash autocompletion
+* *2019-03-21* Store CRTC values in configurations
+* *2019-03-24* Fix handling of recently disconnected outputs (See #128 and #143)
 
 **autorandr 1.8.1**
 
@@ -313,6 +336,12 @@ profiles matching multiple (or any) monitors.
 * *2016-12-07* Tag the current code as version 1.0.0; see github issue #54
 * *2016-10-03* Install a desktop file to `/etc/xdg/autostart` by default
 
+%package zsh-completion
+Summary: zsh-completion for autorandr
+Requires: zsh
+Requires: %{name}
+%description zsh-completion
+This package provides zsh-completion files for autorandr
 
 %prep
 %setup -n %{name}-%{version} -n %{name}-%{version}
@@ -325,6 +354,8 @@ pathfix.py -pni "%{__python2} %{py2_shbang_opts}" ./autorandr.py
 %install
 make DESTDIR="%{buildroot}" PREFIX=/usr install
 install -vDm 644 README.md -t "%{buildroot}/usr/share/doc/%{name}/"
+install -vDm 644 contrib/zsh_completion/_autorandr -t %{buildroot}%{_datarootdir}/zsh/site-functions/
+
 
 %files
 %defattr(-,root,root,-)
@@ -336,7 +367,14 @@ install -vDm 644 README.md -t "%{buildroot}/usr/share/doc/%{name}/"
 %{_mandir}
 %{_datarootdir}/bash-completion/completions/autorandr
 %{_udevrulesdir}/40-monitor-hotplug.rules
+
+%files zsh-completion
+%{_datarootdir}/zsh/site-functions/_autorandr
+
 %changelog
+* Mon Jun 08 2020 Jerzy Drozdz <jerzy.drozdz@jdsieci.pl> - 1.10.1-1
+- Updated to stable 1.10.1
+- Added zsh-completion subpackage
 * Wed May 22 2019 Maciej Sitarz <macieksitarz@wp.pl> - 1.8.1-1
 - Updated to stable 1.8.1
 * Fri Sep 28 2018 Maciej Sitarz <macieksitarz@wp.pl> - 1.7-1
