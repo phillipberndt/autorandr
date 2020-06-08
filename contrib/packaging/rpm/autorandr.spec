@@ -38,6 +38,10 @@ BuildRequires: bash-completion
 BuildRequires: python%{py_ver}-devel
 BuildRequires: systemd
 BuildRequires: udev
+%if %{py_ver} == 2
+BuildRequires: python3-devel
+%endif
+
 
 %description
 # autorandr
