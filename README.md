@@ -212,6 +212,16 @@ asterisk to enable wildcard matching: Such EDIDs are matched against connected
 monitors using the usual file name globbing rules. This can be used to create
 profiles matching multiple (or any) monitors.
 
+### udev triggers with NVidia cards
+
+In order for `udev` to detect `drm` events from the native NVidia driver, the
+kernel parameter `nvidia-drm.modeset` must be set to 1. For example, add a file
+`/etc/modprobe.d/nvidia-drm-modeset.conf`:
+
+```
+options nvidia_drm modeset=1
+```
+
 ## Changelog
 
 **autorandr 1.10.1**
