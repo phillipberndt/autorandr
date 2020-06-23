@@ -1107,7 +1107,7 @@ def dispatch_call_to_sessions(argv):
             os.chdir(pwent.pw_dir)
             os.environ.clear()
             os.environ.update(process_environ)
-            if sys.executable != "":
+            if sys.executable != "" and sys.executable != None:
                 os.execl(sys.executable, sys.executable, autorandr_binary, *argv[1:])
             else:
                 os.execl(autorandr_binary, autorandr_binary, *argv[1:])
