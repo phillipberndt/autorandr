@@ -770,10 +770,10 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
 
     fb_dimensions = get_fb_dimensions(new_configuration)
     try:
-        base_argv += ["--fb", "%dx%d" % fb_dimensions]
+        fb_argv = ["--fb", "%dx%d" % fb_dimensions]
     except:
         # Failed to obtain frame-buffer size. Doesn't matter, xrandr will choose for the user.
-        pass
+        fb_argv = []
 
     auxiliary_changes_pre = []
     disable_outputs = []
@@ -852,7 +852,11 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
     # Enable the remaining outputs in pairs of two operations
     operations = disable_outputs + enable_outputs
     for index in range(0, len(operations), 2):
-        argv = base_argv + list(chain.from_iterable(operations[index:index + 2]))
+        argv = base_argv
+        # Only set fb argument when adding monitors. We may be removing the biggest.
+        if index >= len(disable_outputs):
+            argv += fb_argv
+        argv += list(chain.from_iterable(operations[index:index + 2]))
         if call_and_retry(argv, dry_run=dry_run) != 0:
             raise AutorandrException("Command failed: %s" % " ".join(argv))
 
