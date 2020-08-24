@@ -1111,7 +1111,7 @@ def dispatch_call_to_sessions(argv):
                 os.execl(sys.executable, sys.executable, autorandr_binary, *argv[1:])
             else:
                 os.execl(autorandr_binary, autorandr_binary, *argv[1:])
-            os.exit(1)
+            sys.exit(1)
         os.waitpid(child_pid, 0)
 
     for directory in os.listdir("/proc"):
