@@ -1138,7 +1138,7 @@ def dispatch_call_to_sessions(argv):
                 environ_entry = environ_entry.decode("ascii")
             except UnicodeDecodeError:
                 continue
-            name, sep, value = environ_entry.partition("=")
+            name, sep, value = environ_entry.partition(b"=")
             if name and sep:
                 if name == "DISPLAY" and "." in value:
                     value = value[:value.find(".")]
