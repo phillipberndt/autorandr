@@ -1101,7 +1101,7 @@ def dispatch_call_to_sessions(argv):
             # so it should be safe. Also, note that since the environment
             # is taken from a process owned by the user, reusing it should
             # not leak any information.
-            os.setgroups([])
+            os.setgroups(os.getgrouplist(pwent.pw_name, pwent.pw_gid))
             os.setresgid(pwent.pw_gid, pwent.pw_gid, pwent.pw_gid)
             os.setresuid(pwent.pw_uid, pwent.pw_uid, pwent.pw_uid)
             os.chdir(pwent.pw_dir)
