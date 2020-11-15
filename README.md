@@ -224,6 +224,11 @@ options nvidia_drm modeset=1
 
 ## Changelog
 
+**autorandr 1.11**
+* *2020-05-23* Handle empty sys.executable
+* *2020-06-08* Fix Python 2 compatibility
+* *2020-10-06* Set group membership of users in batch mode
+
 **autorandr 1.10.1**
 * *2020-05-04* Revert making the launcher the default (fixes #195)
 
