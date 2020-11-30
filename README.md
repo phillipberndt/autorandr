@@ -194,17 +194,30 @@ it has a unique name.
 If you switch back from `docked` to `mobile`, `~/.config/autorandr/postswitch`
 is executed instead of the `docked` specific `postswitch`.
 
-In these scripts, some of autorandr's state is exposed as environment variables
+If you experience issues with xrandr being executed too early after connecting
+a new monitor, then you can use a `predetect` script to delay the execution.
+Write e.g. `sleep 1` into that file to make autorandr wait a second before
+running `xrandr`.
+
+#### Variables
+
+Some of autorandr's state is exposed as environment variables
 prefixed with `AUTORANDR_`, such as:
 - `AUTORANDR_CURRENT_PROFILE`
 - `AUTORANDR_CURRENT_PROFILES`
 - `AUTORANDR_PROFILE_FOLDER`
 - `AUTORANDR_MONITORS`
 
-If you experience issues with xrandr being executed too early after connecting
-a new monitor, then you can use a `predetect` script to delay the execution.
-Write e.g. `sleep 1` into that file to make autorandr wait a second before
-running `xrandr`.
+with the intention that they can be used within the hook scripts.
+
+For instance, you might display which profile has just been activated by
+including the following in a `postswitch` script:
+```sh
+notify-send -i display "Display profile" "$AUTORANDR_CURRENT_PROFILE"
+```
+
+The one kink is that during `preswitch`, `AUTORANDR_CURRENT_PROFILE` is
+reporting the *upcoming* profile rather than the *current* one.
 
 ### Wildcard EDID matching
 
