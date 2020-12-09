@@ -147,9 +147,20 @@ names in your configuration directory to have autorandr use any of them
 as the default configuration without you having to change the system-wide
 configuration.
 
-You can store default values for any option in an INI-file in
-`~/.config/autorandr/settings.ini` in a section `config`. The most useful
-candidate for doing that is `skip-options`, if you need it.
+You can store default values for any option in an INI-file located at
+`~/.config/autorandr/settings.ini`. In a `config` section, you may place any
+default values in the form `option-name=option-argument`.
+
+A common and effective use of this is to specify default `skip-options`, for
+instance skipping the `gamma` setting if using
+[`redshift`](https://github.com/jonls/redshift) as a daemon.  To implement
+the equivalent of `--skip-options gamma`, your `settings.ini` file should look
+like this:
+
+```
+[config]
+skip-options=gamma
+```
 
 ## Advanced usage
 
