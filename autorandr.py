@@ -81,6 +81,7 @@ Usage: autorandr [options]
 --dry-run               don't change anything, only print the xrandr commands
 --fingerprint           fingerprint your current hardware setup
 --force                 force (re)loading of a profile / overwrite exiting files
+--list                  list configurations
 --skip-options <option> comma separated list of xrandr arguments (e.g. "gamma")
                         to skip both in detecting changes and applying a profile
 --version               show version information and exit
@@ -1211,7 +1212,7 @@ def main(argv):
         opts, args = getopt.getopt(argv[1:], "s:r:l:d:cfh",
                                    ["batch", "dry-run", "change", "default=", "save=", "remove=", "load=",
                                     "force", "fingerprint", "config", "debug", "skip-options=", "help",
-                                    "current", "detected", "version"])
+                                    "list", "current", "detected", "version"])
     except getopt.GetoptError as e:
         print("Failed to parse options: {0}.\n"
               "Use --help to get usage information.".format(str(e)),
@@ -1370,7 +1371,7 @@ def main(argv):
         best_index = 9999
         for profile_name in profiles.keys():
             if profile_blocked(os.path.join(profile_path, profile_name), block_script_metadata):
-                if "--current" not in options and "--detected" not in options:
+                if not any(opt in options for opt in ("--current", "--detected", "--list")):
                     print("%s (blocked)" % profile_name)
                 continue
             props = []
@@ -1390,7 +1391,7 @@ def main(argv):
                 props.append("(current)")
             elif "--current" in options:
                 continue
-            if "--current" in options or "--detected" in options:
+            if any(opt in options for opt in ("--current", "--detected", "--list")):
                 print("%s" % (profile_name, ))
             else:
                 print("%s%s%s" % (profile_name, " " if props else "", " ".join(props)))
