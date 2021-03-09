@@ -1375,6 +1375,7 @@ def main(argv):
                     print("%s (blocked)" % profile_name)
                 continue
             props = []
+            is_current_profile = profile_name in current_profiles
             if profile_name in detected_profiles:
                 if len(detected_profiles) == 1:
                     index = 1
@@ -1382,16 +1383,13 @@ def main(argv):
                 else:
                     index = detected_profiles.index(profile_name) + 1
                     props.append("(detected) (%d%s match)" % (index, ["st", "nd", "rd"][index - 1] if index < 4 else "th"))
-                if ("-c" in options or "--change" in options) and index < best_index:
-                    load_profile = profile_name
-                    best_index = index
-                if "--cycle" in options and index < best_index:
-                    if profile_name not in current_profiles:
+                if index < best_index:
+                    if "-c" in options or "--change" in options or ("--cycle" in options and not is_current_profile):
                         load_profile = profile_name
                         best_index = index
             elif "--detected" in options:
                 continue
-            if profile_name in current_profiles:
+            if is_current_profile:
                 props.append("(current)")
             elif "--current" in options:
                 continue
