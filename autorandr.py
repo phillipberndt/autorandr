@@ -76,6 +76,7 @@ Usage: autorandr [options]
 --batch                 run autorandr for all users with active X11 sessions
 --current               only list current (active) configuration(s)
 --config                dump your current xrandr setup
+--cycle                 automatically load the next detected profile
 --debug                 enable verbose output
 --detected              only list detected (available) configuration(s)
 --dry-run               don't change anything, only print the xrandr commands
@@ -1209,7 +1210,7 @@ def read_config(options, directory):
 def main(argv):
     try:
         opts, args = getopt.getopt(argv[1:], "s:r:l:d:cfh",
-                                   ["batch", "dry-run", "change", "default=", "save=", "remove=", "load=",
+                                   ["batch", "dry-run", "change", "cycle", "default=", "save=", "remove=", "load=",
                                     "force", "fingerprint", "config", "debug", "skip-options=", "help",
                                     "current", "detected", "version"])
     except getopt.GetoptError as e:
@@ -1384,6 +1385,10 @@ def main(argv):
                 if ("-c" in options or "--change" in options) and index < best_index:
                     load_profile = profile_name
                     best_index = index
+                if "--cycle" in options and index < best_index:
+                    if profile_name not in current_profiles:
+                        load_profile = profile_name
+                        best_index = index
             elif "--detected" in options:
                 continue
             if profile_name in current_profiles:
@@ -1399,7 +1404,7 @@ def main(argv):
 
     if "-d" in options:
         options["--default"] = options["-d"]
-    if not load_profile and "--default" in options and ("-c" in options or "--change" in options):
+    if not load_profile and "--default" in options and ("-c" in options or "--change" in options or "--cycle" in options):
         load_profile = options["--default"]
 
     if load_profile:
