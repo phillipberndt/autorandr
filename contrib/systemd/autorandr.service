@@ -1,10 +1,7 @@
 [Unit]
 Description=autorandr execution hook
 After=sleep.target
-# Note: StartLimitInterval was renamed to StartLimitIntervalSec in systemd-230.
-# See autorandr bug #69. Do not rename for now, as the old name is kept for
-# compatibility.
-StartLimitInterval=5
+StartLimitIntervalSec=5
 StartLimitBurst=1
 
 [Service]
