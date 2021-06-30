@@ -159,6 +159,11 @@ class AutorandrException(Exception):
 class XrandrOutput(object):
     "Represents an XRandR output"
 
+    XRANDR_PROPERTIES_REGEXP = "|".join(
+        [r"{}:\s*(?P<{}>[\S ]*\S+)"
+         .format(p, re.sub(r"\W+", "_", p.lower()))
+            for p in properties])
+
     # This regular expression is used to parse an output in `xrandr --verbose'
     XRANDR_OUTPUT_REGEXP = """(?x)
         ^\s*(?P<output>\S[^ ]*)\s+                                                      # Line starts with output name
@@ -185,7 +190,7 @@ class XrandrOutput(object):
             CRTC:\s*(?P<crtc>[0-9]) |                                                   # CRTC value
             Transform: (?P<transform>(?:[\-0-9\. ]+\s+){3}) |                           # Transformation matrix
             EDID: (?P<edid>\s*?(?:\\n\\t\\t[0-9a-f]+)+) |                               # EDID of the output
-            %s |                                                                        # Properties to include in the profile
+            """ + XRANDR_PROPERTIES_REGEXP + """ |                                      # Properties to include in the profile
             (?![0-9])[^:\s][^:\n]+:.*(?:\s\\t[\\t ].+)*                                 # Other properties
         ))+
         \s*
@@ -195,9 +200,7 @@ class XrandrOutput(object):
              v:\s+height\s+(?P<mode_height>[0-9]+).+clock\s+(?P<rate>[0-9\.]+)Hz\s* |
             \S+(?:(?!\*current).)+\s+h:.+\s+v:.+\s*                                     # Other resolutions
         )*)
-    """ % ("|".join([r"{}:\s*(?P<{}>[\S ]*\S+)"
-                     .format(re.sub(r"(\s)", r"\\\1", p),
-                             re.sub(r"\W+", "_", p.lower())) for p in properties]))
+    """
 
     XRANDR_OUTPUT_MODES_REGEXP = """(?x)
         (?P<name>\S+).+?(?P<preferred>\+preferred)?\s+
@@ -1233,7 +1236,6 @@ def read_config(options, directory):
     if config.has_section("config"):
         for key, value in config.items("config"):
             options.setdefault("--%s" % key, value)
-
 
 def main(argv):
     try:
