@@ -71,6 +71,11 @@ properties = [
     "Broadcast RGB",
     "audio",
     "non-desktop",
+    "TearFree",
+    "underscan vborder",
+    "underscan hborder",
+    "underscan",
+    "scaling mode",
 ]
 
 help_text = """
@@ -161,7 +166,7 @@ class XrandrOutput(object):
 
     XRANDR_PROPERTIES_REGEXP = "|".join(
         [r"{}:\s*(?P<{}>[\S ]*\S+)"
-         .format(p, re.sub(r"\W+", "_", p.lower()))
+         .format(re.sub(r"\s", r"\\\g<0>", p), re.sub(r"\W+", "_", p.lower()))
             for p in properties])
 
     # This regular expression is used to parse an output in `xrandr --verbose'
