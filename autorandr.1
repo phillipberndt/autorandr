@@ -58,6 +58,17 @@ Force loading or reloading of a profile
 .TP
 .BR \-\-version
 Show version information and exit
+.SH FILES
+Configuration files are searched for in the \fIautorandr
+\fRdirectory in the colon separated list of paths in \fI$XDG_CONFIG_DIRS
+\fR- or in \fI/etc/xdg
+\fRif that var is not set.  They are then looked for in \fI~/.autorandr
+\fRand if that doesn't exist, in \fI$XDG_CONFIG_HOME/autorandr
+\fRor in \fI~/.config/autorandr\fR if that var is unset.
+
+In each of those directories it looks for directories with \fIconfig\fR and
+\fIsetup\fR in them.  It is best to manage these files with the
+\fBautorandr\fR utility.
 .SH AUTHOR
 \fRPhillip Berndt <phillip.berndt@googlemail.com>
 .br
