@@ -1049,7 +1049,7 @@ def exec_scripts(profile_path, script_name, meta_information=None):
             script = os.path.join(folder, script_name)
             if os.access(script, os.X_OK | os.F_OK):
                 try:
-                    all_ok &= subprocess.call(script, env=env) != 0
+                    all_ok &= subprocess.call(script, env=env, shell=True) != 0
                 except:
                     raise AutorandrException("Failed to execute user command: %s" % (script,))
                 ran_scripts.add(script_name)
@@ -1062,7 +1062,7 @@ def exec_scripts(profile_path, script_name, meta_information=None):
                     script = os.path.join(script_folder, file_name)
                     if os.access(script, os.X_OK | os.F_OK):
                         try:
-                            all_ok &= subprocess.call(script, env=env) != 0
+                            all_ok &= subprocess.call(script, env=env, shell=True) != 0
                         except:
                             raise AutorandrException("Failed to execute user command: %s" % (script,))
                         ran_scripts.add(check_name)
