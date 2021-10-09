@@ -1050,7 +1050,8 @@ def exec_scripts(profile_path, script_name, meta_information=None):
             if os.access(script, os.X_OK | os.F_OK):
                 try:
                     all_ok &= subprocess.call(script, env=env) != 0
-                except:
+                except Exception as process_exception:
+                    print(process_exception):
                     raise AutorandrException("Failed to execute user command: %s" % (script,))
                 ran_scripts.add(script_name)
 
@@ -1063,7 +1064,8 @@ def exec_scripts(profile_path, script_name, meta_information=None):
                     if os.access(script, os.X_OK | os.F_OK):
                         try:
                             all_ok &= subprocess.call(script, env=env) != 0
-                        except:
+                        except Exception as process_exception:
+                            print(process_exception)
                             raise AutorandrException("Failed to execute user command: %s" % (script,))
                         ran_scripts.add(check_name)
 
