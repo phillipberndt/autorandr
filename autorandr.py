@@ -39,9 +39,13 @@ import time
 import glob
 
 from collections import OrderedDict
-from distutils.version import LooseVersion as Version
 from functools import reduce
 from itertools import chain
+
+try:
+    from packaging.version import Version
+except ModuleNotFound:
+    from distutils.version import LooseVersion as Version
 
 if sys.version_info.major == 2:
     import ConfigParser as configparser
