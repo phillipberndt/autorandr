@@ -1,6 +1,10 @@
 #!/bin/bash
 # Copyright 2021 Christophe-Marie Duquesne
 
+# Check if dbus-monitor is installed
+command -v dbus-monitor >/dev/null 2>&1 || \
+    { echo >&2 "dbus-monitor is required but is not installed. Exiting"; exit 1; }
+
 pipe=$(mktemp -u /tmp/autorandr.XXXXXXXX)
 
 trap "rm -f $pipe" EXIT
