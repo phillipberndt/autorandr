@@ -4,7 +4,7 @@ RPM_SPEC=contrib/packaging/rpm/autorandr.spec
 CFLAGS?=-O2 -Wall
 CLEANUP_FILES=
 
-.PHONY: all install uninstall autorandr bash_completion autostart_config pmutils systemd udev
+.PHONY: all install uninstall autorandr bash_completion autostart_config pmutils systemd udev dbus_monitor
 
 all:
 	@echo "Call \"make install\" to install this program."
