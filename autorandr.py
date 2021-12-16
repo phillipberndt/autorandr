@@ -44,7 +44,7 @@ from itertools import chain
 
 try:
     from packaging.version import Version
-except ModuleNotFound:
+except ModuleNotFoundError:
     from distutils.version import LooseVersion as Version
 
 if sys.version_info.major == 2:
