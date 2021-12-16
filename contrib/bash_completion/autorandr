@@ -10,7 +10,7 @@ _autorandr ()
 	prev="${COMP_WORDS[COMP_CWORD-1]}"
 
 	opts="-h -c -s -r -l -d"
-	lopts="--help --change --cycle --save --remove --load --list --default --force --fingerprint --config --dry-run"
+	lopts="--help --change --cycle --save --remove --load --list --default --force --fingerprint  --match-edid --config --dry-run"
 
 	# find system-level autorandr dirs
 	OIFS="$IFS"

@@ -85,6 +85,7 @@ Usage: autorandr [options]
 --detected              only list detected (available) configuration(s)
 --dry-run               don't change anything, only print the xrandr commands
 --fingerprint           fingerprint your current hardware setup
+--match-edid            match diplays based on edid instead of name
 --force                 force (re)loading of a profile / overwrite exiting files
 --list                  list configurations
 --skip-options <option> comma separated list of xrandr arguments (e.g. "gamma")
@@ -597,6 +598,36 @@ def match_asterisk(pattern, data):
     matched = len(pattern)
     total = len(data) + 1
     return matched * 1. / total
+
+
+def update_profiles_edid(profiles, config):
+    edid_map = {}
+    for c in config:
+        if config[c].edid is not None:
+            edid_map[config[c].edid] = c
+
+    for p in profiles:
+        profile_config = profiles[p]["config"]
+
+        for edid in edid_map:
+            for c in profile_config.keys():
+                if profile_config[c].edid != edid or c == edid_map[edid]:
+                    continue
+
+                print("%s: renaming display %s to %s" % (p, c, edid_map[edid]))
+
+                tmp_disp = profile_config[c]
+
+                if edid_map[edid] in profile_config:
+                    # Swap the two entries
+                    profile_config[c] = profile_config[edid_map[edid]]
+                    profile_config[c].output = c
+                else:
+                    # Object is reassigned to another key, drop this one
+                    del profile_config[c]
+
+                profile_config[edid_map[edid]] = tmp_disp
+                profile_config[edid_map[edid]].output = edid_map[edid]
 
 
 def find_profiles(current_config, profiles):
@@ -1217,7 +1248,7 @@ def main(argv):
         opts, args = getopt.getopt(argv[1:], "s:r:l:d:cfh",
                                    ["batch", "dry-run", "change", "cycle", "default=", "save=", "remove=", "load=",
                                     "force", "fingerprint", "config", "debug", "skip-options=", "help",
-                                    "list", "current", "detected", "version"])
+                                    "list", "current", "detected", "version", "match-edid"])
     except getopt.GetoptError as e:
         print("Failed to parse options: {0}.\n"
               "Use --help to get usage information.".format(str(e)),
@@ -1270,19 +1301,22 @@ def main(argv):
             profiles.update(load_profiles(profile_path))
             profile_symlinks.update(get_symlinks(profile_path))
             read_config(options, profile_path)
-        # Sort by mtime
-        sort_direction = -1
-        if "--cycle" in options:
-            # When cycling through profiles, put the profile least recently used to the top of the list
-            sort_direction = 1
-        profiles = OrderedDict(sorted(profiles.items(), key=lambda x: sort_direction * x[1]["config-mtime"]))
     except Exception as e:
         raise AutorandrException("Failed to load profiles", e)
 
-    profile_symlinks = {k: v for k, v in profile_symlinks.items() if v in (x[0] for x in virtual_profiles) or v in profiles}
-
     exec_scripts(None, "predetect")
     config, modes = parse_xrandr_output()
+
+    if "--match-edid" in options:
+        update_profiles_edid(profiles, config)
+
+    # Sort by mtime
+    sort_direction = -1
+    if "--cycle" in options:
+        # When cycling through profiles, put the profile least recently used to the top of the list
+        sort_direction = 1
+    profiles = OrderedDict(sorted(profiles.items(), key=lambda x: sort_direction * x[1]["config-mtime"]))
+    profile_symlinks = {k: v for k, v in profile_symlinks.items() if v in (x[0] for x in virtual_profiles) or v in profiles}
 
     if "--fingerprint" in options:
         output_setup(config, sys.stdout)

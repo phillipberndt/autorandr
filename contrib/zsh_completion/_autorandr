@@ -33,6 +33,7 @@ _autorandr () {
        --debug"[enable verbose output]" \
        --dry-run"[don't change anything]" \
        --fingerprint"[fingerprint current hardware]" \
+       --match-edid"[match displays using edid]" \
        --force"[force loading of a profile]" \
        --list"[list all profiles]" \
        --skip-options"[skip xrandr options]:xrandr options:_values -s , options gamma brightness panning transform primary mode pos rate" \
