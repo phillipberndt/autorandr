@@ -80,6 +80,7 @@ Usage: autorandr [options]
 --batch                 run autorandr for all users with active X11 sessions
 --current               only list current (active) configuration(s)
 --config                dump your current xrandr setup
+--cycle                 automatically load the next detected profile
 --debug                 enable verbose output
 --detected              only list detected (available) configuration(s)
 --dry-run               don't change anything, only print the xrandr commands
@@ -1214,7 +1215,7 @@ def read_config(options, directory):
 def main(argv):
     try:
         opts, args = getopt.getopt(argv[1:], "s:r:l:d:cfh",
-                                   ["batch", "dry-run", "change", "default=", "save=", "remove=", "load=",
+                                   ["batch", "dry-run", "change", "cycle", "default=", "save=", "remove=", "load=",
                                     "force", "fingerprint", "config", "debug", "skip-options=", "help",
                                     "list", "current", "detected", "version"])
     except getopt.GetoptError as e:
@@ -1379,6 +1380,7 @@ def main(argv):
                     print("%s (blocked)" % profile_name)
                 continue
             props = []
+            is_current_profile = profile_name in current_profiles
             if profile_name in detected_profiles:
                 if len(detected_profiles) == 1:
                     index = 1
@@ -1386,12 +1388,13 @@ def main(argv):
                 else:
                     index = detected_profiles.index(profile_name) + 1
                     props.append("(detected) (%d%s match)" % (index, ["st", "nd", "rd"][index - 1] if index < 4 else "th"))
-                if ("-c" in options or "--change" in options) and index < best_index:
-                    load_profile = profile_name
-                    best_index = index
+                if index < best_index:
+                    if "-c" in options or "--change" in options or ("--cycle" in options and not is_current_profile):
+                        load_profile = profile_name
+                        best_index = index
             elif "--detected" in options:
                 continue
-            if profile_name in current_profiles:
+            if is_current_profile:
                 props.append("(current)")
             elif "--current" in options:
                 continue
@@ -1404,7 +1407,7 @@ def main(argv):
 
     if "-d" in options:
         options["--default"] = options["-d"]
-    if not load_profile and "--default" in options and ("-c" in options or "--change" in options):
+    if not load_profile and "--default" in options and ("-c" in options or "--change" in options or "--cycle" in options):
         load_profile = options["--default"]
 
     if load_profile:
