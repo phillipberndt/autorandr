@@ -32,6 +32,7 @@ import os
 import posix
 import pwd
 import re
+import shlex
 import subprocess
 import sys
 import shutil
@@ -755,23 +756,22 @@ def call_and_retry(*args, **kwargs):
     waits a second and then retries once. This mitigates #47,
     a timing issue with some drivers.
     """
-    if "dry_run" in kwargs:
-        dry_run = kwargs["dry_run"]
-        del kwargs["dry_run"]
+    if kwargs.pop("dry_run", False):
+        for arg in args[0]:
+            print(shlex.quote(arg), end=" ")
+        print()
+        return 0
     else:
-        dry_run = False
-    kwargs_redirected = dict(kwargs)
-    if not dry_run:
         if hasattr(subprocess, "DEVNULL"):
-            kwargs_redirected["stdout"] = getattr(subprocess, "DEVNULL")
+            kwargs["stdout"] = getattr(subprocess, "DEVNULL")
         else:
-            kwargs_redirected["stdout"] = open(os.devnull, "w")
-        kwargs_redirected["stderr"] = kwargs_redirected["stdout"]
-    retval = subprocess.call(*args, **kwargs_redirected)
-    if retval != 0:
-        time.sleep(1)
+            kwargs["stdout"] = open(os.devnull, "w")
+        kwargs["stderr"] = kwargs["stdout"]
         retval = subprocess.call(*args, **kwargs)
-    return retval
+        if retval != 0:
+            time.sleep(1)
+            retval = subprocess.call(*args, **kwargs)
+        return retval
 
 
 def get_fb_dimensions(configuration):
@@ -816,10 +816,7 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
     found_left_monitor = False
     found_top_monitor = False
     outputs = sorted(new_configuration.keys(), key=lambda x: new_configuration[x].sort_key)
-    if dry_run:
-        base_argv = ["echo", "xrandr"]
-    else:
-        base_argv = ["xrandr"]
+    base_argv = ["xrandr"]
 
     # There are several xrandr / driver bugs we need to take care of here:
     # - We cannot enable more than two screens at the same time
