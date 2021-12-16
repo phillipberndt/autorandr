@@ -1270,8 +1270,12 @@ def main(argv):
             profiles.update(load_profiles(profile_path))
             profile_symlinks.update(get_symlinks(profile_path))
             read_config(options, profile_path)
-        # Sort by descending mtime
-        profiles = OrderedDict(sorted(profiles.items(), key=lambda x: -x[1]["config-mtime"]))
+        # Sort by mtime
+        sort_direction = -1
+        if "--cycle" in options:
+            # When cycling through profiles, put the profile least recently used to the top of the list
+            sort_direction = 1
+        profiles = OrderedDict(sorted(profiles.items(), key=lambda x: sort_direction * x[1]["config-mtime"]))
     except Exception as e:
         raise AutorandrException("Failed to load profiles", e)
 
@@ -1426,7 +1430,7 @@ def main(argv):
                 scripts_path = profile["path"]
             except KeyError:
                 raise AutorandrException("Failed to load profile '%s': Profile not found" % load_profile)
-            if load_profile in detected_profiles and detected_profiles[0] != load_profile:
+            if "--dry-run" not in options:
                 update_mtime(os.path.join(scripts_path, "config"))
         add_unused_outputs(config, load_config)
         if load_config == dict(config) and "-f" not in options and "--force" not in options:
