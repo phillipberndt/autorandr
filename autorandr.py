@@ -266,17 +266,20 @@ class XrandrOutput(object):
         "Return the command line parameters for XRandR for this instance"
         args = ["--output", self.output]
         for option, arg in sorted(self.options_with_defaults.items()):
-            if option[:5] == "prop-":
+            if option.startswith("x-prop-"):
                 prop_found = False
                 for prop, xrandr_prop in [(re.sub(r"\W+", "_", p.lower()), p) for p in properties]:
-                    if prop == option[5:]:
+                    if prop == option[7:]:
                         args.append("--set")
                         args.append(xrandr_prop)
                         prop_found = True
                         break
                 if not prop_found:
-                    print("Warning: Unknown property `%s' in config file. Skipping." % option[5:], file=sys.stderr)
+                    print("Warning: Unknown property `%s' in config file. Skipping." % option[7:], file=sys.stderr)
                     continue
+            elif option.startswith("x-"):
+                print("Warning: Unknown option `%s' in config file. Skipping." % option, file=sys.stderr)
+                continue
             else:
                 args.append("--%s" % option)
             if arg:
@@ -429,7 +432,7 @@ class XrandrOutput(object):
                 options["rate"] = match["rate"]
             for prop in [re.sub(r"\W+", "_", p.lower()) for p in properties]:
                 if match[prop]:
-                    options["prop-" + prop] = match[prop]
+                    options["x-prop-" + prop] = match[prop]
 
         return XrandrOutput(match["output"], edid, options), modes
 
