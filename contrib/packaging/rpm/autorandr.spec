@@ -1,415 +1,77 @@
-%define name autorandr
-%define version 1.10.1
-%define release 1
+Name:           autorandr
+Version:        1.11
+Release:        %autorelease
+Summary:        Automatically select a display configuration based on connected devices
 
-# pmutils
-%define use_pm_utils 1
-%if 0%{?fedora} > 22
-%define use_pm_utils 0
-%endif
-%if 0%{?rhel} > 7
-%define use_pm_utils 0
-%endif
+BuildArch:      noarch
+BuildRequires:  python3-devel
 
-# python 2 or 3
-%define py_ver 3
-%if 0%{?rhel}
-%define py_ver 2
-%endif
+License:        GPLv3
+URL:            https://github.com/phillipberndt/%{name}
+Source0:        %{url}/archive/%{version}/%{name}-%{version}.tar.gz
 
-Summary: Automatically select a display configuration based on connected devices
-Name: %{name}
-Version: %{version}
-Release: %{release}%{?dist}
-Source0: https://github.com/phillipberndt/%{name}/archive/%{version}/%{name}-%{version}.tar.gz
-License: GPLv3
-Group: Development/Libraries
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-Prefix: %{_prefix}
-BuildArch: noarch
-Vendor: Phillip Berndt <phillip.berndt@googlemail.com>
-Url: https://github.com/phillipberndt/autorandr
-Requires: python%{py_ver}
-%if 0%{?use_pm_utils}
-Requires:	pm-utils
-%endif
-%{?systemd_ordering}
-BuildRequires: bash-completion
-BuildRequires: python%{py_ver}-devel
+BuildRequires: make
 BuildRequires: systemd
 BuildRequires: udev
-%if %{py_ver} == 2
-BuildRequires: python3-devel
-%endif
+BuildRequires: desktop-file-utils
 
 
 %description
-# autorandr
+%{summary}.
 
-Automatically select a display configuration based on connected devices
+%prep
+%setup -q
+%py3_shebang_fix ./autorandr.py
 
-## Branch information
+%post
+udevadm control --reload-rules
+%systemd_post autorandr.service
 
-This is a compatible Python rewrite of
-[wertarbyte/autorandr](https://github.com/wertarbyte/autorandr). Contributions
-for bash-completion, fd.o/XDG autostart, Nitrogen, pm-utils, and systemd can be
-found under [contrib](contrib/).
+%preun
+%systemd_preun autorandr.service
 
-The original [wertarbyte/autorandr](https://github.com/wertarbyte/autorandr)
-tree is unmaintained, with lots of open pull requests and issues. I forked it
-and merged what I thought were the most important changes. If you are searching
-for that version, see the [`legacy` branch](https://github.com/phillipberndt/autorandr/tree/legacy).
-Note that the Python version is better suited for non-standard configurations,
-like if you use `--transform` or `--reflect`. If you use `auto-disper`, you
-have to use the bash version, as there is no disper support in the Python
-version (yet). Both versions use a compatible configuration file format, so
-you can, to some extent, switch between them.  I will maintain the `legacy`
-branch until @wertarbyte finds the time to maintain his branch again.
+%postun
+%systemd_postun autorandr.service
 
-If you are interested in why there are two versions around, see
-[#7](https://github.com/phillipberndt/autorandr/issues/7),
-[#8](https://github.com/phillipberndt/autorandr/issues/8) and
-especially
-[#12](https://github.com/phillipberndt/autorandr/issues/12)
-if you are unhappy with this version and would like to contribute to the bash
-version.
+%package bash-completion
+Summary: Bash completion for autorandr
+Requires: %{name}
+Requires: bash-completion
+%description bash-completion
+This package provides bash-completion files for autorandr
 
-## License information and authors
-
-autorandr is available under the terms of the GNU General Public License
-(version 3).
-
-Contributors to this version of autorandr are:
-
-* Adrián López
-* andersonjacob
-* Alexander Wirt
-* Brice Waegeneire
-* Chris Dunder
-* Christoph Gysin
-* Christophe-Marie Duquesne
-* Daniel Hahler
-* Maciej Sitarz
-* Mathias Svensson
-* Matthew R Johnson
-* Nazar Mokrynskyi
-* Phillip Berndt
-* Rasmus Wriedt Larsen
-* Simon Wydooghe
-* Stefan Tomanek
-* stormc
-* tachylatus
-* Timo Bingmann
-* Timo Kaufmann
-* Tomasz Bogdal
-* Victor Häggqvist
-* Jan-Oliver Kaiser
-
-## Installation/removal
-
-You can use the `autorandr.py` script as a stand-alone binary. If you'd like to
-install it as a system-wide application, there is a Makefile included that also
-places some configuration files in appropriate directories such that autorandr
-is invoked automatically when a monitor is connected or removed, the system
-wakes up from suspend, or a user logs into an X11 session. Run `make install`
-as root to install it.
-
-If you prefer to have a system wide install managed by your package manager,
-you can
-
-* Use the [official Arch package](https://www.archlinux.org/packages/community/any/autorandr/).
-* Use the [official Debian package](https://packages.debian.org/sid/x11/autorandr) on sid
-* Use the [ebuild from zugaina](https://gpo.zugaina.org/x11-misc/autorandr) on Gentoo.
-* Use the
-  [nix package](https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/misc/autorandr.nix)
-  on NixOS.
-* Use the automated nightlies generated by the
-  [openSUSE build service](https://build.opensuse.org/package/show/home:phillipberndt/autorandr)
-  for various distributions (RPM and DEB based).
-* Use the [X binary package system](https://wiki.voidlinux.eu/XBPS)' on Void Linux 
-* Build a .deb-file from the source tree using `make deb`.
-* Build a .rpm-file from the source tree using `make rpm`.
-
-We appreciate packaging scripts for other distributions, please file a pull
-request if you write one.
-
-If you prefer `pip` over your package manager, you can install autorandr with:
-
-    sudo pip install "git+http://github.com/phillipberndt/autorandr#egg=autorandr"
-
-or simply
-
-    sudo pip install autorandr
-
-if you prefer to use a stable version.
-
-## How to use
-
-Save your current display configuration and setup with:
-
-    autorandr --save mobile
-
-Connect an additional display, configure your setup and save it:
-
-    autorandr --save docked
-
-Now autorandr can detect which hardware setup is active:
-
-    $ autorandr
-      mobile
-      docked (detected)
-
-To automatically reload your setup:
-
-    $ autorandr --change
-
-To manually load a profile:
-
-    $ autorandr --load <profile>
-
-or simply:
-
-    $ autorandr <profile>
-
-autorandr tries to avoid reloading an identical configuration. To force the
-(re)configuration:
-
-    $ autorandr --load <profile> --force
-
-To prevent a profile from being loaded, place a script call _block_ in its
-directory. The script is evaluated before the screen setup is inspected, and
-in case of it returning a value of 0 the profile is skipped. This can be used
-to query the status of a docking station you are about to leave.
-
-If no suitable profile can be identified, the current configuration is kept.
-To change this behaviour and switch to a fallback configuration, specify
-`--default <profile>`. The system-wide installation of autorandr by default
-calls autorandr with a parameter `--default default`. There are three special,
-virtual configurations called `horizontal`, `vertical` and `common`. They
-automatically generate a configuration that incorporates all screens
-connected to the computer. You can symlink `default` to one of these
-names in your configuration directory to have autorandr use any of them
-as the default configuration without you having to change the system-wide
-configuration.
-
-You can store default values for any option in an INI-file in
-`~/.config/autorandr/settings.ini` in a section `config`. The most useful
-candidate for doing that is `skip-options`, if you need it.
-
-## Advanced usage
-
-### Hook scripts
-
-Three more scripts can be placed in the configuration directory
-(as defined by the [XDG spec](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html),
-usually `~/.config/autorandr` or `~/.autorandr` if you have an old installation
-for user configuration and `/etc/xdg/autorandr` for system wide configuration):
-
-- `postswitch` is executed *after* a mode switch has taken place. This can be
-  used to notify window managers or other applications about the switch.
-- `preswitch` is executed *before* a mode switch takes place.
-- `postsave` is executed after a profile was stored or altered.
-- `predetect` is executed before autorandr attempts to run xrandr. 
-
-These scripts must be executable and can be placed directly in the configuration
-directory, where they will always be executed, or in the profile subdirectories,
-where they will only be executed on changes regarding that specific profile.
-
-Instead (or in addition) to these scripts, you can also place as many executable
-files as you like in subdirectories called `script_name.d` (e.g. `postswitch.d`).
-
-If a script with the same name occurs multiple times, user configuration
-takes precedence over system configuration (as specified by the
-[XDG spec](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html))
-and profile configuration over general configuration.
-
-As a concrete example, suppose you have the files
-
-- `/etc/xdg/autorandr/postswitch`
-- `~/.config/autorandr/postswitch`
-- `~/.config/autorandr/postswitch.d/notify-herbstluftwm`
-- `~/.config/autorandr/docked/postswitch`
-
-and switch from `mobile` to `docked`. Then
-`~/.config/autorandr/docked/postswitch` is executed, since the profile specific
-configuration takes precedence, and
-`~/.config/autorandr/postswitch.d/notify-herbstluftwm` is executed, since
-it has a unique name.
-
-If you switch back from `docked` to `mobile`, `~/.config/autorandr/postswitch`
-is executed instead of the `docked` specific `postswitch`.
-
-If you experience issues with xrandr being executed too early after connecting
-a new monitor, then you can use a `predetect` script to delay the execution.
-Write e.g. `sleep 1` into that file to make autorandr wait a second before
-running `xrandr`.
-
-#### Variables
-
-Some of autorandr's state is exposed as environment variables
-prefixed with `AUTORANDR_`, such as:
-- `AUTORANDR_CURRENT_PROFILE`
-- `AUTORANDR_CURRENT_PROFILES`
-- `AUTORANDR_PROFILE_FOLDER`
-- `AUTORANDR_MONITORS`
-
-with the intention that they can be used within the hook scripts.
-
-For instance, you might display which profile has just been activated by
-including the following in a `postswitch` script:
-```sh
-notify-send -i display "Display profile" "$AUTORANDR_CURRENT_PROFILE"
-```
-
-The one kink is that during `preswitch`, `AUTORANDR_CURRENT_PROFILE` is
-reporting the *upcoming* profile rather than the *current* one.
-
-### Wildcard EDID matching
-
-The EDID strings in the `~/.config/autorandr/*/setup` files may contain an
-asterisk to enable wildcard matching: Such EDIDs are matched against connected
-monitors using the usual file name globbing rules. This can be used to create
-profiles matching multiple (or any) monitors.
-
-## Changelog
-
-**autorandr 1.10.1**
-* *2020-05-04* Revert making the launcher the default (fixes #195)
-
-**autorandr 1.10**
-* *2020-04-23* Fix hook script execution order to match description from readme
-* *2020-04-11* Handle negative gamma values (fixes #188)
-* *2020-04-11* Sort approximate matches in detected profiles by quality of match
-* *2020-01-31* Handle non-ASCII environment variables (fixes #180)
-* *2019-12-31* Fix output positioning if the top-left output is not the first
-* *2019-12-31* Accept negative gamma values (and interpret them as 0)
-* *2019-12-31* Prefer the X11 launcher over systemd/udev configuration
-
-**autorandr 1.9**
-
-* *2019-11-10* Count closed lids as disconnected outputs
-* *2019-10-05* Do not overwrite existing configurations without `--force`
-* *2019-08-16* Accept modes that don't match the WWWxHHH pattern
-* *2019-03-22* Improve bash autocompletion
-* *2019-03-21* Store CRTC values in configurations
-* *2019-03-24* Fix handling of recently disconnected outputs (See #128 and #143)
-
-**autorandr 1.8.1**
-
-* *2019-03-18* Removed mandb call from Makefile
-
-**autorandr 1.8**
-
-* *2019-02-17* Add an X11 daemon that runs autorandr when a display connects (by @rliou92, #127)
-* *2019-02-17* Replace width=0 check with disconnected to detect disconnected monitors (by @joseph-jones, #139)
-* *2019-02-17* Fix handling of empty padding (by @jschwab, #138)
-* *2019-02-17* Add a man page (by @somers-all-the-time, #133)
-
-**autorandr 1.7**
-
-* *2018-09-25* Fix FB size computation with rotated screens (by @Janno, #117)
-
-**autorandr 1.6**
-
-* *2018-04-19* Bugfix: Do not load default profile unless --change is set
-* *2018-04-30* Added a `AUTORANDR_MONITORS` variable to hooks (by @bricewge, #106)
-* *2018-06-29* Fix detection of current configuration if extra monitors are active
-* *2018-07-11* Bugfix in the latest change: Correctly handle "off" minitors when comparing
-* *2018-07-19* Do not kill spawned user processes from systemd unit
-* *2018-07-20* Correctly handle "off" monitors when comparing -- fixup for another bug.
-
-**autorandr 1.5**
-
-* *2018-01-03* Add --version
-* *2018-01-04* Fixed vertical/horizontal/clone-largest virtual profiles
-* *2018-03-07* Output all non-error messages to stdout instead of stderr
-* *2018-03-25* Add --detected and --current to filter the profile list output
-* *2018-03-25* Allow wildcard matching in EDIDs
-
-**autorandr 1.4**
-
-* *2017-12-22* Fixed broken virtual profile support
-* *2017-12-14* Added support for a settings file
-* *2017-12-14* Added a virtual profile `off`, which disables all screens
-
-**autorandr 1.3**
-
-* *2017-11-13* Add a short form for `--load`
-* *2017-11-21* Fix environment stealing in `--batch` mode (See #87)
-
-**autorandr 1.2**
-
-* *2017-07-16* Skip `--panning` unless it is required (See #72)
-* *2017-10-13* Add `clone-largest` virtual profile
-
-**autorandr 1.1**
-
-* *2017-06-07* Call systemctl with `--no-block` from udev rule (See #61)
-* *2017-01-20* New script hook, `predetect`
-* *2017-01-18* Accept comments (lines starting with `#`) in config/setup files
-
-**autorandr 1.0**
-
-* *2016-12-07* Tag the current code as version 1.0.0; see github issue #54
-* *2016-10-03* Install a desktop file to `/etc/xdg/autostart` by default
 
 %package zsh-completion
-Summary: zsh-completion for autorandr
+Summary: Zsh completion for autorandr
 Requires: zsh
 Requires: %{name}
 %description zsh-completion
 This package provides zsh-completion files for autorandr
 
-%prep
-%setup -n %{name}-%{version} -n %{name}-%{version}
-%if %{py_ver} == 3
-pathfix.py -pni "%{__python3} %{py3_shbang_opts}" ./autorandr.py
-%else
-pathfix.py -pni "%{__python2} %{py2_shbang_opts}" ./autorandr.py
-%endif
-
 %install
-make DESTDIR="%{buildroot}" PREFIX=/usr install
+%make_install
 install -vDm 644 README.md -t "%{buildroot}/usr/share/doc/%{name}/"
-install -vDm 644 contrib/zsh_completion/_autorandr -t %{buildroot}%{_datarootdir}/zsh/site-functions/
+install -vDm 644 contrib/bash_completion/autorandr -t %{buildroot}%{_datadir}/bash-completion/completions/
+install -vDm 644 contrib/zsh_completion/_autorandr -t %{buildroot}%{_datadir}/zsh/site-functions/
+install -vDm 644 autorandr.1 -t %{buildroot}%{_mandir}/man1/
 
+%check
+desktop-file-validate %{buildroot}%{_sysconfdir}/xdg/autostart/autorandr.desktop
 
 %files
-%defattr(-,root,root,-)
-%attr(0644,root,root) %{_unitdir}/autorandr.service
-%license gpl-3.0.txt 
+%license gpl-3.0.txt
 %doc README.md
-%config(noreplace) %{_sysconfdir}/*
-%{_bindir}/*
-%{_mandir}
-%{_datarootdir}/bash-completion/completions/autorandr
+%{_mandir}/man1/*
+%{_bindir}/autorandr
+%{_unitdir}/autorandr.service
+%{_sysconfdir}/xdg/autostart/autorandr.desktop
 %{_udevrulesdir}/40-monitor-hotplug.rules
 
+%files bash-completion
+%{_datadir}/bash-completion/completions/autorandr
+
 %files zsh-completion
-%{_datarootdir}/zsh/site-functions/_autorandr
+%{_datadir}/zsh/site-functions/_autorandr
 
 %changelog
-* Mon Jun 08 2020 Jerzy Drozdz <jerzy.drozdz@jdsieci.pl> - 1.10.1-1
-- Updated to stable 1.10.1
-- Added zsh-completion subpackage
-* Wed May 22 2019 Maciej Sitarz <macieksitarz@wp.pl> - 1.8.1-1
-- Updated to stable 1.8.1
-* Fri Sep 28 2018 Maciej Sitarz <macieksitarz@wp.pl> - 1.7-1
-- Updated to stable 1.7
-* Thu Jul 19 2018 Maciej Sitarz <macieksitarz@wp.pl> - 1.5-1
-- Updated to stable 1.5
-- Changed dest path for systemd service file
-* Sun Oct 01 2017 Jerzy Drozdz <rpmbuilder@jdsieci.pl> - 1.1-2
-- Added conditionals for pm-utils, compability with Fedora26+
-- Removed bash-completion from requisites
-- Removed udev from requisites
-* Sun Sep 03 2017 Jerzy Drozdz <rpmbuilder@jdsieci.pl> - 1.1-1
-- Update to stable 1.1
-* Fri Feb 17 2017 Jerzy Drozdz <rpmbuilder@jdsieci.pl> - 20170217git-1
-- Update to master
-* Wed Jul 6 2016 Jerzy Drozdz <rpmbuilder@jdsieci.pl> - 20160706git-1
-- Set default value of $XDG_CONFIG_DIRS to fulfill the standard
-* Fri Jul 1 2016 Jerzy Drozdz <rpmbuilder@jdsieci.pl> - 20160701git-1.1
-- fixed running udevadm in post
-* Fri Jul 1 2016 Jerzy Drozdz <rpmbuilder@jdsieci.pl> - 20160701git-1
-- initial build
+%autochangelog

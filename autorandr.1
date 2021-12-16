@@ -38,6 +38,9 @@ List only the current (active) configuration(s)
 .BR \-\-config
 Dump the variable values of your current xrandr setup
 .TP
+.BR \-\-cycle
+Cycle through all detected profiles
+.TP
 .BR \-\-debug
 Enable verbose output
 .TP
@@ -56,11 +59,25 @@ Match displays based on edid instead of name
 .BR \-\-force
 Force loading or reloading of a profile
 .TP
+.BR \-\-list
+List all profiles
+.TP
 \fB\-\-skip\-options [\fIOPTION\fR] ...
 \fRSet a comma\-separated list of xrandr arguments to skip both in change detection and profile application. See \fBxrandr(1)\fR for xrandr arguments.
 .TP
 .BR \-\-version
 Show version information and exit
+.SH FILES
+Configuration files are searched for in the \fIautorandr
+\fRdirectory in the colon separated list of paths in \fI$XDG_CONFIG_DIRS
+\fR- or in \fI/etc/xdg
+\fRif that var is not set.  They are then looked for in \fI~/.autorandr
+\fRand if that doesn't exist, in \fI$XDG_CONFIG_HOME/autorandr
+\fRor in \fI~/.config/autorandr\fR if that var is unset.
+
+In each of those directories it looks for directories with \fIconfig\fR and
+\fIsetup\fR in them.  It is best to manage these files with the
+\fBautorandr\fR utility.
 .SH AUTHOR
 \fRPhillip Berndt <phillip.berndt@googlemail.com>
 .br

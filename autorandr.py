@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # encoding: utf-8
 #
 # autorandr.py
@@ -39,9 +39,13 @@ import time
 import glob
 
 from collections import OrderedDict
-from distutils.version import LooseVersion as Version
 from functools import reduce
 from itertools import chain
+
+try:
+    from packaging.version import Version
+except ModuleNotFoundError:
+    from distutils.version import LooseVersion as Version
 
 if sys.version_info.major == 2:
     import ConfigParser as configparser
@@ -76,12 +80,14 @@ Usage: autorandr [options]
 --batch                 run autorandr for all users with active X11 sessions
 --current               only list current (active) configuration(s)
 --config                dump your current xrandr setup
+--cycle                 automatically load the next detected profile
 --debug                 enable verbose output
 --detected              only list detected (available) configuration(s)
 --dry-run               don't change anything, only print the xrandr commands
 --fingerprint           fingerprint your current hardware setup
 --match-edid            match diplays based on edid instead of name
 --force                 force (re)loading of a profile / overwrite exiting files
+--list                  list configurations
 --skip-options <option> comma separated list of xrandr arguments (e.g. "gamma")
                         to skip both in detecting changes and applying a profile
 --version               show version information and exit
@@ -1240,9 +1246,9 @@ def read_config(options, directory):
 def main(argv):
     try:
         opts, args = getopt.getopt(argv[1:], "s:r:l:d:cfh",
-                                   ["batch", "dry-run", "change", "default=", "save=", "remove=", "load=",
+                                   ["batch", "dry-run", "change", "cycle", "default=", "save=", "remove=", "load=",
                                     "force", "fingerprint", "config", "debug", "skip-options=", "help",
-                                    "current", "detected", "version", "match-edid"])
+                                    "list", "current", "detected", "version", "match-edid"])
     except getopt.GetoptError as e:
         print("Failed to parse options: {0}.\n"
               "Use --help to get usage information.".format(str(e)),
@@ -1304,8 +1310,12 @@ def main(argv):
     if "--match-edid" in options:
         update_profiles_edid(profiles, config)
 
-    # Sort by descending mtime
-    profiles = OrderedDict(sorted(profiles.items(), key=lambda x: -x[1]["config-mtime"]))
+    # Sort by mtime
+    sort_direction = -1
+    if "--cycle" in options:
+        # When cycling through profiles, put the profile least recently used to the top of the list
+        sort_direction = 1
+    profiles = OrderedDict(sorted(profiles.items(), key=lambda x: sort_direction * x[1]["config-mtime"]))
     profile_symlinks = {k: v for k, v in profile_symlinks.items() if v in (x[0] for x in virtual_profiles) or v in profiles}
 
     if "--fingerprint" in options:
@@ -1404,10 +1414,11 @@ def main(argv):
         best_index = 9999
         for profile_name in profiles.keys():
             if profile_blocked(os.path.join(profile_path, profile_name), block_script_metadata):
-                if "--current" not in options and "--detected" not in options:
+                if not any(opt in options for opt in ("--current", "--detected", "--list")):
                     print("%s (blocked)" % profile_name)
                 continue
             props = []
+            is_current_profile = profile_name in current_profiles
             if profile_name in detected_profiles:
                 if len(detected_profiles) == 1:
                     index = 1
@@ -1415,16 +1426,17 @@ def main(argv):
                 else:
                     index = detected_profiles.index(profile_name) + 1
                     props.append("(detected) (%d%s match)" % (index, ["st", "nd", "rd"][index - 1] if index < 4 else "th"))
-                if ("-c" in options or "--change" in options) and index < best_index:
-                    load_profile = profile_name
-                    best_index = index
+                if index < best_index:
+                    if "-c" in options or "--change" in options or ("--cycle" in options and not is_current_profile):
+                        load_profile = profile_name
+                        best_index = index
             elif "--detected" in options:
                 continue
-            if profile_name in current_profiles:
+            if is_current_profile:
                 props.append("(current)")
             elif "--current" in options:
                 continue
-            if "--current" in options or "--detected" in options:
+            if any(opt in options for opt in ("--current", "--detected", "--list")):
                 print("%s" % (profile_name, ))
             else:
                 print("%s%s%s" % (profile_name, " " if props else "", " ".join(props)))
@@ -1433,7 +1445,7 @@ def main(argv):
 
     if "-d" in options:
         options["--default"] = options["-d"]
-    if not load_profile and "--default" in options and ("-c" in options or "--change" in options):
+    if not load_profile and "--default" in options and ("-c" in options or "--change" in options or "--cycle" in options):
         load_profile = options["--default"]
 
     if load_profile:
@@ -1452,7 +1464,7 @@ def main(argv):
                 scripts_path = profile["path"]
             except KeyError:
                 raise AutorandrException("Failed to load profile '%s': Profile not found" % load_profile)
-            if load_profile in detected_profiles and detected_profiles[0] != load_profile:
+            if "--dry-run" not in options:
                 update_mtime(os.path.join(scripts_path, "config"))
         add_unused_outputs(config, load_config)
         if load_config == dict(config) and "-f" not in options and "--force" not in options:
