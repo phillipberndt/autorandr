@@ -252,6 +252,7 @@ options nvidia_drm modeset=1
 **autorandr 1.12**
 * *2021-12-16* Switch default interpreter to Python 3
 * *2021-12-16* Add `--list` to list all profiles
+* *2021-12-16* Add `--cycle` to cycle all detected profiles
 
 **autorandr 1.11**
 * *2020-05-23* Handle empty sys.executable
