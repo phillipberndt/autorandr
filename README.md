@@ -249,6 +249,9 @@ options nvidia_drm modeset=1
 
 ## Changelog
 
+**autorandr 1.12**
+* *2021-12-16* Switch default interpreter to Python 3
+
 **autorandr 1.11**
 * *2020-05-23* Handle empty sys.executable
 * *2020-06-08* Fix Python 2 compatibility
