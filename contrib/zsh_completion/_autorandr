@@ -28,11 +28,13 @@ _autorandr () {
        "($exclude)"{-r,--remove}"[remove profile]:profile:__autorandr_saved_profile" \
        --batch"[run autorandr for all users]" \
        --current"[list current active configurations]" \
+       --cycle"[cycle through all detected profiles]" \
        --config"[dump current xrandr setup]" \
        --debug"[enable verbose output]" \
        --dry-run"[don't change anything]" \
        --fingerprint"[fingerprint current hardware]" \
        --force"[force loading of a profile]" \
+       --list"[list all profiles]" \
        --skip-options"[skip xrandr options]:xrandr options:_values -s , options gamma brightness panning transform primary mode pos rate" \
        --version"[show version]"
 }
