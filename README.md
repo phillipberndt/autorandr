@@ -249,6 +249,9 @@ options nvidia_drm modeset=1
 
 ## Changelog
 
+**autorandr 1.12.1**
+* *2021-12-22* Fix `--match-edid` (see #273)
+
 **autorandr 1.12**
 * *2021-12-16* Switch default interpreter to Python 3
 * *2021-12-16* Add `--list` to list all profiles

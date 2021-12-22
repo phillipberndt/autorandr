@@ -53,7 +53,7 @@ if sys.version_info.major == 2:
 else:
     import configparser
 
-__version__ = "1.12"
+__version__ = "1.12.1"
 
 try:
     input = raw_input
@@ -649,7 +649,7 @@ def update_profiles_edid(profiles, config):
         profile_config = profiles[p]["config"]
 
         for edid in edid_map:
-            for c in profile_config.keys():
+            for c in list(profile_config.keys()):
                 if profile_config[c].edid != edid or c == edid_map[edid]:
                     continue
 
