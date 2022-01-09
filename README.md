@@ -58,6 +58,7 @@ Contributors to this version of autorandr are:
 * Tomasz Bogdal
 * Victor Häggqvist
 * Jan-Oliver Kaiser
+* Alexandre Viau
 
 ## Installation/removal
 

@@ -541,7 +541,10 @@ def debug_regexp(pattern, string):
     return "Debug information would be available if the `regex' module was installed."
 
 
-def parse_xrandr_output():
+def parse_xrandr_output(
+    *,
+    ignore_lid,
+):
     "Parse the output of `xrandr --verbose' into a list of outputs"
     xrandr_output = os.popen("xrandr -q --verbose").read()
     if not xrandr_output:
@@ -564,7 +567,11 @@ def parse_xrandr_output():
             modes[output_name] = output_modes
 
     # consider a closed lid as disconnected if other outputs are connected
-    if sum(o.edid != None for o in outputs.values()) > 1:
+    if not ignore_lid and sum(
+        o.edid != None
+        for o
+        in outputs.values()
+    ) > 1:
         for output_name in outputs.keys():
             if is_closed_lid(output_name):
                 outputs[output_name].edid = None
@@ -1281,10 +1288,32 @@ def read_config(options, directory):
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv[1:], "s:r:l:d:cfh",
-                                   ["batch", "dry-run", "change", "cycle", "default=", "save=", "remove=", "load=",
-                                    "force", "fingerprint", "config", "debug", "skip-options=", "help",
-                                    "list", "current", "detected", "version", "match-edid"])
+        opts, args = getopt.getopt(
+            argv[1:],
+            "s:r:l:d:cfh",
+            [
+                "batch",
+                "dry-run",
+                "change",
+                "cycle",
+                "default=",
+                "save=",
+                "remove=",
+                "load=",
+                "force",
+                "fingerprint",
+                "config",
+                "debug",
+                "skip-options=",
+                "help",
+                "list",
+                "current",
+                "detected",
+                "version",
+                "match-edid",
+                "ignore-lid"
+            ]
+        )
     except getopt.GetoptError as e:
         print("Failed to parse options: {0}.\n"
               "Use --help to get usage information.".format(str(e)),
@@ -1341,7 +1370,12 @@ def main(argv):
         raise AutorandrException("Failed to load profiles", e)
 
     exec_scripts(None, "predetect")
-    config, modes = parse_xrandr_output()
+
+    ignore_lid = "--ignore-lid" in options
+
+    config, modes = parse_xrandr_output(
+        ignore_lid=ignore_lid,
+    )
 
     if "--match-edid" in options:
         update_profiles_edid(profiles, config)
@@ -1533,7 +1567,9 @@ def main(argv):
             raise AutorandrException("Failed to apply profile '%s'" % load_profile, e, True)
 
         if "--dry-run" not in options and "--debug" in options:
-            new_config, _ = parse_xrandr_output()
+            new_config, _ = parse_xrandr_output(
+                ignore_lid=ignore_lid,
+            )
             if not is_equal_configuration(new_config, load_config):
                 print("The configuration change did not go as expected:")
                 print_profile_differences(new_config, load_config)
