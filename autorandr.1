@@ -78,6 +78,53 @@ Configuration files are searched for in the \fIautorandr
 In each of those directories it looks for directories with \fIconfig\fR and
 \fIsetup\fR in them.  It is best to manage these files with the
 \fBautorandr\fR utility.
+
+.SH DEFAULT OPTIONS
+
+You can store default values for any option in an INI-file located at
+\fI~/.config/autorandr/settings.ini\fR. In a config section, you may
+place any default values in the form \fIoption-name=option-argument\fR.
+
+.SH HOOK SCRIPTS
+
+Three more scripts can be placed in the configuration directory:
+.TP
+\fIpostswitch\fR
+Executed after a mode switch has taken place. This can be used to notify
+window managers or other applications about the switch.
+.TP
+\fIpreswitch\fR
+Executed before a mode switch takes place.
+.TP
+\fIpostsave\fR
+Executed after a profile was stored or altered.
+.TP
+\fIpredetect\fR
+Executed before autorandr attempts to run xrandr.
+
+.PP
+These scripts must be executable and can be placed directly in the
+configuration directory, where they will always be executed, or in
+the profile subdirectories, where they will only be executed on changes
+regarding that specific profile.
+
+Instead (or in addition) to these scripts, you can also place as many
+executable files as you like in subdirectories called script_name.d
+(e.g. postswitch.d).
+.PP
+
+Some of autorandr's state is exposed as environment variables prefixed with
+\fIAUTORANDR_\fR, such as:
+\fIAUTORANDR_CURRENT_PROFILE\fR,
+\fIAUTORANDR_CURRENT_PROFILES\fR,
+\fIAUTORANDR_PROFILE_FOLDER\fR,
+and \fIAUTORANDR_MONITORS\fR
+with the intention that they can be used within the hook scripts.
+
+The one kink is that during \fIpreswitch\fR, \fIAUTORANDR_CURRENT_PROFILE\fR
+is reporting the upcoming profile rather
+than the current one.
+
 .SH AUTHOR
 \fRPhillip Berndt <phillip.berndt@googlemail.com>
 .br
