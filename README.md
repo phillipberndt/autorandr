@@ -74,6 +74,7 @@ you can
 
 * Use the [official Arch package](https://www.archlinux.org/packages/community/any/autorandr/).
 * Use the [official Debian package](https://packages.debian.org/sid/x11/autorandr) on sid
+* Use the [FreeBSD Ports Collection](https://www.freshports.org/x11/autorandr/) on FreeBSD.
 * Use the [ebuild from zugaina](https://gpo.zugaina.org/x11-misc/autorandr) on Gentoo.
 * Use the
   [nix package](https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/misc/autorandr.nix)
