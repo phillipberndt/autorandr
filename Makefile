@@ -40,7 +40,8 @@ all:
 DEFAULT_TARGETS=autorandr
 
 install_autorandr:
-	install -D -m 755 autorandr.py ${DESTDIR}${PREFIX}/bin/autorandr
+	mkdir -p ${DESTDIR}${PREFIX}/bin
+	install -m 755 autorandr.py ${DESTDIR}${PREFIX}/bin/autorandr
 
 uninstall_autorandr:
 	rm -f ${DESTDIR}${PREFIX}/bin/autorandr
@@ -52,7 +53,8 @@ DEFAULT_TARGETS+=bash_completion
 endif
 
 install_bash_completion:
-	install -D -m 644 contrib/bash_completion/autorandr ${DESTDIR}/${BASH_COMPLETIONS_DIR}/autorandr
+	mkdir -p ${DESTDIR}/${BASH_COMPLETIONS_DIR}
+	install -m 644 contrib/bash_completion/autorandr ${DESTDIR}/${BASH_COMPLETIONS_DIR}/autorandr
 
 uninstall_bash_completion:
 	rm -f ${DESTDIR}/${BASH_COMPLETIONS_DIR}/autorandr
@@ -62,7 +64,8 @@ XDG_AUTOSTART_DIR=/etc/xdg/autostart
 DEFAULT_TARGETS+=autostart_config
 
 install_autostart_config:
-	install -D -m 644 contrib/etc/xdg/autostart/autorandr.desktop ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr.desktop
+	mkdir -p ${DESTDIR}/${XDG_AUTOSTART_DIR}
+	install -m 644 contrib/etc/xdg/autostart/autorandr.desktop ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr.desktop
 ifneq ($(PREFIX),/usr/)
 	sed -i -re 's#/usr/bin/autorandr#$(subst #,\#,${PREFIX})/bin/autorandr#g' ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr.desktop
 endif
@@ -78,7 +81,8 @@ endif
 
 install_systemd:
 	$(if $(SYSTEMD_UNIT_DIR),,$(error SYSTEMD_UNIT_DIR is not defined))
-	install -D -m 644 contrib/systemd/autorandr.service ${DESTDIR}/${SYSTEMD_UNIT_DIR}/autorandr.service
+	mkdir -p ${DESTDIR}/${SYSTEMD_UNIT_DIR}
+	install -m 644 contrib/systemd/autorandr.service ${DESTDIR}/${SYSTEMD_UNIT_DIR}/autorandr.service
 ifneq ($(PREFIX),/usr/)
 	sed -i -re 's#/usr/bin/autorandr#$(subst #,\#,${PREFIX})/bin/autorandr#g' ${DESTDIR}/${SYSTEMD_UNIT_DIR}/autorandr.service
 endif
@@ -102,7 +106,8 @@ endif
 
 install_pmutils:
 	$(if $(PM_SLEEPHOOKS_DIR),,$(error PM_SLEEPHOOKS_DIR is not defined))
-	install -D -m 755 contrib/pm-utils/40autorandr ${DESTDIR}/${PM_SLEEPHOOKS_DIR}/40autorandr
+	mkdir -p ${DESTDIR}/${PM_SLEEPHOOKS_DIR}
+	install -m 755 contrib/pm-utils/40autorandr ${DESTDIR}/${PM_SLEEPHOOKS_DIR}/40autorandr
 ifneq ($(PREFIX),/usr/)
 	sed -i -re 's#/usr/bin/autorandr#$(subst #,\#,${PREFIX})/bin/autorandr#g' ${DESTDIR}/${PM_SLEEPHOOKS_DIR}/40autorandr
 endif
@@ -151,8 +156,10 @@ contrib/autorandr_launcher/autorandr-launcher: contrib/autorandr_launcher/autora
 	$(CC) $(CFLAGS) $(LAUNCHER_CFLAGS) -o $@ $+ $(LDFLAGS) $(LAUNCHER_LDLIBS) $(LDLIBS)
 
 install_launcher: contrib/autorandr_launcher/autorandr-launcher
-	install -D -m 755 contrib/autorandr_launcher/autorandr-launcher ${DESTDIR}${PREFIX}/bin/autorandr-launcher
-	install -D -m 644 contrib/etc/xdg/autostart/autorandr-launcher.desktop ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr-launcher.desktop
+	mkdir -p ${DESTDIR}${PREFIX}/bin
+	install -m 755 contrib/autorandr_launcher/autorandr-launcher ${DESTDIR}${PREFIX}/bin/autorandr-launcher
+	mkdir -p ${DESTDIR}/${XDG_AUTOSTART_DIR}
+	install -m 644 contrib/etc/xdg/autostart/autorandr-launcher.desktop ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr-launcher.desktop
 ifneq ($(PREFIX),/usr/)
 	sed -i -re 's#/usr/bin/autorandr-launcher#$(subst #,\#,${PREFIX})/bin/autorandr-launcher#g' ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr-launcher.desktop
 endif
