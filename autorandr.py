@@ -1198,6 +1198,16 @@ def dispatch_call_to_sessions(argv):
             sys.exit(1)
         os.waitpid(child_pid, 0)
 
+    # The following line assumes that user accounts start at 1000 and that no
+    # one works using the root or another system account. This is rather
+    # restrictive, but de facto default. If this breaks your use case, set the
+    # env var AUTORANDR_UID_MIN as appropriate. (Alternatives would be to use
+    # the UID_MIN from /etc/login.defs or FIRST_UID from /etc/adduser.conf; but
+    # effectively, both values aren't binding in any way.)
+    uid_min = 1000
+    if 'AUTORANDR_UID_MIN' in os.environ:
+      uid_min = int(os.environ['AUTORANDR_UID_MIN'])
+
     for directory in os.listdir("/proc"):
         directory = os.path.join("/proc/", directory)
         if not os.path.isdir(directory):
@@ -1207,13 +1217,7 @@ def dispatch_call_to_sessions(argv):
             continue
         uid = os.stat(environ_file).st_uid
 
-        # The following line assumes that user accounts start at 1000 and that
-        # no one works using the root or another system account. This is rather
-        # restrictive, but de facto default. Alternatives would be to use the
-        # UID_MIN from /etc/login.defs or FIRST_UID from /etc/adduser.conf;
-        # but effectively, both values aren't binding in any way.
-        # If this breaks your use case, please file a bug on Github.
-        if uid < 1000:
+        if uid < uid_min:
             continue
 
         process_environ = {}
