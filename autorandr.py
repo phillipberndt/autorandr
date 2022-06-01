@@ -100,6 +100,7 @@ Usage: autorandr [options]
 --detected              only list detected (available) configuration(s)
 --dry-run               don't change anything, only print the xrandr commands
 --fingerprint           fingerprint your current hardware setup
+--ignore-lid            treat outputs as connected even if their lids are closed
 --match-edid            match diplays based on edid instead of name
 --force                 force (re)loading of a profile / overwrite exiting files
 --list                  list configurations
