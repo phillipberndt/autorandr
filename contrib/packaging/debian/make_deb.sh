@@ -45,7 +45,7 @@ SIZE=$(du -s $D | awk '{print $1}')
 
 cp -r "$P/debian" "$D/DEBIAN"
 chmod 0755 "$D/DEBIAN"
-[ -d "$D/etc" ] && (cd $D; find etc -type f) > "$D/DEBIAN/conffiles"
+[ -d "$D/etc" ] && (cd $D; find etc -type f -printf '/%p\n') > "$D/DEBIAN/conffiles"
 sed -i -re "s#Version:.+#Version: $V#" "$D/DEBIAN/control"
 echo "Installed-Size: $SIZE" >> "$D/DEBIAN/control"
 fakeroot dpkg-deb -b "$D" "$O"
