@@ -7,7 +7,7 @@ Build-Depends: debhelper (>=9)
 Standards-Version: 3.9.6
 Homepage: https://github.com/phillipberndt/autorandr
 Architecture: all
-Depends: x11-xserver-utils, python
+Depends: x11-xserver-utils, python3
 Description: Automatically select a display configuration for connected devices
  Autorandr is a script for managing xrandr configurations based on the
  connected devices. It can be set up to automatically switch to a stored
