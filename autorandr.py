@@ -238,7 +238,7 @@ class XrandrOutput(object):
     EDID_UNAVAILABLE = "--CONNECTED-BUT-EDID-UNAVAILABLE-"
 
     def __repr__(self):
-        return "<%s%s %s>" % (self.output, self.short_edid, " ".join(self.option_vector))
+        return "<%s%s %s>" % (self.output, self.fingerprint, " ".join(self.option_vector))
 
     @property
     def short_edid(self):
@@ -317,7 +317,31 @@ class XrandrOutput(object):
         self.edid = edid
         self.options = options
         self.ignored_options = []
+        self.parse_serial_from_edid()
         self.remove_default_option_values()
+
+    def parse_serial_from_edid(self):
+        self.serial = None
+        if self.edid:
+            # Thx to pyedid project, the following code was
+            # copied (and modified) from pyedid/__init__py:21 [parse_edid()]
+            raw = bytes.fromhex(self.edid)
+            # Check EDID header, and checksum
+            if raw[:8] != b'\x00\xff\xff\xff\xff\xff\xff\x00' or sum(raw) % 256 != 0:
+                return
+            serial_no = int.from_bytes(raw[15:11:-1], byteorder='little')
+
+            serial_text = None
+            # Offsets of standard timing information descriptors 1-4
+            # (see https://en.wikipedia.org/wiki/Extended_Display_Identification_Data#EDID_1.4_data_format)
+            for timing_bytes in (raw[54:72], raw[72:90], raw[90:108], raw[108:126]):
+                if timing_bytes[0:2] == b'\x00\x00':
+                    timing_type = timing_bytes[3]
+                    if timing_type == 0xFF:
+                        buffer = timing_bytes[5:]
+                        buffer = buffer.partition(b'\x0a')[0]
+                        serial_text = buffer.decode('cp437')
+            self.serial = serial_text if serial_text else "0x{:x}".format(serial_no) if serial_no != 0 else None
 
     def set_ignored_options(self, options):
         "Set a list of xrandr options that are never used (neither when comparing configurations nor when applying them)"
@@ -466,6 +490,16 @@ class XrandrOutput(object):
 
         return XrandrOutput(output, edid, options)
 
+    @property
+    def fingerprint(self):
+        return str(self.serial) if self.serial else self.short_edid
+
+    def fingerprint_equals(self, other):
+        if self.serial and other.serial:
+           return self.serial == other.serial
+        else:
+           return self.edid_equals(other)
+
     def edid_equals(self, other):
         "Compare to another XrandrOutput's edid and on/off-state, taking legacy autorandr behaviour (md5sum'ing) into account"
         if self.edid and other.edid:
@@ -483,13 +517,13 @@ class XrandrOutput(object):
         return not (self == other)
 
     def __eq__(self, other):
-        return self.edid_equals(other) and self.output == other.output and self.filtered_options == other.filtered_options
+        return self.fingerprint_equals(other) and self.output == other.output and self.filtered_options == other.filtered_options
 
     def verbose_diff(self, other):
         "Compare to another XrandrOutput and return a list of human readable differences"
         diffs = []
-        if not self.edid_equals(other):
-            diffs.append("EDID `%s' differs from `%s'" % (self.short_edid, other.short_edid))
+        if not self.fingerprint_equals(other):
+            diffs.append("EDID `%s' differs from `%s'" % (self.fingerprint, other.fingerprint))
         if self.output != other.output:
             diffs.append("Output name `%s' differs from `%s'" % (self.output, other.output))
         if "off" in self.options and "off" not in other.options:
@@ -648,33 +682,33 @@ def match_asterisk(pattern, data):
 
 
 def update_profiles_edid(profiles, config):
-    edid_map = {}
+    fp_map = {}
     for c in config:
-        if config[c].edid is not None:
-            edid_map[config[c].edid] = c
+        if config[c].fingerprint is not None:
+            fp_map[config[c].fingerprint] = c
 
     for p in profiles:
         profile_config = profiles[p]["config"]
 
-        for edid in edid_map:
+        for fingerprint in fp_map:
             for c in list(profile_config.keys()):
-                if profile_config[c].edid != edid or c == edid_map[edid]:
+                if profile_config[c].fingerprint != fingerprint or c == fp_map[fingerprint]:
                     continue
 
-                print("%s: renaming display %s to %s" % (p, c, edid_map[edid]))
+                print("%s: renaming display %s to %s" % (p, c, fp_map[fingerprint]))
 
                 tmp_disp = profile_config[c]
 
-                if edid_map[edid] in profile_config:
+                if fp_map[fingerprint] in profile_config:
                     # Swap the two entries
-                    profile_config[c] = profile_config[edid_map[edid]]
+                    profile_config[c] = profile_config[fp_map[fingerprint]]
                     profile_config[c].output = c
                 else:
                     # Object is reassigned to another key, drop this one
                     del profile_config[c]
 
-                profile_config[edid_map[edid]] = tmp_disp
-                profile_config[edid_map[edid]].output = edid_map[edid]
+                profile_config[fp_map[fingerprint]] = tmp_disp
+                profile_config[fp_map[fingerprint]].output = fp_map[fingerprint]
 
 
 def find_profiles(current_config, profiles):
@@ -684,12 +718,12 @@ def find_profiles(current_config, profiles):
         config = profile["config"]
         matches = True
         for name, output in config.items():
-            if not output.edid:
+            if not output.fingerprint:
                 continue
-            if name not in current_config or not output.edid_equals(current_config[name]):
+            if name not in current_config or not output.fingerprint_equals(current_config[name]):
                 matches = False
                 break
-        if not matches or any((name not in config.keys() for name in current_config.keys() if current_config[name].edid)):
+        if not matches or any((name not in config.keys() for name in current_config.keys() if current_config[name].fingerprint)):
             continue
         if matches:
             closeness = max(match_asterisk(output.edid, current_config[name].edid), match_asterisk(
