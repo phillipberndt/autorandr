@@ -37,6 +37,7 @@ Contributors to this version of autorandr are:
 
 * Adrián López
 * andersonjacob
+* Alexander Lochmann
 * Alexander Wirt
 * Brice Waegeneire
 * Chris Dunder
