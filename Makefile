@@ -83,18 +83,21 @@ install_systemd:
 	$(if $(SYSTEMD_UNIT_DIR),,$(error SYSTEMD_UNIT_DIR is not defined))
 	mkdir -p ${DESTDIR}/${SYSTEMD_UNIT_DIR}
 	install -m 644 contrib/systemd/autorandr.service ${DESTDIR}/${SYSTEMD_UNIT_DIR}/autorandr.service
+	install -m 644 contrib/systemd/autorandr-lid-listener.service ${DESTDIR}/${SYSTEMD_UNIT_DIR}/autorandr-lid-listener.service
 ifneq ($(PREFIX),/usr/)
 	sed -i -re 's#/usr/bin/autorandr#$(subst #,\#,${PREFIX})/bin/autorandr#g' ${DESTDIR}/${SYSTEMD_UNIT_DIR}/autorandr.service
 endif
 	@echo
-	@echo "To activate the systemd unit, run this command as root:"
+	@echo "To activate the systemd units, run this command as root:"
 	@echo "    systemctl daemon-reload"
 	@echo "    systemctl enable autorandr.service"
+	@echo "    systemctl enable autorandr-lid-listener.service"
 	@echo
 
 uninstall_systemd:
 	$(if $(SYSTEMD_UNIT_DIR),,$(error SYSTEMD_UNIT_DIR is not defined))
 	rm -f ${DESTDIR}/${SYSTEMD_UNIT_DIR}/autorandr.service
+	rm -f ${DESTDIR}/${SYSTEMD_UNIT_DIR}/autorandr-lid-listener.service
 
 # Rules for pmutils
 PM_SLEEPHOOKS_DIR:=$(shell pkg-config --variable=pm_sleephooks pm-utils 2>/dev/null)
