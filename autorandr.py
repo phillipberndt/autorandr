@@ -203,6 +203,7 @@ class XrandrOutput(object):
             Gamma: (?P<gamma>(?:inf|-?[0-9\.\-: e])+) |                                 # Gamma value
             CRTC:\s*(?P<crtc>[0-9]) |                                                   # CRTC value
             Transform: (?P<transform>(?:[\-0-9\. ]+\s+){3}) |                           # Transformation matrix
+                      filter:\s+(?P<filter>bilinear|nearest) |                          # Transformation filter
             EDID: (?P<edid>\s*?(?:\\n\\t\\t[0-9a-f]+)+) |                               # EDID of the output
             """ + XRANDR_PROPERTIES_REGEXP + """ |                                      # Properties to include in the profile
             (?![0-9])[^:\s][^:\n]+:.*(?:\s\\t[\\t ].+)*                                 # Other properties
@@ -444,6 +445,8 @@ class XrandrOutput(object):
                         # I doubt that this special case is actually required.
                         print("Warning: Output %s has a transformation applied. Could not determine correct mode! "
                               "Using `%s'." % (match["output"], options["mode"]), file=sys.stderr)
+            if match["filter"]:
+                options["filter"] = match["filter"]
             if match["gamma"]:
                 gamma = match["gamma"].strip()
                 # xrandr prints different values in --verbose than it accepts as a parameter value for --gamma
