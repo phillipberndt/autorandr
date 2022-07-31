@@ -28,6 +28,7 @@ import binascii
 import copy
 import getopt
 import hashlib
+import math
 import os
 import posix
 import pwd
@@ -855,7 +856,7 @@ def get_fb_dimensions(configuration):
                 o_height = int(detail.get("h")) + int(detail.get("y"))
         width = max(width, o_width)
         height = max(height, o_height)
-    return int(width), int(height)
+    return math.ceil(width), math.ceil(height)
 
 
 def apply_configuration(new_configuration, current_configuration, dry_run=False):
