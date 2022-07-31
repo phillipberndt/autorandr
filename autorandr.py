@@ -889,10 +889,10 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
 
     fb_dimensions = get_fb_dimensions(new_configuration)
     try:
-        base_argv += ["--fb", "%dx%d" % fb_dimensions]
+        fb_args = ["--fb", "%dx%d" % fb_dimensions]
     except:
         # Failed to obtain frame-buffer size. Doesn't matter, xrandr will choose for the user.
-        pass
+        fb_args = []
 
     auxiliary_changes_pre = []
     disable_outputs = []
@@ -941,6 +941,11 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
         argv = base_argv + list(chain.from_iterable(auxiliary_changes_pre))
         if call_and_retry(argv, dry_run=dry_run) != 0:
             raise AutorandrException("Command failed: %s" % " ".join(argv))
+
+    # Starting here, fix the frame buffer size
+    # Do not do this earlier, as disabling scaling might temporarily make the framebuffer
+    # dimensions larger than they will finally be.
+    base_argv += fb_args
 
     # Disable unused outputs, but make sure that there always is at least one active screen
     disable_keep = 0 if remain_active_count else 1
