@@ -189,6 +189,8 @@ where they will only be executed on changes regarding that specific profile.
 
 Instead (or in addition) to these scripts, you can also place as many executable
 files as you like in subdirectories called `script_name.d` (e.g. `postswitch.d`).
+The order of execution of scripts in these directories is by file name, you can
+force a certain ordering by naming them `10-wallpaper`, `20-restart-wm`, etc.
 
 If a script with the same name occurs multiple times, user configuration
 takes precedence over system configuration (as specified by the
