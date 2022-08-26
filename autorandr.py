@@ -1187,7 +1187,7 @@ def exec_scripts(profile_path, script_name, meta_information=None):
 
         script_folder = os.path.join(folder, "%s.d" % script_name)
         if os.access(script_folder, os.R_OK | os.X_OK) and os.path.isdir(script_folder):
-            for file_name in os.listdir(script_folder):
+            for file_name in sorted(os.listdir(script_folder)):
                 check_name = "d/%s" % (file_name,)
                 if check_name not in ran_scripts:
                     script = os.path.join(script_folder, file_name)
