@@ -477,6 +477,7 @@ class XrandrOutput(object):
                 options[line[0]] = line[1] if len(line) > 1 else None
 
         edid = None
+        errors = []
 
         if options["output"] in edid_map:
             edid = edid_map[options["output"]]
@@ -487,12 +488,12 @@ class XrandrOutput(object):
             if fuzzy_output in fuzzy_edid_map:
                 edid = edid_map[list(edid_map.keys())[fuzzy_edid_map.index(fuzzy_output)]]
             elif "off" not in options:
-                raise AutorandrException("Failed to find an EDID for output `%s' in setup file, required as `%s' "
-                                         "is not off in config file." % (options["output"], options["output"]))
+                errors.append(options["output"])
+
         output = options["output"]
         del options["output"]
 
-        return XrandrOutput(output, edid, options)
+        return errors, XrandrOutput(output, edid, options)
 
     @property
     def fingerprint(self):
@@ -632,9 +633,11 @@ def load_profiles(profile_path):
 
         config = {}
         buffer = []
+        errors = []
         for line in chain(open(config_name).readlines(), ["output"]):
             if line[:6] == "output" and buffer:
-                config[buffer[0].strip().split()[-1]] = XrandrOutput.from_config_file(edids, "".join(buffer))
+                _e, config[buffer[0].strip().split()[-1]] = XrandrOutput.from_config_file(edids, "".join(buffer))
+                errors.extend(_e)
                 buffer = [line]
             else:
                 buffer.append(line)
@@ -644,6 +647,7 @@ def load_profiles(profile_path):
                 del config[output_name]
 
         profiles[profile] = {
+            "errors": errors,
             "config": config,
             "path": os.path.join(profile_path, profile),
             "config-mtime": os.stat(config_name).st_mtime,
@@ -1567,6 +1571,15 @@ def main(argv):
         load_profile = options["--default"]
 
     if load_profile:
+        if bool(profiles[load_profile]['errors']) and "--force" not in options:
+            msg = 'An error was detected when load profile %s. Monitor(s) %s ' \
+                  + 'was not found in configuration. Use --force for load ' \
+                  + 'this profil and turn off this monitor(s).'
+            print(
+                    msg %
+                    (load_profile, ','.join(profiles[load_profile]['errors']))
+                 )
+            sys.exit(1)
         if load_profile in profile_symlinks:
             if "--debug" in options:
                 print("'%s' symlinked to '%s'" % (load_profile, profile_symlinks[load_profile]))
