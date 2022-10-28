@@ -466,7 +466,7 @@ class XrandrOutput(object):
         return XrandrOutput(match["output"], edid, options), modes
 
     @classmethod
-    def from_config_file(cls, edid_map, configuration):
+    def from_config_file(cls, profile, edid_map, configuration):
         "Instanciate an XrandrOutput from the contents of a configuration file"
         options = {}
         for line in configuration.split("\n"):
@@ -487,8 +487,8 @@ class XrandrOutput(object):
             if fuzzy_output in fuzzy_edid_map:
                 edid = edid_map[list(edid_map.keys())[fuzzy_edid_map.index(fuzzy_output)]]
             elif "off" not in options:
-                raise AutorandrException("Failed to find an EDID for output `%s' in setup file, required as `%s' "
-                                         "is not off in config file." % (options["output"], options["output"]))
+                raise AutorandrException("Profile `%s': Failed to find an EDID for output `%s' in setup file, required "
+                                         "as `%s' is not off in config file." % (profile, options["output"], options["output"]))
         output = options["output"]
         del options["output"]
 
@@ -634,7 +634,7 @@ def load_profiles(profile_path):
         buffer = []
         for line in chain(open(config_name).readlines(), ["output"]):
             if line[:6] == "output" and buffer:
-                config[buffer[0].strip().split()[-1]] = XrandrOutput.from_config_file(edids, "".join(buffer))
+                config[buffer[0].strip().split()[-1]] = XrandrOutput.from_config_file(profile, edids, "".join(buffer))
                 buffer = [line]
             else:
                 buffer.append(line)
