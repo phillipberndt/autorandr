@@ -1625,6 +1625,9 @@ def main(argv):
             new_config, _ = parse_xrandr_output(
                 ignore_lid=ignore_lid,
             )
+            if "--skip-options" in options:
+                for output in new_config.values():
+                    output.set_ignored_options(skip_options)
             if not is_equal_configuration(new_config, load_config):
                 print("The configuration change did not go as expected:")
                 print_profile_differences(new_config, load_config)
