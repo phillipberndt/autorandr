@@ -218,6 +218,17 @@ a new monitor, then you can use a `predetect` script to delay the execution.
 Write e.g. `sleep 1` into that file to make autorandr wait a second before
 running `xrandr`.
 
+### Script format
+
+Each script you are placing under valid configuration folders must follow **bash/sh/yourshell** format. As an example;
+
+```bash
+#!/bin/bash
+notify-send -i display "Display profile" "$AUTORANDR_CURRENT_PROFILE"
+```
+
+And script must hold **executable** rights. ex: `chmod +x your_script`
+
 #### Variables
 
 Some of autorandr's state is exposed as environment variables
