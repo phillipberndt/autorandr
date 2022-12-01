@@ -256,7 +256,7 @@ options nvidia_drm modeset=1
 ## Changelog
 
 **autorandr 1.13 (dev)**
-* *2022-12-01* Support `--skip-option set` to skip setting properties
+* *2022-12-01* Support `--skip-options set` to skip setting properties
 
 **autorandr 1.12.1**
 * *2021-12-22* Fix `--match-edid` (see #273)
