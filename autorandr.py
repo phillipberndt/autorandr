@@ -947,7 +947,7 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
     if auxiliary_changes_pre:
         argv = base_argv + list(chain.from_iterable(auxiliary_changes_pre))
         if call_and_retry(argv, dry_run=dry_run) != 0:
-            raise AutorandrException("Command failed: %s" % " ".join(argv))
+            raise AutorandrException("Command failed: %s" % " ".join(map(shlex.quote, argv)))
 
     # Starting here, fix the frame buffer size
     # Do not do this earlier, as disabling scaling might temporarily make the framebuffer
@@ -985,7 +985,7 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
     for index in range(0, len(operations), 2):
         argv = base_argv + list(chain.from_iterable(operations[index:index + 2]))
         if call_and_retry(argv, dry_run=dry_run) != 0:
-            raise AutorandrException("Command failed: %s" % " ".join(argv))
+            raise AutorandrException("Command failed: %s" % " ".join(map(shlex.quote, argv)))
 
 
 def is_equal_configuration(source_configuration, target_configuration):
