@@ -257,12 +257,17 @@ class XrandrOutput(object):
         if xrandr_version() >= Version("1.2"):
             options.update(self.XRANDR_12_DEFAULTS)
         options.update(self.options)
+        if "set" in self.ignored_options:
+            options = {a: b for a, b in options.items() if not a.startswith("x-prop")}
         return {a: b for a, b in options.items() if a not in self.ignored_options}
 
     @property
     def filtered_options(self):
         "Return a dictionary of options without ignored options"
-        return {a: b for a, b in self.options.items() if a not in self.ignored_options}
+        options = {a: b for a, b in self.options.items() if a not in self.ignored_options}
+        if "set" in self.ignored_options:
+            options = {a: b for a, b in options.items() if not a.startswith("x-prop")}
+        return options
 
     @property
     def option_vector(self):
