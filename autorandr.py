@@ -68,6 +68,8 @@ virtual_profiles = [
     ("clone-largest", "Clone all connected outputs with the largest resolution (scaled down if necessary)", None),
     ("horizontal", "Stack all connected outputs horizontally at their largest resolution", None),
     ("vertical", "Stack all connected outputs vertically at their largest resolution", None),
+    ("horizontal-reverse", "Stack all connected outputs horizontally at their largest resolution in reverse order", None),
+    ("vertical-reverse", "Stack all connected outputs vertically at their largest resolution in reverse order", None),
 ]
 
 properties = [
@@ -1050,7 +1052,7 @@ def generate_virtual_profile(configuration, modes, profile_name):
                     configuration[output].options["pos"] = "0x0"
                 else:
                     configuration[output].options["off"] = None
-    elif profile_name in ("horizontal", "vertical"):
+    elif profile_name in ("horizontal", "vertical", "horizontal-reverse", "vertical-reverse"):
         shift = 0
         if profile_name == "horizontal":
             shift_index = "width"
@@ -1058,8 +1060,10 @@ def generate_virtual_profile(configuration, modes, profile_name):
         else:
             shift_index = "height"
             pos_specifier = "0x%s"
-
-        for output in configuration:
+            
+        config_iter = reversed(configuration) if "reverse" in profile_name else iter(configuration)
+            
+        for output in config_iter:
             configuration[output].options = {}
             if output in modes and configuration[output].edid:
                 def key(a):
