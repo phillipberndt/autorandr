@@ -1179,10 +1179,7 @@ def exec_scripts(profile_path, script_name, meta_information=None):
         if script_name not in ran_scripts:
             script = os.path.join(folder, script_name)
             if os.access(script, os.X_OK | os.F_OK):
-                try:
-                    all_ok &= subprocess.call(script, env=env) != 0
-                except:
-                    raise AutorandrException("Failed to execute user command: %s" % (script,))
+                all_ok &= exec_script(script, env) != 0
                 ran_scripts.add(script_name)
 
         script_folder = os.path.join(folder, "%s.d" % script_name)
@@ -1192,13 +1189,19 @@ def exec_scripts(profile_path, script_name, meta_information=None):
                 if check_name not in ran_scripts:
                     script = os.path.join(script_folder, file_name)
                     if os.access(script, os.X_OK | os.F_OK):
-                        try:
-                            all_ok &= subprocess.call(script, env=env) != 0
-                        except:
-                            raise AutorandrException("Failed to execute user command: %s" % (script,))
+                        all_ok &= exec_script(script, env) != 0
                         ran_scripts.add(check_name)
 
     return all_ok
+
+
+def exec_script(script, env):
+    try:
+        return subprocess.check_call(script, env=env)
+    except subprocess.CalledProcessError as e:
+        print("Warning: Script %s returned exit code %d." % (script, e.returncode), file=sys.stderr)
+    except:
+        raise AutorandrException("Failed to execute user command: %s" % (script,))
 
 
 def dispatch_call_to_sessions(argv):
