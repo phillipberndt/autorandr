@@ -237,6 +237,11 @@ notify-send -i display "Display profile" "$AUTORANDR_CURRENT_PROFILE"
 The one kink is that during `preswitch`, `AUTORANDR_CURRENT_PROFILE` is
 reporting the *upcoming* profile rather than the *current* one.
 
+#### Exit status
+
+If a hook script exits with a non-zero exit status, a warning will be output, but the
+operation continue.
+
 #### Canceling operation from within a hook script
 
 A hook script can send a `SIGUSR1` signal to its parent process to indicate that the
