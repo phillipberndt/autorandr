@@ -160,7 +160,6 @@ default values in the form `option-name=option-argument`.
 A common and effective use of this is to specify default `skip-options`, for
 instance skipping the `gamma` setting if using
 [`redshift`](https://github.com/jonls/redshift) as a daemon.  To implement
-the equivalent of `--skip-options gamma`, your `settings.ini` file should look
 like this:
 
 ```
@@ -276,7 +275,7 @@ def should_continue():
   return False
 
 if __name__ == "__main__":
-  if should_continue():
+  if not should_continue():
     # Send SIGUSR1 signal to parent process to cancel operation
     os.kill(os.getppid(), signal.SIGUSR1)
     sys.exit()
