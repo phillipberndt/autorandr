@@ -1184,7 +1184,7 @@ def exec_scripts(profile_path, script_name, meta_information=None):
         if script_name not in ran_scripts:
             script = os.path.join(folder, script_name)
             if os.access(script, os.X_OK | os.F_OK):
-                all_ok &= exec_script(script, script_name, env) != 0
+                all_ok &= exec_one_script(script, script_name, env) != 0
                 ran_scripts.add(script_name)
 
         script_folder = os.path.join(folder, "%s.d" % script_name)
@@ -1194,13 +1194,13 @@ def exec_scripts(profile_path, script_name, meta_information=None):
                 if check_name not in ran_scripts:
                     script = os.path.join(script_folder, file_name)
                     if os.access(script, os.X_OK | os.F_OK):
-                        all_ok &= exec_script(script, script_name, env) != 0
+                        all_ok &= exec_one_script(script, script_name, env) != 0
                         ran_scripts.add(check_name)
 
     return all_ok
 
 
-def exec_script(script, script_name, env):
+def exec_one_script(script, script_name, env):
     """"Run a userscript and return the exit code.
 
     If the script exits with a non-zero exit status, a warning is sent to stderr but the operation continues.
