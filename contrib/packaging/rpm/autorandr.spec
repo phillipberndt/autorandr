@@ -15,6 +15,8 @@ BuildRequires: systemd
 BuildRequires: udev
 BuildRequires: desktop-file-utils
 
+Recommends:    (%{name}-bash-completion = %{version}-%{release} if bash)
+Recommends:    (%{name}-zsh-completion = %{version}-%{release} if zsh)
 
 %description
 %{summary}.
