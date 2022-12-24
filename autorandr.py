@@ -1054,7 +1054,7 @@ def generate_virtual_profile(configuration, modes, profile_name):
                     configuration[output].options["off"] = None
     elif profile_name in ("horizontal", "vertical", "horizontal-reverse", "vertical-reverse"):
         shift = 0
-        if profile_name == "horizontal":
+        if profile_name.startswith("horizontal"):
             shift_index = "width"
             pos_specifier = "%sx0"
         else:
