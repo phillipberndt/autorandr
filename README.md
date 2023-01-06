@@ -160,7 +160,6 @@ default values in the form `option-name=option-argument`.
 A common and effective use of this is to specify default `skip-options`, for
 instance skipping the `gamma` setting if using
 [`redshift`](https://github.com/jonls/redshift) as a daemon.  To implement
-the equivalent of `--skip-options gamma`, your `settings.ini` file should look
 like this:
 
 ```
@@ -237,6 +236,57 @@ notify-send -i display "Display profile" "$AUTORANDR_CURRENT_PROFILE"
 
 The one kink is that during `preswitch`, `AUTORANDR_CURRENT_PROFILE` is
 reporting the *upcoming* profile rather than the *current* one.
+
+#### Exit status
+
+If a hook script exits with a non-zero exit status, a warning will be output, but the
+operation continue.
+
+#### Canceling operation from within a hook script
+
+A hook script can send a `SIGUSR1` signal to its parent process to indicate that the
+current operation should halt. The script is allowed to finish in any case.
+Only scripts with names starting with `pre` support this feature. 
+
+Bash example:
+
+```bash
+#!/usr/bin/env bash
+
+should_continue() {
+  # No
+  return 1
+}
+
+if ! should_continue; then
+  # Send SIGUSR1 signal to parent process to cancel operation
+  kill -s USR1 "$PPID"
+  exit
+fi
+
+# Continue ...
+```
+
+Python example:
+
+```python
+#!/usr/bin/env python
+import os
+import sys
+import signal
+
+def should_continue():
+  # No
+  return False
+
+if __name__ == "__main__":
+  if not should_continue():
+    # Send SIGUSR1 signal to parent process to cancel operation
+    os.kill(os.getppid(), signal.SIGUSR1)
+    sys.exit()
+
+  # Continue ...
+```
 
 ### Wildcard EDID matching
 

@@ -24,6 +24,8 @@
 
 from __future__ import print_function
 
+from signal import signal, SIGUSR1, SIG_DFL
+
 import binascii
 import copy
 import getopt
@@ -60,6 +62,9 @@ try:
     input = raw_input
 except NameError:
     pass
+
+
+cancel_signal = SIGUSR1
 
 virtual_profiles = [
     # (name, description, callback)
@@ -1179,10 +1184,7 @@ def exec_scripts(profile_path, script_name, meta_information=None):
         if script_name not in ran_scripts:
             script = os.path.join(folder, script_name)
             if os.access(script, os.X_OK | os.F_OK):
-                try:
-                    all_ok &= subprocess.call(script, env=env) != 0
-                except:
-                    raise AutorandrException("Failed to execute user command: %s" % (script,))
+                all_ok &= exec_one_script(script, script_name, env) != 0
                 ran_scripts.add(script_name)
 
         script_folder = os.path.join(folder, "%s.d" % script_name)
@@ -1192,13 +1194,42 @@ def exec_scripts(profile_path, script_name, meta_information=None):
                 if check_name not in ran_scripts:
                     script = os.path.join(script_folder, file_name)
                     if os.access(script, os.X_OK | os.F_OK):
-                        try:
-                            all_ok &= subprocess.call(script, env=env) != 0
-                        except:
-                            raise AutorandrException("Failed to execute user command: %s" % (script,))
+                        all_ok &= exec_one_script(script, script_name, env) != 0
                         ran_scripts.add(check_name)
 
     return all_ok
+
+
+def exec_one_script(script, script_name, env):
+    """"Run a userscript and return the exit code.
+
+    If the script exits with a non-zero exit status, a warning is sent to stderr but the operation continues.
+
+    If the script sends a SIGUSR1 signal to the parent, the parent process will
+    wait for the child process to exit, then halt with a zero status.
+    """
+    def handle_cancel_signal(signum, frame):
+        if not script_name.startswith('pre'):
+            print("Script %s issued %s signal, but it is ignored for %s scripts." % (
+                script, cancel_signal.name, script_name), file=sys.stderr)
+            return
+
+        main_operation_name = script_name[3:]
+
+        # Clean up, inform, exit
+        print("Script %s issued %s signal. Cancelling %s operation." % (script, cancel_signal.name, main_operation_name))
+        sys.exit()
+
+    try:
+        signal(cancel_signal, handle_cancel_signal)
+        return subprocess.check_call(script, env=env)
+    except subprocess.CalledProcessError as e:
+        print("Warning: Script %s returned exit code %d." % (script, e.returncode), file=sys.stderr)
+    except Exception as e:
+        raise AutorandrException("Failed to execute user command: %s" % (script,), original_exception=e)
+    finally:
+        # Revert to default handler
+        signal(cancel_signal, SIG_DFL)
 
 
 def dispatch_call_to_sessions(argv):
