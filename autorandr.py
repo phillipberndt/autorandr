@@ -44,10 +44,6 @@ from collections import OrderedDict
 from functools import reduce
 from itertools import chain
 
-try:
-    from packaging.version import Version
-except ModuleNotFoundError:
-    from distutils.version import LooseVersion as Version
 
 if sys.version_info.major == 2:
     import ConfigParser as configparser
@@ -120,6 +116,24 @@ Usage: autorandr [options]
 
  The following virtual configurations are available:
 """.strip()
+
+
+class Version(object):
+    def __init__(self, version):
+        self._version = version
+        self._version_parts = re.split("([0-9]+)", version)
+
+    def __eq__(self, other):
+        return self._version_parts == other._version_parts
+
+    def __lt__(self, other):
+        for my, theirs in zip(self._version_parts, other._version_parts):
+            if my.isnumeric() and theirs.isnumeric():
+                my = int(my)
+                theirs = int(theirs)
+            if my < theirs:
+                return True
+        return len(theirs) > len(my)
 
 
 def is_closed_lid(output):
@@ -1186,7 +1200,7 @@ def exec_scripts(profile_path, script_name, meta_information=None):
                 try:
                     all_ok &= subprocess.call(script, env=env) != 0
                 except Exception as e:
-                    raise AutorandrException("Failed to execute user command: %s error: %s" % (script,str(e)))
+                    raise AutorandrException("Failed to execute user command: %s. Error: %s" % (script, str(e)))
                 ran_scripts.add(script_name)
 
         script_folder = os.path.join(folder, "%s.d" % script_name)
@@ -1199,7 +1213,7 @@ def exec_scripts(profile_path, script_name, meta_information=None):
                         try:
                             all_ok &= subprocess.call(script, env=env) != 0
                         except Exception as e:
-                            raise AutorandrException("Failed to execute user command: %s error: %s" % (script,str(e)))
+                            raise AutorandrException("Failed to execute user command: %s. Error: %s" % (script, str(e)))
                         ran_scripts.add(check_name)
 
     return all_ok
