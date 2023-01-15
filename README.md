@@ -257,7 +257,10 @@ options nvidia_drm modeset=1
 
 ## Changelog
 
-**autorandr 1.13 (dev)**
+**autorandr 1.13**
+* *2023-01-15* Add reversed horizontal/vertical profiles
+* *2023-01-15* Fix distutils deprecation warning
+* *2023-01-15* Print error when user script fails
 * *2022-12-01* Support `--skip-options set` to skip setting properties
 
 **autorandr 1.12.1**
