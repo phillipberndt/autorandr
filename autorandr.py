@@ -135,6 +135,8 @@ class Version(object):
                 return True
         return len(theirs) > len(my)
 
+    def __ge__(self, other):
+        return not (self < other)
 
 def is_closed_lid(output):
     if not re.match(r'(eDP(-?[0-9]\+)*|LVDS(-?[0-9]\+)*)', output):
