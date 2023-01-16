@@ -257,6 +257,9 @@ options nvidia_drm modeset=1
 
 ## Changelog
 
+**autorandr 1.13.1**
+* *2023-01-16* Fix bug with Version comparison
+
 **autorandr 1.13**
 * *2023-01-15* Add reversed horizontal/vertical profiles
 * *2023-01-15* Fix distutils deprecation warning
