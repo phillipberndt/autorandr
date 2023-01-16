@@ -138,6 +138,15 @@ class Version(object):
     def __ge__(self, other):
         return not (self < other)
 
+    def __ne__(self, other):
+        return not (self == other)
+
+    def __le__(self, other):
+        return (self < other) or (self == other)
+
+    def __gt__(self, other):
+        return self >= other and not (self == other)
+
 def is_closed_lid(output):
     if not re.match(r'(eDP(-?[0-9]\+)*|LVDS(-?[0-9]\+)*)', output):
         return False
