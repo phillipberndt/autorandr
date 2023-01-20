@@ -66,12 +66,17 @@ DEFAULT_TARGETS+=autostart_config
 install_autostart_config:
 	mkdir -p ${DESTDIR}/${XDG_AUTOSTART_DIR}
 	install -m 644 contrib/etc/xdg/autostart/autorandr.desktop ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr.desktop
+	# KDE-specific autostart (workaround for https://github.com/systemd/systemd/issues/18791)
+	install -m 644 contrib/etc/xdg/autostart/autorandr.desktop ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr-kde.desktop
+	desktop-file-edit --remove-key=X-GNOME-Autostart-Phase --add-only-show-in=KDE ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr-kde.desktop
+
 ifneq ($(PREFIX),/usr/)
 	sed -i -re 's#/usr/bin/autorandr#$(subst #,\#,${PREFIX})/bin/autorandr#g' ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr.desktop
 endif
 
 uninstall_autostart_config:
 	rm -f ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr.desktop
+	rm -f ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr-kde.desktop
 
 # Rules for systemd
 SYSTEMD_UNIT_DIR:=$(shell pkg-config --variable=systemdsystemunitdir systemd 2>/dev/null)
