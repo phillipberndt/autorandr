@@ -1016,6 +1016,13 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
         if call_and_retry(argv, dry_run=dry_run) != 0:
             raise AutorandrException("Command failed: %s" % " ".join(map(shlex.quote, argv)))
 
+    # Adjust the frame buffer to match (see #319)
+    if fb_args:
+        argv = base_argv
+        if call_and_retry(argv, dry_run=dry_run) != 0:
+            raise AutorandrException("Command failed: %s" % " ".join(map(shlex.quote, argv)))
+
+
 
 def is_equal_configuration(source_configuration, target_configuration):
     """

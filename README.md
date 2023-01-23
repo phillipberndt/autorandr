@@ -259,6 +259,7 @@ options nvidia_drm modeset=1
 
 **autorandr 1.13.2 (dev)**
 * *2023-01-23* Fix wildcard use in EDIDs (see #322)
+* *2023-01-23* Do a final xrandr call to set the frame buffer size (see #319)
 
 **autorandr 1.13.1**
 * *2023-01-16* Fix bug with Version comparison
