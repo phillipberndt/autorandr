@@ -257,7 +257,7 @@ options nvidia_drm modeset=1
 
 ## Changelog
 
-**autorandr 1.13.2 (dev)**
+**autorandr 1.13.2**
 * *2023-01-23* Fix autostart in KDE (see #320)
 * *2023-01-23* Match add/remove rather than change in udev rule (see #321)
 * *2023-01-23* Fix wildcard use in EDIDs (see #322)
