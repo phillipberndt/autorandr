@@ -359,6 +359,8 @@ class XrandrOutput(object):
         if self.edid:
             if self.EDID_UNAVAILABLE in self.edid:
                 return
+            if "*" in self.edid:
+                return
             # Thx to pyedid project, the following code was
             # copied (and modified) from pyedid/__init__py:21 [parse_edid()]
             raw = bytes.fromhex(self.edid)

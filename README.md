@@ -257,6 +257,9 @@ options nvidia_drm modeset=1
 
 ## Changelog
 
+**autorandr 1.13.2 (dev)**
+* *2023-01-23* Fix wildcard use in EDIDs (see #322)
+
 **autorandr 1.13.1**
 * *2023-01-16* Fix bug with Version comparison
 
