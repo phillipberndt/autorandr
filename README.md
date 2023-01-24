@@ -257,6 +257,9 @@ options nvidia_drm modeset=1
 
 ## Changelog
 
+**autorandr 1.13.3**
+* *2023-01-24* Revert udev rule to rely on "change" event (see #324)
+
 **autorandr 1.13.2**
 * *2023-01-23* Fix autostart in KDE (see #320)
 * *2023-01-23* Match add/remove rather than change in udev rule (see #321)
