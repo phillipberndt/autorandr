@@ -100,7 +100,7 @@ Usage: autorandr [options]
 --dry-run               don't change anything, only print the xrandr commands
 --fingerprint           fingerprint your current hardware setup
 --ignore-lid            treat outputs as connected even if their lids are closed
---match-edid            match diplays based on edid instead of name
+--match-edid            match displays based on edid instead of name
 --force                 force (re)loading of a profile / overwrite exiting files
 --list                  list configurations
 --skip-options <option> comma separated list of xrandr arguments (e.g. "gamma")
@@ -346,7 +346,7 @@ class XrandrOutput(object):
         return x + 10000 * y
 
     def __init__(self, output, edid, options):
-        "Instanciate using output name, edid and a dictionary of XRandR command line parameters"
+        "Instantiate using output name, edid and a dictionary of XRandR command line parameters"
         self.output = output
         self.edid = edid
         self.options = options
@@ -386,7 +386,7 @@ class XrandrOutput(object):
         self.ignored_options = list(options)
 
     def remove_default_option_values(self):
-        "Remove values from the options dictionary that are superflous"
+        "Remove values from the options dictionary that are superfluous"
         if "off" in self.options and len(self.options.keys()) > 1:
             self.options = {"off": None}
             return
@@ -396,7 +396,7 @@ class XrandrOutput(object):
 
     @classmethod
     def from_xrandr_output(cls, xrandr_output):
-        """Instanciate an XrandrOutput from the output of `xrandr --verbose'
+        """Instantiate an XrandrOutput from the output of `xrandr --verbose'
 
         This method also returns a list of modes supported by the output.
         """
@@ -503,7 +503,7 @@ class XrandrOutput(object):
 
     @classmethod
     def from_config_file(cls, profile, edid_map, configuration):
-        "Instanciate an XrandrOutput from the contents of a configuration file"
+        "Instantiate an XrandrOutput from the contents of a configuration file"
         options = {}
         for line in configuration.split("\n"):
             if line:
@@ -628,7 +628,7 @@ def parse_xrandr_output(
     # We are not interested in screens
     xrandr_output = re.sub("(?m)^Screen [0-9].+", "", xrandr_output).strip()
 
-    # Split at output boundaries and instanciate an XrandrOutput per output
+    # Split at output boundaries and instantiate an XrandrOutput per output
     split_xrandr_output = re.split("(?m)^([^ ]+ (?:(?:dis)?connected|unknown connection).*)$", xrandr_output)
     if len(split_xrandr_output) < 2:
         raise AutorandrException("No output boundaries found", report_bug=True)
@@ -1005,7 +1005,7 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
     # If we did not find a candidate, we might need to inject a call
     # If there is no output to disable, we will enable 0x and x0 at the same time
     if not found_top_left_monitor and len(disable_outputs) > 0:
-        # If the call to 0x and x0 is splitted, inject one of them
+        # If the call to 0x and x0 is split, inject one of them
         if found_top_monitor and found_left_monitor:
             enable_outputs.insert(0, enable_outputs[0])
 

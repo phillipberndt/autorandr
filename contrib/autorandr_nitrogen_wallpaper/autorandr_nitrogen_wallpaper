@@ -48,7 +48,7 @@ PROFILE_BG="$NITROGEN_HOME/$PROFILE_BG_FILE"
 
 # save background for detected profile
 if [[ $1 = 'savebg' ]]; then
-    # nitrogen config doesnt exist, instruct to run it first
+    # nitrogen config doesn't exist, instruct to run it first
     if [[ ! -f "$NITROGEN_BG" ]]; then
         echo "wallpaper: you need to first run 'nitrogen' and set your wallpapers"
         exit 2
