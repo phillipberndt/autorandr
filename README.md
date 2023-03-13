@@ -50,6 +50,7 @@ Contributors to this version of autorandr are:
 * Nazar Mokrynskyi
 * Phillip Berndt
 * Rasmus Wriedt Larsen
+* Sam Coulter
 * Simon Wydooghe
 * Stefan Tomanek
 * stormc
