@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # autorandr_nitrogen_wallpaper
 # Copyright (c) 2015, Ondra 'Kepi' Kudlík, http://kepi.cz
@@ -46,6 +46,11 @@ PROFILE=$(autorandr 2>&1| grep detected |awk '{ print $1 }')
 PROFILE_BG_FILE="bg-saved.$PROFILE.cfg"
 PROFILE_BG="$NITROGEN_HOME/$PROFILE_BG_FILE"
 
+CP=$(which cp)
+MV=$(which mv)
+UNLINK=$(which unlink)
+NITROGEN=$(which nitrogen)
+
 # save background for detected profile
 if [[ $1 = 'savebg' ]]; then
     # nitrogen config doesn't exist, instruct to run it first
@@ -55,12 +60,12 @@ if [[ $1 = 'savebg' ]]; then
     fi
     # nitrogen config exists but is broken symlink, just remove it and instruct to run it first
     if [ ! -e "$NITROGEN_BG" ] ; then
-        /usr/bin/unlink "$NITROGEN_BG"
+        $UNLINK "$NITROGEN_BG"
         echo "wallpaper: you need to first run 'nitrogen' and set your wallpapers (config was broken)"
         exit 3
     fi
 
-    /bin/cp -L "$NITROGEN_BG" "$PROFILE_BG"
+    $CP -L "$NITROGEN_BG" "$PROFILE_BG"
 
 # load background for detected profile
 else
@@ -69,14 +74,14 @@ else
         # nitrogen original file exists and not symlink
         if [[ -f "$NITROGEN_BG" ]] && [[ ! -L "$NITROGEN_BG" ]]; then
             echo "wallpaper: Backing up nitrogen saved bg to $NITROGEN_BG.backup" 
-            /bin/mv "$NITROGEN_BG" "$NITROGEN_BG".backup
+            $MV "$NITROGEN_BG" "$NITROGEN_BG".backup
         fi
         
         # set symlink
         echo "wallpaper: Found saved wallpaper for profile $PROFILE - changing"
         ln -f -s "$PROFILE_BG_FILE" "$NITROGEN_BG"
         # call nitrogen
-        nitrogen --restore
+        $NITROGEN --restore
     else
         echo "wallpaper: No saved wallpaper found for profile $PROFILE"
     fi
