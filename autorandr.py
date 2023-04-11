@@ -159,6 +159,119 @@ def is_closed_lid(output):
     return False
 
 
+def _read_resolution_from_18_byte_data_block(edid, offset):
+    """Read resolution from edid bytearray beginning at offset. Return a tuple
+    of (horizontal, vertical) pixels if a valid resolution is defined, else
+    return None"""
+
+    horz = edid[offset + 2] + ((edid[offset + 4] & 0xf0) << 4)
+    if horz == 0:
+        return 18, None
+
+    vert = edid[offset + 5] + ((edid[offset + 7] & 0xf0) << 4)
+
+    return 18, (horz, vert)
+
+
+def _read_resolution_from_displayid_block(edid, offset):
+    payload_length = edid[offset + 2]
+
+    def do_read(expected_payload_length, resolution_offset):
+        if payload_length != expected_payload_length:
+            return None
+
+        horz = ((edid[offset + resolution_offset + 1] << 8) +
+                edid[offset + resolution_offset])
+        if horz == 0:
+            return None
+
+        vert = ((edid[offset + resolution_offset + 3] << 8) +
+                edid[offset + resolution_offset + 2])
+
+        return horz, vert
+
+    tag = edid[offset]
+    if tag == 0x01:
+        res = do_read(12, 7)
+    elif tag == 0x0c:
+        res = do_read(13, 5)
+    elif tag == 0x21:
+        res = do_read(29, 7)
+    else:
+        res = None
+
+    # Add header length of 3
+    return payload_length + 3, res
+
+
+def _read_resolutions_from_block(edid, offset):
+    def do_read(start, end, read_block):
+        resolutions = []
+
+        index = start
+        while index < end:
+            length, resolution = read_block(edid, offset + index)
+            if resolution:
+                resolutions.append(resolution)
+
+            index += length
+
+        return resolutions
+
+    block_type = edid[offset]
+    if block_type == 0x00:
+        return do_read(0x36, 0x7e, _read_resolution_from_18_byte_data_block)
+
+    if block_type == 0x02:
+        version = edid[offset + 1]
+        if version < 1:
+            return []
+
+        detail = edid[offset + 2]
+        if detail < 4:
+            return []
+
+        return do_read(detail, 127, _read_resolution_from_18_byte_data_block)
+
+    if block_type == 0x70:
+        # DisplayID length has a maximum of 121
+        length = min(edid[offset + 2], 121)
+        base = offset + 5
+
+        return do_read(base, length, _read_resolution_from_displayid_block)
+
+    return []
+
+
+def read_native_resolutions(edid):
+    """Given an edid hex string, return a set of all the native
+    resolutions (horizontal, vertical) defined in the EDID"""
+
+    edid_page_size = 128
+
+    edid_bytearray = bytearray.fromhex(edid)
+
+    native_resolutions = set()
+    for offset in range(0, len(edid_bytearray), edid_page_size):
+        native_resolutions.update(
+            _read_resolutions_from_block(edid_bytearray, offset))
+
+    return native_resolutions
+
+
+def _parse_edid_pattern(pattern):
+    """Parse (horizontal, vertical) pixels from a pattern defined like
+    `native_resolution=1920x1080`"""
+
+    # Only supports patterns like "native_resolution=3840x2160" for now
+    if "native_resolution=" not in pattern:
+        return None
+
+    m = re.match(r"native_resolution=(\d+)x(\d+)", pattern)
+    if m:
+        return int(m.group(1)), int(m.group(2))
+
+
 class AutorandrException(Exception):
     def __init__(self, message, original_exception=None, report_bug=False):
         self.message = message
@@ -361,6 +474,8 @@ class XrandrOutput(object):
                 return
             if "*" in self.edid:
                 return
+            if _parse_edid_pattern(self.edid):
+                return
             # Thx to pyedid project, the following code was
             # copied (and modified) from pyedid/__init__py:21 [parse_edid()]
             raw = bytes.fromhex(self.edid)
@@ -551,6 +666,10 @@ class XrandrOutput(object):
                 return match_asterisk(self.edid, other.edid) > 0
             elif "*" in other.edid:
                 return match_asterisk(other.edid, self.edid) > 0
+            if _parse_edid_pattern(self.edid):
+                return match_native_resolution(self.edid, other.edid)
+            elif _parse_edid_pattern(other.edid):
+                return match_native_resolution(other.edid, self.edid)
         return self.edid == other.edid
 
     def __ne__(self, other):
@@ -721,6 +840,14 @@ def match_asterisk(pattern, data):
     return matched * 1. / total
 
 
+def match_native_resolution(edid_pattern, edid_string):
+    horz_x_vert = _parse_edid_pattern(edid_pattern)
+    if not horz_x_vert:
+        return False
+
+    return horz_x_vert in read_native_resolutions(edid_string)
+
+
 def update_profiles_edid(profiles, config):
     fp_map = {}
     for c in config:
@@ -766,8 +893,14 @@ def find_profiles(current_config, profiles):
         if not matches or any((name not in config.keys() for name in current_config.keys() if current_config[name].fingerprint)):
             continue
         if matches:
-            closeness = max(match_asterisk(output.edid, current_config[name].edid), match_asterisk(
-                current_config[name].edid, output.edid))
+            config_edid = current_config[name].edid
+            parsed = _parse_edid_pattern(output.edid) or _parse_edid_pattern(config_edid)
+            if parsed:
+                closeness = int(match_native_resolution(config_edid, output.edid) or
+                                match_native_resolution(output.edid, config_edid))
+            else:
+                closeness = max(match_asterisk(output.edid, config_edid),
+                                match_asterisk(config_edid, output.edid))
             detected_profiles.append((closeness, profile_name))
     detected_profiles = [o[1] for o in sorted(detected_profiles, key=lambda x: -x[0])]
     return detected_profiles
@@ -1094,9 +1227,9 @@ def generate_virtual_profile(configuration, modes, profile_name):
         else:
             shift_index = "height"
             pos_specifier = "0x%s"
-            
+
         config_iter = reversed(configuration) if "reverse" in profile_name else iter(configuration)
-            
+
         for output in config_iter:
             configuration[output].options = {}
             if output in modes and configuration[output].edid:
