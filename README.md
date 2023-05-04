@@ -256,6 +256,19 @@ kernel parameter `nvidia-drm.modeset` must be set to 1. For example, add a file
 options nvidia_drm modeset=1
 ```
 
+### Wayland
+
+Before running autorandr will check the environment for the `WAYLAND_DISPLAY`
+variable to check if the program is running in a Wayland session. This is to
+avoid issues between usage of xrandr in Wayland environments.
+
+If you need to run autorandr in a Wayland environment, one workaround is to
+unset the `WAYLAND_DISPLAY` variable before running the program, such as:
+
+```
+WAYLAND_DISPLAY= autorandr
+```
+
 ## Changelog
 
 **autorandr 1.13.3**

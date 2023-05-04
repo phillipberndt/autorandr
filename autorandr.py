@@ -1325,6 +1325,11 @@ def dispatch_call_to_sessions(argv):
             # Cannot work with this environment, skip.
             continue
 
+        if "WAYLAND_DISPLAY" in process_environ and process_environ["WAYLAND_DISPLAY"]:
+            if "--debug" in argv:
+                print("Detected Wayland session '{0}'. Skipping.".format(process_environ["WAYLAND_DISPLAY"]))
+            continue
+
         # To allow scripts to detect batch invocation (especially useful for predetect)
         process_environ["AUTORANDR_BATCH_PID"] = str(os.getpid())
         process_environ["UID"] = str(uid)
@@ -1437,6 +1442,9 @@ def main(argv):
         user = pwd.getpwuid(os.getuid())
         user = user.pw_name if user else "#%d" % os.getuid()
         print("autorandr running as user %s (started from batch instance)" % user)
+    if ("WAYLAND_DISPLAY" in os.environ and os.environ["WAYLAND_DISPLAY"]):
+        print("Detected Wayland session '{0}'. Exiting.".format(os.environ["WAYLAND_DISPLAY"]), file=sys.stderr)
+        sys.exit(1)
 
     profiles = {}
     profile_symlinks = {}
