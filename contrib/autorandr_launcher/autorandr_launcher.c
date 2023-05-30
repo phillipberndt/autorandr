@@ -150,14 +150,9 @@ int main(int argc, char **argv)
 
 	xcb_timestamp_t last_timestamp = (xcb_timestamp_t) 0;
 	time_t last_time = time(NULL);
-	while (1) {
-
-		ar_log("Waiting for event\n");
-		xcb_generic_event_t *evt = xcb_wait_for_event(c);
-		if (!evt) {
-			break;
-		}
-
+	ar_log("Waiting for event\n");
+	xcb_generic_event_t *evt;
+	while ( (evt = xcb_wait_for_event(c)) ) {
 		ar_log("Event type: %" PRIu8 "\n", evt->response_type);
 		ar_log("screen change masked: %" PRIu8 "\n",
 		      evt->response_type &
