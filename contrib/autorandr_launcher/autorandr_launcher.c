@@ -10,6 +10,13 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <time.h>
+#include <inttypes.h>
+#include <errno.h>
+#include <string.h>
+
+#ifndef AUTORANDR_PATH
+#define AUTORANDR_PATH "/usr/bin/autorandr"
+#endif
 
 // indent -kr -i8
 static int VERBOSE = 0;
@@ -21,7 +28,7 @@ static void sigterm_handler(int signum)
 	kill(getpid(), signum);
 }
 
-static void ar_log(const char *format, ...)
+__attribute__((format(printf, 1, 2))) static void ar_log(const char *format, ...)
 {
 	va_list args;
 
@@ -33,13 +40,17 @@ static void ar_log(const char *format, ...)
 	fflush(stdout);
 }
 
-static int ar_launch()
+static int ar_launch(void)
 {
 	pid_t pid = fork();
 	if (pid == 0) {
-		static char *argv[] =
-		    { "/usr/bin/autorandr", "--change", "--default", "default", NULL };
-		execve(argv[0], argv, environ);
+		static char *argv[] = { AUTORANDR_PATH, "--change", "--default", "default", NULL};
+		if (execve(argv[0], argv, environ) == -1) {
+        	int errsv = errno;
+			fprintf(stderr, "Error executing file: %s\n", strerror(errsv));
+			exit(errsv);
+        }
+
 		exit(127);
 	} else {
 		waitpid(pid, 0, 0);
@@ -147,10 +158,10 @@ int main(int argc, char **argv)
 			break;
 		}
 
-		// ar_log("Event type: %" PRIu8 "\n", evt->response_type);
-		// ar_log("screen change masked: %" PRIu8 "\n",
-		//       evt->response_type &
-		//       XCB_RANDR_NOTIFY_MASK_SCREEN_CHANGE);
+		ar_log("Event type: %" PRIu8 "\n", evt->response_type);
+		ar_log("screen change masked: %" PRIu8 "\n",
+		      evt->response_type &
+		       XCB_RANDR_NOTIFY_MASK_SCREEN_CHANGE);
 
 		if (evt->response_type &
 		    XCB_RANDR_NOTIFY_MASK_SCREEN_CHANGE) {
