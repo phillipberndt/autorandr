@@ -160,8 +160,9 @@ LAUNCHER_LDLIBS=$(shell pkg-config --libs pkg-config xcb xcb-randr 2>/dev/null)
 ifneq (,$(LAUNCHER_LDLIBS))
 CLEANUP_FILES+=contrib/autorandr_launcher/autorandr-launcher
 LAUNCHER_CFLAGS=$(shell pkg-config --cflags pkg-config xcb xcb-randr 2>/dev/null)
+DEF_AUTORANDR_PATH="-DAUTORANDR_PATH=\"${DESTDIR}${PREFIX}/bin/autorandr\""
 contrib/autorandr_launcher/autorandr-launcher: contrib/autorandr_launcher/autorandr_launcher.c
-	$(CC) $(CFLAGS) $(LAUNCHER_CFLAGS) -o $@ $+ $(LDFLAGS) $(LAUNCHER_LDLIBS) $(LDLIBS)
+	$(CC) $(CFLAGS) $(LAUNCHER_CFLAGS) $(DEF_AUTORANDR_PATH) -o $@ $+ $(LDFLAGS) $(LAUNCHER_LDLIBS) $(LDLIBS)
 
 install_launcher: contrib/autorandr_launcher/autorandr-launcher
 	mkdir -p ${DESTDIR}${PREFIX}/bin
