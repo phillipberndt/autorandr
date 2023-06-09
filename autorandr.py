@@ -735,7 +735,7 @@ def update_profiles_edid(profiles, config):
                 if profile_config[c].fingerprint != fingerprint or c == fp_map[fingerprint]:
                     continue
 
-                print("%s: renaming display %s to %s" % (p, c, fp_map[fingerprint]))
+                print("%s: renaming display %s to %s" % (p, c, fp_map[fingerprint]), file=sys.stderr)
 
                 tmp_disp = profile_config[c]
 
