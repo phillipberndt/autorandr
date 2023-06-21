@@ -72,6 +72,7 @@ install_autostart_config:
 
 ifneq ($(PREFIX),/usr/)
 	sed -i -re 's#/usr/bin/autorandr#$(subst #,\#,${PREFIX})/bin/autorandr#g' ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr.desktop
+	sed -i -re 's#/usr/bin/autorandr#$(subst #,\#,${PREFIX})/bin/autorandr#g' ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr-kde.desktop
 endif
 
 uninstall_autostart_config:
