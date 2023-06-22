@@ -271,6 +271,11 @@ WAYLAND_DISPLAY= autorandr
 
 ## Changelog
 
+**autorandr 1.14**
+* *2023-06-22* Direct --match-edid renaming of output messages to stderr
+* *2023-06-22* Add Wayland awareness
+* *2023-06-22* Various minor auxiliary tooling bug fixes, see git-log
+
 **autorandr 1.13.3**
 * *2023-01-24* Revert udev rule to rely on "change" event (see #324)
 
