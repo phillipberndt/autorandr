@@ -74,7 +74,7 @@ as root to install it.
 If you prefer to have a system wide install managed by your package manager,
 you can
 
-* Use the [official Arch package](https://www.archlinux.org/packages/community/any/autorandr/).
+* Use the [official Arch package](https://archlinux.org/packages/extra/any/autorandr/).
 * Use the [official Debian package](https://packages.debian.org/sid/x11/autorandr) on sid
 * Use the [FreeBSD Ports Collection](https://www.freshports.org/x11/autorandr/) on FreeBSD.
 * Use the [official Gentoo package](https://packages.gentoo.org/packages/x11-misc/autorandr).
