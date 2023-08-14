@@ -761,6 +761,7 @@ def find_profiles(current_config, profiles):
 
         missing_output_names = []
         fingerprint_mismatch = []
+        closeness_scores = []
         profile_output_names = config.keys()
 
         for name in profile_output_names:
@@ -775,6 +776,11 @@ def find_profiles(current_config, profiles):
             elif not output.fingerprint_equals(current_config[name]):
                 fingerprint_mismatch.append(name)
 
+            closeness = max(match_asterisk(output.edid, current_config[name].edid), match_asterisk(
+                current_config[name].edid, output.edid))
+
+            closeness_scores.append(closeness)
+
         if len(fingerprint_mismatch) > 0:
             continue
         elif len(missing_output_names) > 0:
@@ -786,8 +792,9 @@ def find_profiles(current_config, profiles):
         percent_present_in_profile = len(possible_output_names) / len(current_output_names)
         percent_present_in_current_config = len(profile_output_names) / len(possible_output_names)
 
-        closeness = max(match_asterisk(output.edid, current_config[name].edid), match_asterisk(
-            current_config[name].edid, output.edid))
+        closeness = 1
+        for closeness_score in closeness_scores:
+            closeness *= closeness_score
 
         score = percent_present_in_profile * percent_present_in_current_config * closeness
 
