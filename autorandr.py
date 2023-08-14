@@ -811,8 +811,14 @@ def find_profiles(current_config, profiles):
         percent_present_in_profile = len(possible_output_names) / len(current_output_names)
         percent_present_in_current_config = len(enabled_output_names) / len(possible_output_names)
 
-        closeness = max(match_asterisk(output.edid, current_config[name].edid), match_asterisk(
-            current_config[name].edid, output.edid))
+        closeness = 1
+        for name in profile_output_names:
+            output = config[name]
+
+            output_closeness = max(match_asterisk(output.edid, current_config[name].edid), match_asterisk(
+                current_config[name].edid, output.edid))
+
+            closeness *= output_closeness
 
         detected_profiles.append({
             'profile_name': profile_name,
