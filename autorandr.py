@@ -207,7 +207,7 @@ class XrandrOutput(object):
             for p in properties])
 
     # This regular expression is used to parse an output in `xrandr --verbose'
-    XRANDR_OUTPUT_REGEXP = """(?x)
+    XRANDR_OUTPUT_REGEXP = r"""(?x)
         ^\s*(?P<output>\S[^ ]*)\s+                                                      # Line starts with output name
         (?:                                                                             # Differentiate disconnected and connected
             disconnected |                                                              # in first line
@@ -245,7 +245,7 @@ class XrandrOutput(object):
         )*)
     """
 
-    XRANDR_OUTPUT_MODES_REGEXP = """(?x)
+    XRANDR_OUTPUT_MODES_REGEXP = r"""(?x)
         (?P<name>\S+).+?(?P<preferred>\+preferred)?\s+
          h:\s+width\s+(?P<width>[0-9]+).+\s+
          v:\s+height\s+(?P<height>[0-9]+).+clock\s+(?P<rate>[0-9\.]+)Hz\s* |
@@ -589,7 +589,7 @@ def xrandr_version():
     if getattr(xrandr_version, "version", False) is False:
         version_string = os.popen("xrandr -v").read()
         try:
-            version = re.search("xrandr program version\s+([0-9\.]+)", version_string).group(1)
+            version = re.search(r"xrandr program version\s+([0-9\.]+)", version_string).group(1)
             xrandr_version.version = Version(version)
         except AttributeError:
             xrandr_version.version = Version("1.3.0")
@@ -885,7 +885,7 @@ def get_fb_dimensions(configuration):
             o_width += o_left
             o_height += o_top
         if "panning" in output.options:
-            match = re.match("(?P<w>[0-9]+)x(?P<h>[0-9]+)(?:\+(?P<x>[0-9]+))?(?:\+(?P<y>[0-9]+))?.*", output.options["panning"])
+            match = re.match(r"(?P<w>[0-9]+)x(?P<h>[0-9]+)(?:\+(?P<x>[0-9]+))?(?:\+(?P<y>[0-9]+))?.*", output.options["panning"])
             if match:
                 detail = match.groupdict(default="0")
                 o_width = int(detail.get("w")) + int(detail.get("x"))
