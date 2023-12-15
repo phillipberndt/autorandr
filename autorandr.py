@@ -232,7 +232,7 @@ class XrandrOutput(object):
             CRTC:\s*(?P<crtc>[0-9]) |                                                   # CRTC value
             Transform: (?P<transform>(?:[\-0-9\. ]+\s+){3}) |                           # Transformation matrix
                       filter:\s+(?P<filter>bilinear|nearest) |                          # Transformation filter
-            EDID: (?P<edid>\s*?(?:\\n\\t\\t[0-9a-f]+)+) |                               # EDID of the output
+            EDID: (?P<edid>\s*?(?:\n\t\t[0-9a-f]+)+) |                                  # EDID of the output
             """ + XRANDR_PROPERTIES_REGEXP + r""" |                                     # Properties to include in the profile
             (?![0-9])[^:\s][^:\n]+:.*(?:\s\t[\t ].+)*                                   # Other properties
         ))+
