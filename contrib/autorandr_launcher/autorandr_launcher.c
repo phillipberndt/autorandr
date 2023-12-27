@@ -42,10 +42,13 @@ __attribute__((format(printf, 1, 2))) static void ar_log(const char *format, ...
 
 static int ar_launch(void)
 {
+	static const char *argv[] = { AUTORANDR_PATH, "--change", "--default", "default", NULL};
+	char **comm = malloc(sizeof argv);
+	memcpy(comm, argv, sizeof argv);
+
 	pid_t pid = fork();
 	if (pid == 0) {
-		static char *argv[] = { AUTORANDR_PATH, "--change", "--default", "default", NULL};
-		if (execve(argv[0], argv, environ) == -1) {
+		if (execve(argv[0], comm, environ) == -1) {
         	int errsv = errno;
 			fprintf(stderr, "Error executing file: %s\n", strerror(errsv));
 			exit(errsv);
@@ -54,6 +57,7 @@ static int ar_launch(void)
 		exit(127);
 	} else {
 		waitpid(pid, 0, 0);
+		free(comm);
 	}
 	return 0;
 }
