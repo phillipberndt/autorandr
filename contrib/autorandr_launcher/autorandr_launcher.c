@@ -154,12 +154,8 @@ int main(int argc, char **argv)
 	xcb_generic_event_t *evt;
 	while ( (evt = xcb_wait_for_event(c)) ) {
 		ar_log("Event type: %" PRIu8 "\n", evt->response_type);
-		ar_log("screen change masked: %" PRIu8 "\n",
-		      evt->response_type &
-		       XCB_RANDR_NOTIFY_MASK_SCREEN_CHANGE);
 
-		if (evt->response_type &
-		    XCB_RANDR_NOTIFY_MASK_SCREEN_CHANGE) {
+		if (evt->response_type) {
 			xcb_randr_screen_change_notify_event_t *randr_evt =
 			    (xcb_randr_screen_change_notify_event_t *) evt;
 			time_t evt_time = time(NULL);
