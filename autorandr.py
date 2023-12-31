@@ -41,7 +41,7 @@ import time
 import glob
 
 from collections import OrderedDict
-from functools import reduce
+from functools import cmp_to_key, reduce
 from itertools import chain
 
 
@@ -750,6 +750,31 @@ def update_profiles_edid(profiles, config):
                 profile_config[fp_map[fingerprint]] = tmp_disp
                 profile_config[fp_map[fingerprint]].output = fp_map[fingerprint]
 
+@cmp_to_key
+def sort_profiles(a, b):
+    """
+    Compare profiles by:
+
+        1. The `match_asterisk` closeness of their EDID patterns,
+        2. The percent of outputs in the profile that are also available in the
+           current RandR configuration, and
+        3. The percent of *enabled* outputs in the RandR configuration that are
+           in the profile.
+
+    These three categories are weighted identically, and profiles that have
+    higher closeness scores and higher profile percentages are
+    preferred/considered higher-precedence.
+    """
+    a_cmp = 0
+    b_cmp = 0
+
+    for key in ['closeness', 'percent_present_in_profile', 'percent_present_in_current_config']:
+        if a[key] > b[key]:
+            a_cmp += 1
+        elif a[key] < b[key]:
+            b_cmp += 1
+
+    return (a_cmp > b_cmp) - (a_cmp < b_cmp)
 
 def find_profiles(current_config, profiles):
     "Find profiles matching the currently connected outputs, sorting asterisk matches to the back"
@@ -757,20 +782,52 @@ def find_profiles(current_config, profiles):
     for profile_name, profile in profiles.items():
         config = profile["config"]
         matches = True
-        for name, output in config.items():
+
+        missing_output_names = []
+        fingerprint_mismatch = []
+        profile_output_names = config.keys()
+
+        for name in profile_output_names:
+            output = config[name]
+
             if not output.fingerprint:
                 continue
-            if name not in current_config or not output.fingerprint_equals(current_config[name]):
-                matches = False
-                break
-        if not matches or any((name not in config.keys() for name in current_config.keys() if current_config[name].fingerprint)):
+
+            if name not in current_config:
+                missing_output_names.append(name)
+
+            elif not output.fingerprint_equals(current_config[name]):
+                fingerprint_mismatch.append(name)
+
+        if len(fingerprint_mismatch) > 0:
             continue
-        if matches:
-            closeness = max(match_asterisk(output.edid, current_config[name].edid), match_asterisk(
+        elif len(missing_output_names) > 0:
+            continue
+
+        current_output_names = [name for name in current_config.keys() if current_config[name].fingerprint]
+        possible_output_names = [name for name in current_output_names if name in profile_output_names]
+        enabled_output_names = [name for name in profile_output_names if "off" not in config[name].options]
+
+        percent_present_in_profile = len(possible_output_names) / len(current_output_names)
+        percent_present_in_current_config = len(enabled_output_names) / len(possible_output_names)
+
+        closeness = 1
+        for name in profile_output_names:
+            output = config[name]
+
+            output_closeness = max(match_asterisk(output.edid, current_config[name].edid), match_asterisk(
                 current_config[name].edid, output.edid))
-            detected_profiles.append((closeness, profile_name))
-    detected_profiles = [o[1] for o in sorted(detected_profiles, key=lambda x: -x[0])]
-    return detected_profiles
+
+            closeness *= output_closeness
+
+        detected_profiles.append({
+            'profile_name': profile_name,
+            'closeness': closeness,
+            'percent_present_in_profile': percent_present_in_profile,
+            'percent_present_in_current_config': percent_present_in_current_config,
+        })
+
+    return [o['profile_name'] for o in sorted(detected_profiles, key=sort_profiles, reverse=True)]
 
 
 def profile_blocked(profile_path, meta_information=None):
