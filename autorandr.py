@@ -757,6 +757,8 @@ def find_profiles(current_config, profiles):
     for profile_name, profile in profiles.items():
         config = profile["config"]
         matches = True
+        if not config.items():
+            continue
         for name, output in config.items():
             if not output.fingerprint:
                 continue
