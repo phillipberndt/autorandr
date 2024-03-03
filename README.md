@@ -271,6 +271,12 @@ WAYLAND_DISPLAY= autorandr
 
 ## Changelog
 
+**autorandr 1.15**
+* *2023-11-27* Several regex literal bug fixes
+* *2023-12-27* Fix #375: Listen to correct events in launcher
+* *2024-03-03* Fix #367: Skip profiles without outputs
+
+
 **autorandr 1.14**
 * *2023-06-22* Direct --match-edid renaming of output messages to stderr
 * *2023-06-22* Add Wayland awareness

@@ -50,7 +50,7 @@ if sys.version_info.major == 2:
 else:
     import configparser
 
-__version__ = "1.14"
+__version__ = "1.15"
 
 try:
     input = raw_input
