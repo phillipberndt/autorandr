@@ -1013,8 +1013,8 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
 
     # Enable the remaining outputs in pairs of two operations
     operations = disable_outputs + enable_outputs
-    for index in range(0, len(operations), 2):
-        argv = base_argv + list(chain.from_iterable(operations[index:index + 2]))
+    for op in operations:
+        argv = base_argv + list(op)
         if call_and_retry(argv, dry_run=dry_run) != 0:
             raise AutorandrException("Command failed: %s" % " ".join(map(shlex.quote, argv)))
 
