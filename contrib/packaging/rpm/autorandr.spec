@@ -1,5 +1,5 @@
 Name:           autorandr
-Version:        1.12.1
+Version:        1.15
 Release:        %autorelease
 Summary:        Automatically select a display configuration based on connected devices
 
@@ -74,7 +74,9 @@ desktop-file-validate %{buildroot}%{_sysconfdir}/xdg/autostart/autorandr.desktop
 %{_mandir}/man1/*
 %{_bindir}/autorandr
 %{_unitdir}/autorandr.service
+%{_unitdir}/autorandr-lid-listener.service
 %{_sysconfdir}/xdg/autostart/autorandr.desktop
+%{_sysconfdir}/xdg/autostart/autorandr-kde.desktop
 %{_udevrulesdir}/40-monitor-hotplug.rules
 
 %files bash-completion
