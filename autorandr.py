@@ -760,17 +760,47 @@ def find_profiles(current_config, profiles):
         if not config.items():
             continue
         for name, output in config.items():
+
+        missing_output_names = []
+        fingerprint_mismatch = []
+        closeness_scores = []
+        profile_output_names = config.keys()
+
+        for name in profile_output_names:
+            output = config[name]
+
             if not output.fingerprint:
                 continue
-            if name not in current_config or not output.fingerprint_equals(current_config[name]):
-                matches = False
-                break
-        if not matches or any((name not in config.keys() for name in current_config.keys() if current_config[name].fingerprint)):
-            continue
-        if matches:
+
+            if name not in current_config:
+                missing_output_names.append(name)
+
+            elif not output.fingerprint_equals(current_config[name]):
+                fingerprint_mismatch.append(name)
+
             closeness = max(match_asterisk(output.edid, current_config[name].edid), match_asterisk(
                 current_config[name].edid, output.edid))
-            detected_profiles.append((closeness, profile_name))
+
+            closeness_scores.append(closeness)
+
+        if len(fingerprint_mismatch) > 0:
+            continue
+        elif len(missing_output_names) > 0:
+            continue
+
+        current_output_names = [name for name in current_config.keys() if current_config[name].fingerprint]
+        possible_output_names = [name for name in current_output_names if name in profile_output_names]
+
+        percent_present_in_profile = len(possible_output_names) / len(current_output_names)
+        percent_present_in_current_config = len(profile_output_names) / len(possible_output_names)
+
+        closeness = 1
+        for closeness_score in closeness_scores:
+            closeness *= closeness_score
+
+        score = percent_present_in_profile * percent_present_in_current_config * closeness
+
+        detected_profiles.append((score, profile_name))
     detected_profiles = [o[1] for o in sorted(detected_profiles, key=lambda x: -x[0])]
     return detected_profiles
 
@@ -1096,9 +1126,9 @@ def generate_virtual_profile(configuration, modes, profile_name):
         else:
             shift_index = "height"
             pos_specifier = "0x%s"
-            
+
         config_iter = reversed(configuration) if "reverse" in profile_name else iter(configuration)
-            
+
         for output in config_iter:
             configuration[output].options = {}
             if output in modes and configuration[output].edid:
