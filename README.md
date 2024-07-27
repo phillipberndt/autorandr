@@ -76,6 +76,7 @@ you can
 
 * Use the [official Arch package](https://archlinux.org/packages/extra/any/autorandr/).
 * Use the [official Debian package](https://packages.debian.org/sid/x11/autorandr) on sid
+* Use the [official Fedora package](https://packages.fedoraproject.org/pkgs/autorandr/autorandr/) on Fedora 39+.
 * Use the [FreeBSD Ports Collection](https://www.freshports.org/x11/autorandr/) on FreeBSD.
 * Use the [official Gentoo package](https://packages.gentoo.org/packages/x11-misc/autorandr).
 * Use the
