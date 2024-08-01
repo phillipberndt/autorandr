@@ -756,49 +756,56 @@ def find_profiles(current_config, profiles):
     detected_profiles = []
     for profile_name, profile in profiles.items():
         config = profile["config"]
-        matches = True
-        for name, output in config.items():
-
-        missing_output_names = []
-        fingerprint_mismatch = []
-        closeness_scores = []
-        profile_output_names = config.keys()
+        on = set()
+        missing_fingerprint = set()
+        missing_output_names = set()
+        fingerprint_mismatch = set()
+        closeness_scores = set()
+        profile_output_names = set(config.keys())
 
         for name in profile_output_names:
             output = config[name]
 
             if not output.fingerprint:
+                missing_fingerprint.add(name)
+                continue
+            elif name not in current_config:
+                missing_output_names.add(name)
+                continue
+            elif not output.fingerprint_equals(current_config[name]):
+                fingerprint_mismatch.add(name)
+                continue
+            elif "off" in output.options:
                 continue
 
-            if name not in current_config:
-                missing_output_names.append(name)
+            on.add(name)
 
-            elif not output.fingerprint_equals(current_config[name]):
-                fingerprint_mismatch.append(name)
-
-            closeness = max(match_asterisk(output.edid, current_config[name].edid), match_asterisk(
-                current_config[name].edid, output.edid))
-
-            closeness_scores.append(closeness)
+            current_edid = current_config[name].edid
+            if output.edid is not None and current_edid is not None:
+                closeness_scores.add(max(match_asterisk(output.edid, current_edid), match_asterisk(current_edid, output.edid)))
+            else:
+                print(f'no edid match for output {name} in profile {profile_name}; current={current_edid}, output={output.edid}')
+                closeness_scores.append(0)
 
         if len(fingerprint_mismatch) > 0:
+            print(f'have {len(fingerprint_mismatch)} ({", ".join(fingerprint_mismatch)}) mismatching fingerprint(s) for profile {profile_name}; omitting it.')
             continue
         elif len(missing_output_names) > 0:
+            print(f'have {len(missing_output_names)} missing output(s) ({", ".join(missing_output_names)}) for profile {profile_name}; omitting it.')
             continue
 
         current_output_names = [name for name in current_config.keys() if current_config[name].fingerprint]
-        possible_output_names = [name for name in current_output_names if name in profile_output_names]
+        possible_output_names = [name for name in current_output_names if name in on]
 
         percent_present_in_profile = len(possible_output_names) / len(current_output_names)
-        percent_present_in_current_config = len(profile_output_names) / len(possible_output_names)
+        percent_present_in_current_config = len(on) / len(possible_output_names)
 
-        closeness = 1
-        for closeness_score in closeness_scores:
-            closeness *= closeness_score
+        closeness = sum(closeness_scores) / len(closeness_scores)
 
         score = percent_present_in_profile * percent_present_in_current_config * closeness
 
         detected_profiles.append((score, profile_name))
+
     detected_profiles = [o[1] for o in sorted(detected_profiles, key=lambda x: -x[0])]
     return detected_profiles
 
