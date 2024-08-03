@@ -1344,6 +1344,11 @@ def dispatch_call_to_sessions(argv):
             backup_candidates[display] = process_environ
             continue
 
+        if not os.path.exists(process_environ["XAUTHORITY"]):
+            # The XAUTHORITY may not be updated in tmux processes when the user re-login
+            backup_candidates[display] = process_environ
+            continue
+
         if display not in X11_displays_done:
             try:
                 pwent = pwd.getpwuid(uid)
