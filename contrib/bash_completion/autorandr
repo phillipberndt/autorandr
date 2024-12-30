@@ -9,8 +9,7 @@ _autorandr ()
 	cur="${COMP_WORDS[COMP_CWORD]}"
 	prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-	opts="-h -c -s -r -l -d"
-	lopts="--help --change --cycle --save --remove --load --list --default --force --fingerprint  --match-edid --config --dry-run"
+	lopts="--change  --config  --current  --cycle  --default  --dry-run --fingerprint   --force  --help  --list  --load  --match-edid  --remove  --save"
 
 	# find system-level autorandr dirs
 	OIFS="$IFS"
@@ -42,18 +41,18 @@ _autorandr ()
 			return 0
 			;;
 		-*)
-			COMPREPLY=( $( compgen -W "${opts} ${lopts}" -- $cur ) )
+			COMPREPLY=( $( compgen -W "${lopts}" -- $cur ) )
 			return 0
 			;;
 		*)
 			if [ $COMP_CWORD -eq 1 ]; then
-				COMPREPLY=( $( compgen -W "${opts} ${lopts}" -- $cur ) )
+				COMPREPLY=( $( compgen -W "${lopts}" -- $cur ) )
 			fi
 			;;
 		esac
 
 	case "${prev}" in
-		-r|--remove|-l|--load|-d|--default)
+		-r|--remove|-l|--load|-d|--default|--save|-s)
 			COMPREPLY=( $( compgen -W "${prfls}" -- $cur ) )
 			return 0
 			;;
