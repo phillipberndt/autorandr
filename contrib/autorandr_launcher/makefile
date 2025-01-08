@@ -38,15 +38,25 @@ CFLAGS  = -pipe \
 
 LAUNCHER_LDLIBS=$(shell pkg-config --libs pkg-config xcb xcb-randr 2>/dev/null)
 LAUNCHER_CFLAGS=$(shell pkg-config --cflags pkg-config xcb xcb-randr 2>/dev/null)
-USER_DEFS="-DAUTORANDR_PATH=\"$(shell which autorandr 2>/dev/null)\""
 #------------------------------------------------------------------------------
 .PHONY : all clean
 
 #------------------------------------------------------------------------------
 all : autorandr-launcher
 
+# pass the following argument to make to override the default path to autorandr: AUTORANDR_PATH=/somepath/autorandr
+AUTORANDR_PATH=
+ifneq ($(AUTORANDR_PATH),)
+override AUTORANDR_PATH := -DAUTORANDR_PATH=\"$(AUTORANDR_PATH)\"
+endif
+
+USER_DEFS=
+ifneq ($(USER_DEFS),)
+$(warning "USER_DEFS is deprecated, use AUTORANDR_PATH instead")
+endif
+
 autorandr-launcher: autorandr_launcher.c
-	$(CC) $(CFLAGS) $(LAUNCHER_CFLAGS) $(USER_DEFS) -o $@ $+ $(LAUNCHER_LDLIBS)
+	$(CC) $(CFLAGS) $(LAUNCHER_CFLAGS) $(AUTORANDR_PATH) -o $@ $+ $(LAUNCHER_LDLIBS)
 
 #------------------------------------------------------------------------------
 clean :
