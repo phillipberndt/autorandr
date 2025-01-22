@@ -925,13 +925,6 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
     #   explicitly, so avoid it unless necessary.
     #   (See https://github.com/phillipberndt/autorandr/issues/72)
 
-    fb_dimensions = get_fb_dimensions(new_configuration)
-    try:
-        fb_args = ["--fb", "%dx%d" % fb_dimensions]
-    except:
-        # Failed to obtain frame-buffer size. Doesn't matter, xrandr will choose for the user.
-        fb_args = []
-
     auxiliary_changes_pre = []
     disable_outputs = []
     enable_outputs = []
@@ -980,11 +973,6 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
         if call_and_retry(argv, dry_run=dry_run) != 0:
             raise AutorandrException("Command failed: %s" % " ".join(map(shlex.quote, argv)))
 
-    # Starting here, fix the frame buffer size
-    # Do not do this earlier, as disabling scaling might temporarily make the framebuffer
-    # dimensions larger than they will finally be.
-    base_argv += fb_args
-
     # Disable unused outputs, but make sure that there always is at least one active screen
     disable_keep = 0 if remain_active_count else 1
     if len(disable_outputs) > disable_keep:
@@ -1018,9 +1006,13 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
         if call_and_retry(argv, dry_run=dry_run) != 0:
             raise AutorandrException("Command failed: %s" % " ".join(map(shlex.quote, argv)))
 
-    # Adjust the frame buffer to match (see #319)
-    if fb_args:
-        argv = base_argv
+    # Finally, fix the frame buffer size
+    # Do not do this earlier, as disabling scaling might temporarily make the framebuffer
+    # dimensions larger than they will finally be. (see #319 and #404)
+    fb_dimensions = get_fb_dimensions(new_configuration)
+    if fb_dimensions is not None:
+        fb_args = ["--fb", "%dx%d" % fb_dimensions]
+        argv = base_argv + fb_args
         if call_and_retry(argv, dry_run=dry_run) != 0:
             raise AutorandrException("Command failed: %s" % " ".join(map(shlex.quote, argv)))
 
