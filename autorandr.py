@@ -379,7 +379,7 @@ class XrandrOutput(object):
                         buffer = timing_bytes[5:]
                         buffer = buffer.partition(b'\x0a')[0]
                         serial_text = buffer.decode('cp437')
-            self.serial = serial_text if serial_text else "0x{:x}".format(serial_no) if serial_no != 0 else None
+            self.serial = "0x{:x}".format(serial_no) if serial_no != 0 else serial_text if serial_text else None
 
     def set_ignored_options(self, options):
         "Set a list of xrandr options that are never used (neither when comparing configurations nor when applying them)"
