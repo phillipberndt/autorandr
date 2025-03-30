@@ -1281,6 +1281,9 @@ def dispatch_call_to_sessions(argv):
             os.setresuid(pwent.pw_uid, pwent.pw_uid, pwent.pw_uid)
             os.chdir(pwent.pw_dir)
             os.environ.clear()
+            # fixes a bug with snapd-desktop-integration changing config directories
+            if process_environ.get("SNAP_NAME") == "snapd-desktop-integration":
+                process_environ = {k: v for k, v in process_environ.items() if k not in {'XDG_CONFIG_HOME', 'LD_PRELOAD', 'HOME'}}
             os.environ.update(process_environ)
             if sys.executable != "" and sys.executable != None:
                 os.execl(sys.executable, sys.executable, autorandr_binary, *argv[1:])
