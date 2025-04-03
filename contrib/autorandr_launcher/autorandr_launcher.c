@@ -15,12 +15,11 @@
 #include <string.h>
 
 #ifndef AUTORANDR_PATH
-#define AUTORANDR_PATH "/usr/bin/autorandr"
+#define AUTORANDR_PATH "autorandr"
 #endif
 
 // indent -kr -i8
 static int VERBOSE = 0;
-extern char **environ;
 
 static void sigterm_handler(int signum)
 {
@@ -48,7 +47,7 @@ static int ar_launch(void)
 
 	pid_t pid = fork();
 	if (pid == 0) {
-		if (execve(argv[0], comm, environ) == -1) {
+		if (execvp(argv[0], comm) == -1) {
         	int errsv = errno;
 			fprintf(stderr, "Error executing file: %s\n", strerror(errsv));
 			exit(errsv);
