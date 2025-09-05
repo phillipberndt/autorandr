@@ -518,8 +518,8 @@ class XrandrOutput(object):
             edid = edid_map[options["output"]]
         else:
             # This fuzzy matching is for legacy autorandr that used sysfs output names
-            fuzzy_edid_map = [re.sub("(card[0-9]+|-)", "", x) for x in edid_map.keys()]
-            fuzzy_output = re.sub("(card[0-9]+|-)", "", options["output"])
+            fuzzy_edid_map = [re.sub(r"(card[0-9]+|-)", "", x) for x in edid_map.keys()]
+            fuzzy_output = re.sub(r"(card[0-9]+|-)", "", options["output"])
             if fuzzy_output in fuzzy_edid_map:
                 edid = edid_map[list(edid_map.keys())[fuzzy_edid_map.index(fuzzy_output)]]
             elif "off" not in options:
@@ -626,10 +626,10 @@ def parse_xrandr_output(
         raise AutorandrException("Failed to run xrandr")
 
     # We are not interested in screens
-    xrandr_output = re.sub("(?m)^Screen [0-9].+", "", xrandr_output).strip()
+    xrandr_output = re.sub(r"(?m)^Screen [0-9].+", "", xrandr_output).strip()
 
     # Split at output boundaries and instantiate an XrandrOutput per output
-    split_xrandr_output = re.split("(?m)^([^ ]+ (?:(?:dis)?connected|unknown connection).*)$", xrandr_output)
+    split_xrandr_output = re.split(r"(?m)^([^ ]+ (?:(?:dis)?connected|unknown connection).*)$", xrandr_output)
     if len(split_xrandr_output) < 2:
         raise AutorandrException("No output boundaries found", report_bug=True)
     outputs = OrderedDict()
@@ -868,7 +868,7 @@ def get_fb_dimensions(configuration):
         if "off" in output.options or not output.edid:
             continue
         # This won't work with all modes -- but it's a best effort.
-        match = re.search("[0-9]{3,}x[0-9]{3,}", output.options["mode"])
+        match = re.search(r"[0-9]{3,}x[0-9]{3,}", output.options["mode"])
         if not match:
             return None
         o_mode = match.group(0)
