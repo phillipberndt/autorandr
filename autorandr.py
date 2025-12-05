@@ -681,10 +681,19 @@ def load_profiles(profile_path):
             if config[output_name].edid is None:
                 del config[output_name]
 
+        # If config is a symlink, read mtime from the link if possible
+        # This allows proper cycle ordering when the target files are read-only
+        if os.path.islink(config_name) and sys.version_info >= (3, 3):
+            # Use lstat to get the symlink's own mtime, not the target's
+            config_mtime = os.lstat(config_name).st_mtime
+        else:
+            # Regular stat follows symlinks
+            config_mtime = os.stat(config_name).st_mtime
+
         profiles[profile] = {
             "config": config,
             "path": os.path.join(profile_path, profile),
-            "config-mtime": os.stat(config_name).st_mtime,
+            "config-mtime": config_mtime,
         }
 
     return profiles
@@ -836,9 +845,16 @@ def save_configuration(profile_path, profile_name, configuration, forced=False):
 def update_mtime(filename):
     "Update a file's mtime"
     try:
-        os.utime(filename, None)
+        # If the file is a symlink, try to update the mtime of the link itself
+        # This enables time-based ordering to work when configs are symlinks to read-only files
+        # Python 3.3+ supports follow_symlinks parameter
+        if os.path.islink(filename) and sys.version_info >= (3, 3):
+            os.utime(filename, None, follow_symlinks=False)
+        else:
+            os.utime(filename, None)
         return True
-    except:
+    except Exception as e:
+        print('Failed to touch mtime for %s: %s' % (filename, e), file=sys.stderr)
         return False
 
 
