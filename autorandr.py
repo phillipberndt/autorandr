@@ -948,8 +948,8 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
 
             option_vector = new_configuration[output].option_vector
             if xrandr_version() >= Version("1.3.0"):
-                for option, off_value in (("transform", "none"), ("panning", "0x0")):
-                    if option in current_configuration[output].options:
+                for option, off_value in (("transform", None), ("panning", "0x0")):
+                    if option in current_configuration[output].options and option != "transform":
                         auxiliary_changes_pre.append(["--output", output, "--%s" % option, off_value])
                     else:
                         try:
