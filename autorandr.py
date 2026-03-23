@@ -148,7 +148,7 @@ class Version(object):
         return self >= other and not (self == other)
 
 def is_closed_lid(output):
-    if not re.match(r'(eDP(-?[0-9]\+)*|LVDS(-?[0-9]\+)*)', output):
+    if not re.match(r'(eDP(-?[0-9]+)*|LVDS(-?[0-9]+)*)', output):
         return False
     lids = glob.glob("/proc/acpi/button/lid/*/state")
     if len(lids) == 1:
@@ -765,11 +765,15 @@ def find_profiles(current_config, profiles):
             if name not in current_config or not output.fingerprint_equals(current_config[name]):
                 matches = False
                 break
-        if not matches or any((name not in config.keys() for name in current_config.keys() if current_config[name].fingerprint)):
+        if not matches or any((name not in config.keys() for name in current_config.keys()
+                               if current_config[name].fingerprint and not re.match(r'(eDP|LVDS)', name))):
             continue
         if matches:
-            closeness = max(match_asterisk(output.edid, current_config[name].edid), match_asterisk(
-                current_config[name].edid, output.edid))
+            closeness = 1
+            for name, output in config.items():
+                if output.edid and name in current_config and current_config[name].edid:
+                    closeness = min(closeness, max(match_asterisk(output.edid, current_config[name].edid),
+                        match_asterisk(current_config[name].edid, output.edid)))
             detected_profiles.append((closeness, profile_name))
     detected_profiles = [o[1] for o in sorted(detected_profiles, key=lambda x: -x[0])]
     return detected_profiles
