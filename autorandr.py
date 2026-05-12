@@ -240,7 +240,7 @@ class XrandrOutput(object):
         (?P<modes>(?:
             (?P<mode_name>\S+).+?\*current.*\s+                                         # Interesting (current) resolution:
              h:\s+width\s+(?P<mode_width>[0-9]+).+\s+                                   # Extract rate
-             v:\s+height\s+(?P<mode_height>[0-9]+).+clock\s+(?P<rate>[0-9\.]+)Hz\s* |
+             v:\s+height\s+(?P<mode_height>[0-9]+).+clock\s+(?P<rate>[0-9\.,]+)Hz\s* |
             \S+(?:(?!\*current).)+\s+h:.+\s+v:.+\s*                                     # Other resolutions
         )*)
     """
@@ -248,7 +248,7 @@ class XrandrOutput(object):
     XRANDR_OUTPUT_MODES_REGEXP = r"""(?x)
         (?P<name>\S+).+?(?P<preferred>\+preferred)?\s+
          h:\s+width\s+(?P<width>[0-9]+).+\s+
-         v:\s+height\s+(?P<height>[0-9]+).+clock\s+(?P<rate>[0-9\.]+)Hz\s* |
+         v:\s+height\s+(?P<height>[0-9]+).+clock\s+(?P<rate>[0-9\.,]+)Hz\s* |
     """
 
     XRANDR_13_DEFAULTS = {
@@ -494,7 +494,9 @@ class XrandrOutput(object):
             if match["crtc"]:
                 options["crtc"] = match["crtc"]
             if match["rate"]:
-                options["rate"] = match["rate"]
+                # Normalize comma decimal separator (locales like de_DE use ',')
+                # so downstream xrandr --rate calls always see a '.' decimal.
+                options["rate"] = match["rate"].replace(",", ".")
             for prop in [re.sub(r"\W+", "_", p.lower()) for p in properties]:
                 if match[prop]:
                     options["x-prop-" + prop] = match[prop]
