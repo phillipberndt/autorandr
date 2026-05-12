@@ -849,6 +849,12 @@ def call_and_retry(*args, **kwargs):
     waits a second and then retries once. This mitigates #47,
     a timing issue with some drivers.
     """
+    # Force C locale for xrandr subprocess: under locales like de_DE,
+    # xrandr's float parser rejects '.' decimals (e.g. --gamma 1.0,
+    # --rate 165.00) and only accepts ',' as the decimal separator.
+    # See #424.
+    if "env" not in kwargs:
+        kwargs["env"] = {**os.environ, "LC_ALL": "C"}
     if kwargs.pop("dry_run", False):
         for arg in args[0]:
             print(shlex.quote(arg), end=" ")
