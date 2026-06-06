@@ -932,6 +932,11 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
         # Failed to obtain frame-buffer size. Doesn't matter, xrandr will choose for the user.
         fb_args = []
 
+    try:
+        current_fb_args = ["--fb", "%dx%d" % get_fb_dimensions(current_configuration)]
+    except:
+        current_fb_args = []
+
     auxiliary_changes_pre = []
     disable_outputs = []
     enable_outputs = []
@@ -980,15 +985,19 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
         if call_and_retry(argv, dry_run=dry_run) != 0:
             raise AutorandrException("Command failed: %s" % " ".join(map(shlex.quote, argv)))
 
-    # Starting here, fix the frame buffer size
-    # Do not do this earlier, as disabling scaling might temporarily make the framebuffer
-    # dimensions larger than they will finally be.
-    base_argv += fb_args
-
     # Disable unused outputs, but make sure that there always is at least one active screen
+    # Use current_fb_args, as it should always be big enough to fit all remaining monitors.
     disable_keep = 0 if remain_active_count else 1
     if len(disable_outputs) > disable_keep:
-        argv = base_argv + list(chain.from_iterable(disable_outputs[:-1] if disable_keep else disable_outputs))
+        argv = (
+            base_argv
+            + current_fb_args
+            + list(
+                chain.from_iterable(
+                    disable_outputs[:-1] if disable_keep else disable_outputs
+                )
+            )
+        )
         if call_and_retry(argv, dry_run=dry_run) != 0:
             # Disabling the outputs failed. Retry with the next command:
             # Sometimes disabling of outputs fails due to an invalid RRSetScreenSize.
@@ -996,6 +1005,11 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
             pass
         else:
             disable_outputs = disable_outputs[-1:] if disable_keep else []
+
+    # Starting here, fix the frame buffer size
+    # Do not do this earlier, as disabling scaling might temporarily make the framebuffer
+    # dimensions larger than they will finally be.
+    base_argv += fb_args
 
     # If disable_outputs still has more than one output in it, one of the xrandr-calls below would
     # disable the last two screens. This is a problem, so if this would happen, instead disable only
