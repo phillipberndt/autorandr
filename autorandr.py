@@ -960,6 +960,23 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
         # Failed to obtain frame-buffer size. Doesn't matter, xrandr will choose for the user.
         fb_args = []
 
+    # While outputs are being disabled/repositioned below, any output that hasn't been
+    # touched by the current xrandr call yet is still sitting at its *current* geometry.
+    # If we already constrained the framebuffer to the final (possibly smaller) target
+    # size at this point, such an untouched output can stick out of the framebuffer and
+    # make the whole call fail with "screen not large enough for output ...". So use a
+    # framebuffer that is large enough for both the current and the new layout while
+    # transitioning, and only shrink it down to the final size once every output has
+    # reached its new position (see the "Adjust the frame buffer to match" step below).
+    try:
+        current_fb_dimensions = get_fb_dimensions(current_configuration)
+        interim_fb_args = ["--fb", "%dx%d" % (
+            max(fb_dimensions[0], current_fb_dimensions[0]),
+            max(fb_dimensions[1], current_fb_dimensions[1]),
+        )]
+    except:
+        interim_fb_args = fb_args
+
     auxiliary_changes_pre = []
     disable_outputs = []
     enable_outputs = []
@@ -1011,7 +1028,8 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
     # Starting here, fix the frame buffer size
     # Do not do this earlier, as disabling scaling might temporarily make the framebuffer
     # dimensions larger than they will finally be.
-    base_argv += fb_args
+    # Use the interim (safe) size here rather than the final target size -- see above.
+    base_argv += interim_fb_args
 
     # Disable unused outputs, but make sure that there always is at least one active screen
     disable_keep = 0 if remain_active_count else 1
@@ -1047,8 +1065,10 @@ def apply_configuration(new_configuration, current_configuration, dry_run=False)
             raise AutorandrException("Command failed: %s" % " ".join(map(shlex.quote, argv)))
 
     # Adjust the frame buffer to match (see #319)
+    # Now that every output has reached its final position, it is safe to shrink the
+    # framebuffer down from the interim (safe) size to the real target size.
     if fb_args:
-        argv = base_argv
+        argv = ["xrandr"] + fb_args
         if call_and_retry(argv, dry_run=dry_run) != 0:
             raise AutorandrException("Command failed: %s" % " ".join(map(shlex.quote, argv)))
 
