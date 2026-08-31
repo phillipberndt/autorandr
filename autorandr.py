@@ -1357,13 +1357,22 @@ def dispatch_call_to_sessions(argv):
         environ_file = os.path.join(directory, "environ")
         if not os.path.isfile(environ_file):
             continue
-        uid = os.stat(environ_file).st_uid
+        try:
+            uid = os.stat(environ_file).st_uid
 
-        if uid < uid_min:
+            if uid < uid_min:
+                continue
+
+            environ_data = open(environ_file, 'rb').read()
+        except OSError:
+            # The process is a zombie or vanished between listdir() and
+            # open(); reading /proc/<pid>/environ then raises
+            # ProcessLookupError, FileNotFoundError or PermissionError
+            # (all subclasses of OSError). Skip such processes.
             continue
 
         process_environ = {}
-        for environ_entry in open(environ_file, 'rb').read().split(b"\0"):
+        for environ_entry in environ_data.split(b"\0"):
             try:
                 environ_entry = environ_entry.decode("ascii")
             except UnicodeDecodeError:
