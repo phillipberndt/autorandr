@@ -4,7 +4,7 @@ RPM_SPEC=contrib/packaging/rpm/autorandr.spec
 CFLAGS?=-O2 -Wall
 CLEANUP_FILES=
 
-.PHONY: all install uninstall autorandr bash_completion autostart_config pmutils systemd udev
+.PHONY: all install uninstall autorandr bash_completion autostart_config pmutils systemd udev dbus_monitor
 
 all:
 	@echo "Call \"make install\" to install this program."
@@ -178,6 +178,17 @@ endif
 uninstall_launcher:
 	rm -f ${DESTDIR}${PREFIX}/bin/autorandr-launcher
 	rm -f ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr-launcher.desktop
+
+# Rules for dbus_monitor
+DEFAULT_TARGETS+=dbus_monitor
+
+install_dbus_monitor:
+	install -D -m 755 contrib/autorandr_dbus_monitor.sh ${DESTDIR}${PREFIX}/bin/autorandr_dbus_monitor
+	install -D -m 644 contrib/etc/xdg/autostart/autorandr_dbus_monitor.desktop ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr_dbus_monitor.desktop
+
+uninstall_dbus_monitor:
+	rm -f ${DESTDIR}${PREFIX}/bin/autorandr_dbus_monitor
+	rm -f ${DESTDIR}/${XDG_AUTOSTART_DIR}/autorandr_dbus_monitor.desktop
 
 TARGETS=$(DEFAULT_TARGETS)
 install: $(patsubst %,install_%,$(TARGETS))

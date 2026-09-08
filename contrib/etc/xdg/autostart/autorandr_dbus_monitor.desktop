@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Autorandr Dbus Monitor
+Comment=Trigger autorandr whenever the screen configuration changes
+Type=Application
+Exec=/usr/bin/autorandr_dbus_monitor
+X-GNOME-Autostart-Phase=Initialization
